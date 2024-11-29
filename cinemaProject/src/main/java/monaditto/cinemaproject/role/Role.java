@@ -1,4 +1,4 @@
-package monaditto.cinemaproject.jobTitle;
+package monaditto.cinemaproject.role;
 
 import jakarta.persistence.*;
 import monaditto.cinemaproject.user.User;
@@ -6,25 +6,25 @@ import monaditto.cinemaproject.user.User;
 import java.util.Set;
 
 @Entity
-@Table(name = JobTitle.TABLE_NAME)
-public class JobTitle {
+@Table(name = Role.TABLE_NAME)
+public class Role {
 
-    public static final String TABLE_NAME = "job_titles";
+    public static final String TABLE_NAME = "roles";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "title_id")
+    @Column(name = "role_id")
     private Long id;
 
     @Column(nullable = false)
     private String name;
 
-    @ManyToMany(mappedBy = "jobTitles")
+    @ManyToMany(mappedBy = "roles")
     private Set<User> users;
 
-    public JobTitle() {}
+    public Role() {}
 
-    public JobTitle(String name) {
+    public Role(String name) {
         this.name = name;
     }
 

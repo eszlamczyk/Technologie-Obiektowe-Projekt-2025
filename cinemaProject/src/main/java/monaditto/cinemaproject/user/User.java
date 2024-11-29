@@ -1,7 +1,7 @@
 package monaditto.cinemaproject.user;
 
 import jakarta.persistence.*;
-import monaditto.cinemaproject.jobTitle.JobTitle;
+import monaditto.cinemaproject.role.Role;
 import monaditto.cinemaproject.opinion.Opinion;
 import monaditto.cinemaproject.purchase.Purchase;
 
@@ -32,11 +32,11 @@ public class User {
 
     @ManyToMany
     @JoinTable(
-            name = "user_category",
+            name = "user_role",
             joinColumns = @JoinColumn(name = "\"user\""),
-            inverseJoinColumns = @JoinColumn(name = "title")
+            inverseJoinColumns = @JoinColumn(name = "role")
     )
-    private Set<JobTitle> jobTitles;
+    private Set<Role> roles;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<Purchase> purchases;

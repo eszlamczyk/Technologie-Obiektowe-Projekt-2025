@@ -1,5 +1,6 @@
 package monaditto.cinemaproject.controller;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -7,10 +8,14 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseEvent;
+import javafx.stage.Stage;
+import monaditto.cinemaproject.StageInitializer;
 import monaditto.cinemaproject.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -29,17 +34,31 @@ public class LoginController implements Initializable {
     @FXML
     private Label lblLogin;
 
+    private final UserService userService;
+
+    private final StageInitializer stageInitializer;
+
     @Autowired
-    private UserService userService;
+    public LoginController(UserService userService, StageInitializer stageInitializer) {
+        this.userService = userService;
+        this.stageInitializer = stageInitializer;
+    }
 
     @FXML
     private void login(ActionEvent event){
-        if(userService.authenticate(getUsername(), getPassword())){
-
+        if (userService.authenticate(getUsername(), getPassword())) {
             lblLogin.setText("Login GUT");
-
-        }else{
+        } else {
             lblLogin.setText("Login Failed.");
+        }
+    }
+
+    @FXML
+    private void loadRegisterPage(MouseEvent event) {
+        try {
+            stageInitializer.loadRegistrationScene();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -53,6 +72,6 @@ public class LoginController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-
+        Platform.runLater(() -> lblLogin.requestFocus());
     }
 }

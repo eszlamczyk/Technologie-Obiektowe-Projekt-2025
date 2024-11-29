@@ -9,7 +9,7 @@ import javax.mail.internet.InternetAddress;
 public class UserValidator {
 
     public boolean validatePassword(String password) {
-        if (password == null || password.length() < 8) {
+        if (password.length() < 8) {
             return false;
         }
 
@@ -46,5 +46,12 @@ public class UserValidator {
         } catch (AddressException ex) {
             return false;
         }
+    }
+
+    public boolean validateString(String string) {
+        if (string == null || string.isEmpty()) {
+            return false;
+        }
+        return !string.contains(" ");
     }
 }

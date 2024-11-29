@@ -73,6 +73,16 @@ public class UserService {
     }
 
     public CreateUserStatus createUser(UserDto userDto) {
+        if (!userValidator.validateString(userDto.firstName)
+                || !userValidator.validateString(userDto.lastName)
+                || !userValidator.validateString(userDto.email)
+                || !userValidator.validateString(userDto.password)
+        ) {
+            return CreateUserStatus.MISSING_DATA;
+        }
+
+        System.out.println("to jest email: (" + userDto.email + ")");
+
         User presentUser = userRepository.findByEmail(userDto.email);
         if (presentUser != null) {
             return CreateUserStatus.USER_ALREADY_EXISTS;

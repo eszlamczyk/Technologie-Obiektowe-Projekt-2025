@@ -16,33 +16,58 @@ import java.net.URL;
 
 @Component
 public class StageInitializer implements ApplicationListener<StageReadyEvent> {
-    private final Resource fxml;
+    private final Resource loginFxml;
+
+    private final Resource registrationFxml;
+
     private final String applicationTitle;
+
     private final ApplicationContext applicationContext;
 
-    public StageInitializer(@Value("classpath:/fxml/Login.fxml") Resource fxml,
+    private Stage stage;
+
+    public StageInitializer(@Value("classpath:/fxml/Login.fxml") Resource loginFxml,
+                            @Value("classpath:/fxml/Registration.fxml") Resource registrationFxml,
                             @Value("${spring.application.ui.title}") String applicationTitle,
                             ApplicationContext applicationContext) {
-        this.fxml = fxml;
+        this.loginFxml = loginFxml;
+        this.registrationFxml = registrationFxml;
         this.applicationTitle = applicationTitle;
         this.applicationContext = applicationContext;
+        this.stage = null;
+    }
+
+    public Stage getStage() {
+        return this.stage;
     }
 
     @Override
     public void onApplicationEvent(StageReadyEvent event) {
         try{
-            Stage stage = event.getStage();
-            URL url = this.fxml.getURL();
-            FXMLLoader loader = new FXMLLoader(url);
-            loader.setControllerFactory(applicationContext::getBean);
-            Parent root = loader.load();
-            Scene scene = new Scene(root, 700, 700);
-            stage.setScene(scene);
-            stage.setTitle(this.applicationTitle);
-            stage.show();
+            this.stage = event.getStage();
+            loadLoginScene();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
 
+    public void loadLoginScene() throws IOException {
+        loadScene(this.loginFxml);
+    }
+
+    public void loadRegistrationScene() throws IOException {
+        loadScene(this.registrationFxml);
+    }
+
+    private void loadScene(Resource fxml) throws IOException {
+        URL url = fxml.getURL();
+        FXMLLoader loader = new FXMLLoader(url);
+        loader.setControllerFactory(applicationContext::getBean);
+        Parent root = loader.load();
+        Scene scene = new Scene(root);
+        this.stage.setScene(scene);
+        this.stage.setTitle(this.applicationTitle);
+        this.stage.sizeToScene();
+        this.stage.show();
     }
 }

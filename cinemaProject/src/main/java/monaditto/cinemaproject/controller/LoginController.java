@@ -29,8 +29,12 @@ public class LoginController implements Initializable {
     @FXML
     private Label lblLogin;
 
+    private final UserService userService;
+
     @Autowired
-    private UserService userService;
+    public LoginController(UserService userService) {
+        this.userService = userService;
+    }
 
     @FXML
     private void login(ActionEvent event){

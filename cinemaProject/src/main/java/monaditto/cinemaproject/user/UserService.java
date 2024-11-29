@@ -9,14 +9,22 @@ import java.util.List;
 @Service
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+
+    private final PasswordHasher passwordHasher;
+
+    private final UserValidator userValidator;
 
     @Autowired
-    private PasswordHasher passwordHasher;
+    public UserService(
+            UserRepository userRepository,
+            PasswordHasher passwordHasher,
+            UserValidator userValidator) {
 
-    @Autowired
-    private UserValidator userValidator;
+        this.userRepository = userRepository;
+        this.passwordHasher = passwordHasher;
+        this.userValidator = userValidator;
+    }
 
     public User findByEmail(String email){
         return userRepository.findByEmail(email);

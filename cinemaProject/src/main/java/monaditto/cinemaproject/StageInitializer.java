@@ -24,8 +24,8 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
                             @Value("${spring.application.ui.title}") String applicationTitle,
                             ApplicationContext applicationContext) {
         this.fxml = fxml;
-        this.applicationContext = applicationContext;
         this.applicationTitle = applicationTitle;
+        this.applicationContext = applicationContext;
     }
 
     @Override
@@ -36,7 +36,7 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
             FXMLLoader loader = new FXMLLoader(url);
             loader.setControllerFactory(applicationContext::getBean);
             Parent root = loader.load();
-            Scene scene = new Scene(root, 1000, 1000);
+            Scene scene = new Scene(root, 700, 700);
             stage.setScene(scene);
             stage.setTitle(this.applicationTitle);
             stage.show();

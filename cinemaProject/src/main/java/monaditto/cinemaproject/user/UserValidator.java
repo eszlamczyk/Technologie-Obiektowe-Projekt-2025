@@ -18,7 +18,7 @@ public class UserValidator {
         boolean hasDigit = false;
         boolean hasSpecialChar = false;
 
-        String specialCharacters = "!@#$%^&*()-_+=<>?/|";
+        String specialCharacters = "!@#$%^&*()-_+=<>?/|.,";
 
         for (char c : password.toCharArray()) {
             if (Character.isUpperCase(c)) {

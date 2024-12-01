@@ -18,7 +18,7 @@
             <ListView fx:id="usersListView" />
             <HBox spacing="6">
                 <Button text="Edit" />
-                <Button text="Delete"/>
+                <Button text="Delete" fx:id="deleteButton" onAction="#handleDelete" />
             </HBox>
         </VBox>
     </VBox>

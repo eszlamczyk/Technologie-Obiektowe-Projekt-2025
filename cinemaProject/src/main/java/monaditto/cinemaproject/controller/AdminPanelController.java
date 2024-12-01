@@ -1,7 +1,10 @@
 package monaditto.cinemaproject.controller;
 
+import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import monaditto.cinemaproject.user.User;
@@ -25,6 +28,9 @@ public class AdminPanelController implements Serializable {
     private ListView<User> usersListView;
 
     @FXML
+    private Button deleteButton;
+
+    @FXML
     private void initialize() {
         usersListView.setCellFactory(list -> new ListCell<>() {
             @Override
@@ -38,6 +44,19 @@ public class AdminPanelController implements Serializable {
                 }
             }
         });
+        loadUsers();
+
+        deleteButton.disableProperty().bind(Bindings.isEmpty(usersListView.getSelectionModel().getSelectedItems()));
+    }
+
+    @FXML
+    private void handleDelete(ActionEvent event) {
+        var user = usersListView.getSelectionModel().getSelectedItem();
+        userService.deleteUser(user);
+        loadUsers();
+    }
+
+    private void loadUsers() {
         usersListView.setItems(FXCollections.observableList(userService.getUsers()));
     }
 }

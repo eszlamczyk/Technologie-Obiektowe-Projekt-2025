@@ -29,7 +29,7 @@ public class LoginController implements Initializable {
     private PasswordField password;
 
     @FXML
-    private TextField username;
+    private TextField email;
 
     @FXML
     private Label lblLogin;
@@ -46,8 +46,17 @@ public class LoginController implements Initializable {
 
     @FXML
     private void login(ActionEvent event){
-        if (userService.authenticate(getUsername(), getPassword())) {
+        if (userService.authenticate(getEmail(), getPassword())) {
             lblLogin.setText("Login GUT");
+            var user = userService.findByEmail(getEmail());
+            var isAdmin = user.getRoles().stream().anyMatch(r -> r.getName().equals("admin"));
+            if (isAdmin) {
+                try {
+                    stageInitializer.loadAdminPanelScene();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         } else {
             lblLogin.setText("Login Failed.");
         }
@@ -66,8 +75,8 @@ public class LoginController implements Initializable {
         return password.getText();
     }
 
-    public String getUsername() {
-        return username.getText();
+    public String getEmail() {
+        return email.getText();
     }
 
     @Override

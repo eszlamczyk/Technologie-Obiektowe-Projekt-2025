@@ -1,0 +1,27 @@
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.PasswordField?>
+<AnchorPane stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemaproject.controller.EditUserController">
+    <VBox spacing="10">
+        <padding>
+            <Insets top="24" right="24" bottom="24" left="24"/>
+        </padding>
+        <Label text="Edit user" style="-fx-font-size: 24;" />
+        <VBox spacing="4">
+            <TextField fx:id="firstNameField" promptText="First name" />
+            <TextField fx:id="lastNameField" promptText="Last name"  />
+            <TextField fx:id="emailField" promptText="Email" />
+            <PasswordField fx:id="passwordField" promptText="Password" />
+            <HBox spacing="6">
+                <Button onAction="#handleCancel" text="Cancel" />
+                <Button onAction="#handleSave" text="Save" />
+            </HBox>
+        </VBox>
+    </VBox>
+</AnchorPane>

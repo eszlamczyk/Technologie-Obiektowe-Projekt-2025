@@ -17,7 +17,7 @@
             <Label text="Users" style="-fx-font-size: 16;" />
             <ListView fx:id="usersListView" />
             <HBox spacing="6">
-                <Button text="Edit" />
+                <Button text="Edit" fx:id="editButton" onAction="#handleEdit" />
                 <Button text="Delete" fx:id="deleteButton" onAction="#handleDelete" />
             </HBox>
         </VBox>

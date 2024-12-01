@@ -1,0 +1,25 @@
+<?import javafx.scene.layout.AnchorPane?>
+
+<?import javafx.scene.control.ListView?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Button?>
+<AnchorPane stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemaproject.controller.AdminPanelController">
+    <VBox spacing="10">
+        <padding>
+            <Insets top="24" right="24" bottom="24" left="24"/>
+        </padding>
+        <Label text="Admin Panel" style="-fx-font-size: 24;" />
+        <VBox spacing="4">
+            <Label text="Users" style="-fx-font-size: 16;" />
+            <ListView fx:id="usersListView" />
+            <HBox spacing="6">
+                <Button text="Edit" />
+                <Button text="Delete"/>
+            </HBox>
+        </VBox>
+    </VBox>
+</AnchorPane>

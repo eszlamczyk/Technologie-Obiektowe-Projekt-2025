@@ -62,11 +62,15 @@ public class UserService {
         }
         existingUser.setEmail(newUser.email());
 
-        if (!userValidator.validatePassword(newUser.password())) {
-            return false;
+        if (newUser.password() != null) {
+            if (!userValidator.validatePassword(newUser.password())) {
+                return false;
+            }
+            String hashedPassword = passwordHasher.hashPassword(newUser.password());
+            existingUser.setPassword(hashedPassword);
+        } else {
+            existingUser.setPassword(oldUser.password());
         }
-        String hashedPassword = passwordHasher.hashPassword(newUser.password());
-        existingUser.setPassword(hashedPassword);
 
         userRepository.save(existingUser);
         return true;

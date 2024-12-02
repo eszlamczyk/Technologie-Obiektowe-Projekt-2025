@@ -34,8 +34,8 @@ public class Movie {
     @ManyToMany
     @JoinTable(
             name = "movie_category",
-            joinColumns = @JoinColumn(name = "movie"),
-            inverseJoinColumns = @JoinColumn(name = "category")
+            joinColumns = @JoinColumn(name = "movie_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id")
     )
     private Set<Category> categories;
 

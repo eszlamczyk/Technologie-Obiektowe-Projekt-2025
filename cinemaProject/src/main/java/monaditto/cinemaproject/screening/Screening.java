@@ -17,11 +17,11 @@ public class Screening {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "movie", nullable = false)
+    @JoinColumn(name = "movie_id", nullable = false)
     private Movie movie;
 
     @ManyToOne
-    @JoinColumn(name = "room", nullable = false)
+    @JoinColumn(name = "room_id", nullable = false)
     private MovieRoom room;
 
     @Column(nullable = false)

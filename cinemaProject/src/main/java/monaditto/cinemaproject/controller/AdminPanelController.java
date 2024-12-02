@@ -12,6 +12,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import monaditto.cinemaproject.StageInitializer;
+import monaditto.cinemaproject.role.RoleService;
 import monaditto.cinemaproject.user.User;
 import monaditto.cinemaproject.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,8 @@ import java.io.Serializable;
 public class AdminPanelController implements Serializable {
 
     private final UserService userService;
+
+    private final RoleService roleService;
 
     private final StageInitializer stageInitializer;
 
@@ -40,8 +43,9 @@ public class AdminPanelController implements Serializable {
     private Button signOutButton;
 
     @Autowired
-    public AdminPanelController(UserService userService, StageInitializer stageInitializer) {
+    public AdminPanelController(UserService userService, RoleService roleService, StageInitializer stageInitializer) {
         this.userService = userService;
+        this.roleService = roleService;
         this.stageInitializer = stageInitializer;
     }
 
@@ -85,7 +89,7 @@ public class AdminPanelController implements Serializable {
         }
 
         EditUserController controller = loader.getController();
-        controller.init(usersListView.getSelectionModel().getSelectedItem(),  this::loadUsers, userService);
+        controller.init(usersListView.getSelectionModel().getSelectedItem(),  this::loadUsers, userService, roleService);
 
         var newScene = new Scene(newRoot);
         newStage.setTitle("Edit user");

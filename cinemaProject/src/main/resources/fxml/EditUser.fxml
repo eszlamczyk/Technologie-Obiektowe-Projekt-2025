@@ -6,6 +6,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ListView?>
 <AnchorPane stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemaproject.controller.EditUserController">
     <VBox spacing="10">
@@ -18,7 +19,24 @@
             <TextField fx:id="lastNameField" promptText="Last name"  />
             <TextField fx:id="emailField" promptText="Email" />
             <PasswordField fx:id="passwordField" promptText="Password" />
-            <HBox spacing="6">
+            <VBox>
+                <HBox>
+                    <VBox>
+                        <Label text="Assigned roles" style="-fx-font-size: 16;" />
+                        <ListView fx:id="assignedRolesListView" />
+                    </VBox>
+                    <VBox>
+                        <Label text="Available roles" style="-fx-font-size: 16;" />
+                        <ListView fx:id="availableRolesListView" />
+                    </VBox>
+                </HBox>
+                <HBox spacing="6">
+                    <Button fx:id="addRoleButton" onAction="#handleAddRole" text="Add role" />
+                    <Button fx:id="removeRoleButton" onAction="#handleRemoveRole" text="Remove role" />
+                </HBox>
+            </VBox>
+            <VBox prefHeight="20" />
+            <HBox spacing="6" alignment="CENTER_RIGHT">
                 <Button onAction="#handleCancel" text="Cancel" />
                 <Button onAction="#handleSave" text="Save" />
             </HBox>

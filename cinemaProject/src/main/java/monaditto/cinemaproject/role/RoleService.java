@@ -35,4 +35,22 @@ public class RoleService {
        user.setRoles(roles);
        userRepository.save(user);
     }
+
+    public void addRoleToUser(User user, Role role) {
+        if (!user.getRoles().contains(role)) {
+            Set<Role> newRoles = new HashSet<>(user.getRoles());
+            newRoles.add(role);
+            user.setRoles(newRoles);
+            userRepository.save(user);
+        }
+    }
+
+    public void removeRoleFromUser(User user, Role role) {
+        if (user.getRoles().contains(role)) {
+            Set<Role> newRoles = new HashSet<>(user.getRoles());
+            newRoles.remove(role);
+            user.setRoles(newRoles);
+            userRepository.save(user);
+        }
+    }
 }

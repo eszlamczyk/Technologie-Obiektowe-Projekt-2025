@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class RoleService {
@@ -30,17 +31,8 @@ public class RoleService {
         return role;
     }
 
-    public void addRoleToUser(User user, Role role) {
-        if (!user.getRoles().contains(role)) {
-            user.getRoles().add(role);
-            userRepository.save(user);
-        }
-    }
-
-    public void removeRoleFromUser(User user, Role role) {
-        if(user.getRoles().contains(role)) {
-            user.getRoles().remove(role);
-            userRepository.save(user);
-        }
+    public void updateRoles(User user, Set<Role> roles) {
+       user.setRoles(roles);
+       userRepository.save(user);
     }
 }

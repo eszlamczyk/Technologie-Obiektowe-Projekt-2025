@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.function.Consumer;
 
 @Controller
@@ -102,8 +103,7 @@ public class EditUserController implements Serializable {
         var newUserDto= new UserService.UserDto(emailField.getText(), firstNameField.getText(), lastNameField.getText(),  newPassword);
         userService.editUser(oldUserDro, newUserDto);
 
-        assignedRolesListView.getItems().forEach(role -> roleService.addRoleToUser(user, role));
-        availableRolesListView.getItems().forEach(role -> roleService.removeRoleFromUser(user, role));
+        roleService.updateRoles(user, new HashSet<>(assignedRolesListView.getItems()));
 
         afterSave.run();
 

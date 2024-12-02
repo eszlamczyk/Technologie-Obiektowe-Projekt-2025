@@ -35,3 +35,8 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### BAZA DANYCH NIE MUSI BYĆ W REPOZYTORIUM MA AUTOCREATE CONFIG
+
+cinema.mv.db
+cinema.trace.db

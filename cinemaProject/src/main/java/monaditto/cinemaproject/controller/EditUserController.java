@@ -102,13 +102,8 @@ public class EditUserController implements Serializable {
         var newUserDto= new UserService.UserDto(emailField.getText(), firstNameField.getText(), lastNameField.getText(),  newPassword);
         userService.editUser(oldUserDro, newUserDto);
 
-        assignedRolesListView.getItems().stream().filter(
-                r -> user.getRoles().stream().noneMatch(userRole -> userRole.getId().equals(r.getId()))
-        ).forEach(role -> roleService.addRoleToUser(user, role));
-
-        user.getRoles().stream().filter(
-                role -> assignedRolesListView.getItems().stream().noneMatch(assignedRole -> assignedRole.getId().equals(role.getId()))
-        ).forEach(role -> roleService.removeRoleFromUser(user, role));
+        assignedRolesListView.getItems().forEach(role -> roleService.addRoleToUser(user, role));
+        availableRolesListView.getItems().forEach(role -> roleService.removeRoleFromUser(user, role));
 
         afterSave.run();
 

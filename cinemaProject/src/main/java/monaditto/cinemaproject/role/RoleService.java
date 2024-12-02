@@ -31,12 +31,16 @@ public class RoleService {
     }
 
     public void addRoleToUser(User user, Role role) {
-       user.getRoles().add(role);
-       userRepository.save(user);
+        if (!user.getRoles().contains(role)) {
+            user.getRoles().add(role);
+            userRepository.save(user);
+        }
     }
 
     public void removeRoleFromUser(User user, Role role) {
-        user.getRoles().remove(role);
-        userRepository.save(user);
+        if(user.getRoles().contains(role)) {
+            user.getRoles().remove(role);
+            userRepository.save(user);
+        }
     }
 }

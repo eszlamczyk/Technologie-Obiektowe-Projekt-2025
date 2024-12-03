@@ -98,10 +98,12 @@ public class EditUserController implements Serializable {
 
     @FXML
     private void handleSave(ActionEvent event) {
-        var newPassword = passwordField.getText().length() > 0 ? passwordField.getText() : null;
-        var oldUserDro = new UserService.UserDto( user.getEmail(), user.getFirstName(), user.getLastName(), user.getPassword());
+        var newPassword = !passwordField.getText().isEmpty() ? passwordField.getText() : null;
+        var oldUserDto = new UserService.UserDto( user.getEmail(), user.getFirstName(), user.getLastName(), user.getPassword());
         var newUserDto= new UserService.UserDto(emailField.getText(), firstNameField.getText(), lastNameField.getText(),  newPassword);
-        userService.editUser(oldUserDro, newUserDto);
+        userService.editUser(oldUserDto, newUserDto);
+
+        refreshUser(newUserDto.email());
 
         roleService.updateRoles(user, new HashSet<>(assignedRolesListView.getItems()));
 
@@ -109,6 +111,10 @@ public class EditUserController implements Serializable {
 
         Stage stage = (Stage)((javafx.scene.Node) event.getSource()).getScene().getWindow();
         stage.close();
+    }
+
+    private void refreshUser(String email) {
+        this.user = userService.findByEmail(email);
     }
 
     @FXML

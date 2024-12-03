@@ -5,6 +5,7 @@ import monaditto.cinemaproject.category.Category;
 import monaditto.cinemaproject.opinion.Opinion;
 import monaditto.cinemaproject.screening.Screening;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -28,13 +29,13 @@ public class Movie {
     private int duration;
 
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL)
-    private Set<Screening> screenings;
+    private Set<Screening> screenings = new HashSet<>();
 
     @ManyToMany
     @JoinTable(
             name = "movie_category",
-            joinColumns = @JoinColumn(name = "movie"),
-            inverseJoinColumns = @JoinColumn(name = "category")
+            joinColumns = @JoinColumn(name = "movie_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id")
     )
     private Set<Category> categories;
 

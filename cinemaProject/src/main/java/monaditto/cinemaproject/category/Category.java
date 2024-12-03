@@ -3,6 +3,7 @@ package monaditto.cinemaproject.category;
 import jakarta.persistence.*;
 import monaditto.cinemaproject.movie.Movie;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -20,7 +21,7 @@ public class Category {
     private String categoryName;
 
     @ManyToMany(mappedBy = "categories")
-    private Set<Movie> movies;
+    private Set<Movie> movies = new HashSet<>();
 
     public Category() {}
 

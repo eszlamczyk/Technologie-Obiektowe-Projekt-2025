@@ -20,6 +20,8 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
 
     private final Resource registrationFxml;
 
+    private final Resource adminPanelFxml;
+
     private final String applicationTitle;
 
     private final ApplicationContext applicationContext;
@@ -28,10 +30,12 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
 
     public StageInitializer(@Value("classpath:/fxml/Login.fxml") Resource loginFxml,
                             @Value("classpath:/fxml/Registration.fxml") Resource registrationFxml,
+                            @Value("classpath:/fxml/AdminPanel.fxml") Resource adminPanelFxml,
                             @Value("${spring.application.ui.title}") String applicationTitle,
                             ApplicationContext applicationContext) {
         this.loginFxml = loginFxml;
         this.registrationFxml = registrationFxml;
+        this.adminPanelFxml = adminPanelFxml;
         this.applicationTitle = applicationTitle;
         this.applicationContext = applicationContext;
         this.stage = null;
@@ -57,6 +61,10 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
 
     public void loadRegistrationScene() throws IOException {
         loadScene(this.registrationFxml);
+    }
+
+    public void loadAdminPanelScene() throws IOException {
+        loadScene(this.adminPanelFxml);
     }
 
     private void loadScene(Resource fxml) throws IOException {

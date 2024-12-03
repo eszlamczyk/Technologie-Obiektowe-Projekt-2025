@@ -5,6 +5,7 @@ import monaditto.cinemaproject.role.Role;
 import monaditto.cinemaproject.opinion.Opinion;
 import monaditto.cinemaproject.purchase.Purchase;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -30,19 +31,19 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_role",
-            joinColumns = @JoinColumn(name = "\"user\""),
-            inverseJoinColumns = @JoinColumn(name = "role")
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    private Set<Role> roles;
+    private Set<Role> roles = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private Set<Purchase> purchases;
+    private Set<Purchase> purchases = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private Set<Opinion> opinions;
+    private Set<Opinion> opinions = new HashSet<>();
 
     public User() {}
 
@@ -87,5 +88,13 @@ public class User {
 
     public Long getId() {
         return id;
+    }
+
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
     }
 }

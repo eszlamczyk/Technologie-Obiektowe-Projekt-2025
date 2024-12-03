@@ -3,6 +3,7 @@ package monaditto.cinemaproject.movieRoom;
 import jakarta.persistence.*;
 import monaditto.cinemaproject.screening.Screening;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -23,7 +24,7 @@ public class MovieRoom {
     private int maxSeats;
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
-    private Set<Screening> screenings;
+    private Set<Screening> screenings = new HashSet<>();
 
     public MovieRoom() {}
 

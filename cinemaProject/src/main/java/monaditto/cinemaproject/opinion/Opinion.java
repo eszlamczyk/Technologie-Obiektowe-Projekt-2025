@@ -13,12 +13,12 @@ public class Opinion {
 
     @Id
     @ManyToOne
-    @JoinColumn(name = "\"user\"", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Id
     @ManyToOne
-    @JoinColumn(name = "movie", nullable = false)
+    @JoinColumn(name = "movie_id", nullable = false)
     private Movie movie;
 
     @Column(nullable = false)

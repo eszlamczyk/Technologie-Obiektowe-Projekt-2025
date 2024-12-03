@@ -12,6 +12,15 @@
 
 Projekt został zaimplementowany jako aplikacja **Spring Boot** w języku *Java*. Wykorzystaliśmy bazę danych **H2**
 
+
+# Uruchomienie:
+
+```txt
+Plik CinemaProjectApplication.java
+
+./gradlew bootRun
+```
+
 # Schemat bazy danych
 
 ![](img/database/diagram.png)
@@ -1274,8 +1283,389 @@ public class RegistrationController implements Initializable {
 }
 ```
 
+## Logowanie użytkownika
+
+`Login.fxml`
+
+> Interfejs okna logowania
+
+
+```xml
+<AnchorPane stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemaproject.controller.LoginController">
+    <opaqueInsets>
+        <Insets/>
+    </opaqueInsets>
+    <Rectangle fill="DODGERBLUE" height="300.0" stroke="#ffffff8b" strokeType="INSIDE" width="400.0"/>
+    <Label fx:id="lblLogin" layoutX="97.0" layoutY="46.0" text="Login" textFill="WHITE">
+        <font>
+            <Font size="20.0"/>
+        </font>
+    </Label>
+    <TextField fx:id="email" layoutX="98.0" layoutY="92.0" prefHeight="36.0" prefWidth="204.0"
+               promptText="Email"/>
+    <PasswordField fx:id="password" layoutX="98.0" layoutY="141.0" onAction="#login" prefHeight="36.0" prefWidth="204.0"
+                   promptText="Password"/>
+    <HBox layoutX="98.0" layoutY="190.0">
+        <Text text="Don't have an account yet? " style="-fx-fill: white;"/>
+        <TextFlow>
+            <Text text="Register now" fx:id="clickableText" onMouseClicked="#loadRegisterPage"
+                  style="-fx-fill: yellow; -fx-underline: true;"/>
+        </TextFlow>
+    </HBox>
+    <Button fx:id="btnLogin" layoutX="215.0" layoutY="220.0" mnemonicParsing="false" onAction="#login" prefHeight="30.0"
+            prefWidth="86.0" styleClass="btnGreen" text="Sign In" textFill="WHITE">
+        <font>
+            <Font size="15.0"/>
+        </font>
+        <effect>
+            <DropShadow blurType="ONE_PASS_BOX"/>
+        </effect>
+    </Button>
+</AnchorPane>
+```
+
+`LoginController`
+
+> Kontroler odpowiedzialny za strone logowania
+
+Funkcjonalności:
+- przetrzymywanie potencjalnego emaila i hasła w celu wysłania zapytania do bazy
+- przekierowanie przyciskiem do rejestracji
+- tymczasowo wyświetlanie informacji o zalogowaniu w `TextField email`
+
+```java
+@Controller
+public class LoginController implements Initializable {
+
+    @FXML
+    private Button btnLogin;
+
+    @FXML
+    private PasswordField password;
+
+    @FXML
+    private TextField email;
+
+    @FXML
+    private Label lblLogin;
+
+    private final UserService userService;
+
+    private final StageInitializer stageInitializer;
+
+    @Autowired
+    public LoginController(UserService userService, StageInitializer stageInitializer) {
+        this.userService = userService;
+        this.stageInitializer = stageInitializer;
+    }
+
+    @FXML
+    private void login(ActionEvent event){
+        if (userService.authenticate(getEmail(), getPassword())) {
+            lblLogin.setText("Zalogowano!");
+            var user = userService.findByEmail(getEmail());
+            var isAdmin = user.getRoles().stream().anyMatch(r -> r.getName().equals("admin"));
+            if (isAdmin) {
+                try {
+                    stageInitializer.loadAdminPanelScene();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        } else {
+            lblLogin.setText("Login Failed.");
+        }
+    }
+
+    @FXML
+    private void loadRegisterPage(MouseEvent event) {
+        try {
+            stageInitializer.loadRegistrationScene();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String getPassword() {
+        return password.getText();
+    }
+
+    public String getEmail() {
+        return email.getText();
+    }
+
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        Platform.runLater(() -> lblLogin.requestFocus());
+    }
+}
+
+```
+
+## Admin Panel
+
+`AdminPanel.fxml`
+
+> Interfejs Panelu administratora
+
+```xml
+<AnchorPane stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemaproject.controller.AdminPanelController">
+    <VBox spacing="10">
+        <padding>
+            <Insets top="24" right="24" bottom="24" left="24"/>
+        </padding>
+        <HBox spacing="10">
+            <Label text="Admin Panel" style="-fx-font-size: 24;" />
+            <Button text="Sign out" onAction="#handleSignOut" />
+        </HBox>
+        <VBox spacing="4">
+            <Label text="Users" style="-fx-font-size: 16;" />
+            <ListView fx:id="usersListView" />
+            <HBox spacing="6">
+                <Button text="Edit" fx:id="editButton" onAction="#handleEdit" />
+                <Button text="Delete" fx:id="deleteButton" onAction="#handleDelete" />
+            </HBox>
+        </VBox>
+    </VBox>
+</AnchorPane>
+```
+
+`AdminPanelController`
+
+> Kontroler odpowiedzialny za panel adminsitracyjny
+
+Funkcjonalności:
+- Wykonywanie operacji CRUD na użytkownikach
+- Wyświetlanie listy użytkowników 
+- Nadawanie im ról
+
+```java
+@Controller
+public class AdminPanelController implements Serializable {
+
+    private final UserService userService;
+
+    private final RoleService roleService;
+
+    private final StageInitializer stageInitializer;
+
+    @FXML
+    private ListView<User> usersListView;
+
+    @FXML
+    private Button deleteButton;
+
+    @FXML
+    private Button editButton;
+
+    @FXML
+    private Button signOutButton;
+
+    @Autowired
+    public AdminPanelController(UserService userService, RoleService roleService, StageInitializer stageInitializer) {
+        this.userService = userService;
+        this.roleService = roleService;
+        this.stageInitializer = stageInitializer;
+    }
+
+    @FXML
+    private void initialize() {
+        usersListView.setCellFactory(list -> new ListCell<>() {
+            @Override
+            protected void updateItem(User user, boolean empty) {
+                super.updateItem(user, empty);
+                if (empty || user == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(user.getFirstName() + " " + user.getLastName());
+                }
+            }
+        });
+        loadUsers();
+
+        deleteButton.disableProperty().bind(Bindings.isEmpty(usersListView.getSelectionModel().getSelectedItems()));
+        editButton.disableProperty().bind(Bindings.isEmpty(usersListView.getSelectionModel().getSelectedItems()));
+    }
+
+    @FXML
+    private void handleDelete(ActionEvent event) {
+        var user = usersListView.getSelectionModel().getSelectedItem();
+        userService.deleteUser(user);
+        loadUsers();
+    }
+
+    @FXML
+    private void handleEdit(ActionEvent event) {
+        var newStage = new Stage();
+
+        var loader = new FXMLLoader(getClass().getResource("/fxml/EditUser.fxml"));
+        AnchorPane newRoot = null;
+        try {
+            newRoot = loader.load();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        EditUserController controller = loader.getController();
+        controller.init(usersListView.getSelectionModel().getSelectedItem(),  this::loadUsers, userService, roleService);
+
+        var newScene = new Scene(newRoot);
+        newStage.setTitle("Edit user");
+        newStage.setScene(newScene);
+        newStage.show();
+    }
+
+    @FXML
+    private void handleSignOut(ActionEvent event) {
+        try {
+            stageInitializer.loadLoginScene();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void loadUsers() {
+        usersListView.setItems(FXCollections.observableList(userService.getUsers()));
+    }
+}
+
+```
+
+```java
+@Controller
+public class EditUserController implements Serializable {
+
+    @FXML
+    private TextField firstNameField;
+
+    @FXML
+    private TextField lastNameField;
+
+    @FXML
+    private TextField emailField;
+
+    @FXML
+    private PasswordField passwordField;
+
+    @FXML
+    private ListView<Role> assignedRolesListView;
+
+    @FXML
+    private ListView<Role> availableRolesListView;
+
+    @FXML
+    private Button addRoleButton;
+
+    @FXML
+    private Button removeRoleButton;
+
+    private UserService userService;
+
+    private RoleService roleService;
+
+    private User user;
+
+    private Runnable afterSave;
+
+    public EditUserController() {}
+
+    @FXML
+    private void initialize() {
+        addRoleButton.disableProperty().bind(Bindings.isEmpty(availableRolesListView.getSelectionModel().getSelectedItems()));
+        removeRoleButton.disableProperty().bind(Bindings.isEmpty(assignedRolesListView.getSelectionModel().getSelectedItems()));
+    }
+
+    public void init(User user, Runnable afterSave, UserService userService, RoleService roleService) {
+        this.user = user;
+        firstNameField.setText(user.getFirstName());
+        lastNameField.setText(user.getLastName());
+        emailField.setText(user.getEmail());
+
+        Callback<ListView<Role>, ListCell<Role>> cellFactory = list -> new ListCell<>() {
+            @Override
+            protected void updateItem(Role role, boolean empty) {
+                super.updateItem(role, empty);
+                if (empty || role == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(role.getName());
+                }
+            }
+        };
+
+        assignedRolesListView.setCellFactory(cellFactory);
+        assignedRolesListView.setItems(FXCollections.observableArrayList(user.getRoles().stream().toList()));
+
+        availableRolesListView.setCellFactory(cellFactory);
+        var availableRoles = roleService
+                .getAllRoles()
+                .stream()
+                .filter(role -> user.getRoles().stream().noneMatch(userRole -> userRole.getId().equals(role.getId())))
+                .toList();
+        availableRolesListView.setItems(FXCollections.observableArrayList(availableRoles));
+
+        this.afterSave = afterSave;
+        this.userService = userService;
+        this.roleService = roleService;
+    }
+
+    @FXML
+    private void handleSave(ActionEvent event) {
+        var newPassword = !passwordField.getText().isEmpty() ? passwordField.getText() : null;
+        var oldUserDto = new UserService.UserDto( user.getEmail(), user.getFirstName(), user.getLastName(), user.getPassword());
+        var newUserDto= new UserService.UserDto(emailField.getText(), firstNameField.getText(), lastNameField.getText(),  newPassword);
+        userService.editUser(oldUserDto, newUserDto);
+
+        refreshUser(newUserDto.email());
+
+        roleService.updateRoles(user, new HashSet<>(assignedRolesListView.getItems()));
+
+        afterSave.run();
+
+        Stage stage = (Stage)((javafx.scene.Node) event.getSource()).getScene().getWindow();
+        stage.close();
+    }
+
+    private void refreshUser(String email) {
+        this.user = userService.findByEmail(email);
+    }
+
+    @FXML
+    private void handleCancel(ActionEvent event) {
+        Stage stage = (Stage)((javafx.scene.Node) event.getSource()).getScene().getWindow();
+        stage.close();
+    }
+
+    @FXML
+    private void handleAddRole(ActionEvent event) {
+        var selectedRoles = availableRolesListView.getSelectionModel().getSelectedItems();
+        assignedRolesListView.getItems().addAll(selectedRoles);
+        availableRolesListView.getItems().removeAll(selectedRoles);
+    }
+
+    @FXML
+    private void handleRemoveRole(ActionEvent event) {
+        var selectedRoles = assignedRolesListView.getSelectionModel().getSelectedItems();
+        availableRolesListView.getItems().addAll(selectedRoles);
+        assignedRolesListView.getItems().removeAll(selectedRoles);
+    }
+}
+```
+
+
+
 # Aplikacja
 
+Repozytorium obecnie jeszcze zawiera klase UI, która będzie podstawą do przyszłej
+'strony głównej' 
+
+Dodatkowo zawarta jest klasa `javafxApplication` jest to podstawa interfejsu GUI
+javafx. Spring po uruchomieniu odwołuje się do metod w tej klasie żeby wszystko
+dobrze ssetupować
 
 # Dodatki
 

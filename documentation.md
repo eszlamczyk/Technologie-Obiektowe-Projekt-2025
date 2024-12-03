@@ -92,20 +92,6 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 }
 ```
 
-
-## Crypto
-
-*jakiś tam opis całej sekcji*
-
-#### Model bazodanowy
-
-#### Klasy pomocnicze
-
-#### Warstwa serwisowa
-
-#### Warstwa repozytorium
-
-
 ## Movie
 
 Tabela *movies* przechowuje filmy jakie oferuje kino.
@@ -1289,3 +1275,75 @@ public class RegistrationController implements Initializable {
 ```
 
 # Aplikacja
+
+
+# Dodatki
+
+## Moduł kryptograficzny - krypto
+
+Moduł zawiera obecnie jedną klase: *PasswordHasher*
+
+PasswordHasher to komponent Springa odpowiedzialny za haszowanie haseł z 
+wykorzystaniem algorytmu ``SHA-256``. W procesie haszowania dodawany jest 
+"pepper" – stała wartość dodana na końcu każdego hasła, która zwiększa
+bezpieczeństwo generowanego skrótu i znacząco zmniejsza szanse trafienia
+poprzez atak tęczowymi tablicami.
+
+### API
+
+kompotent ten zawiera metode `hashPassword(String password): String`
+
+jest ona odpowiedzialna za generowanie hashu hasła
+
+#### Parametry
+`password` - hasło użytkownika w postaci czystego tekstu.
+
+#### Zwracana wartość
+Zwraca zahashowane hasło w postaci ciągu znaków w formacie heksadecymalnym - jako string odpowiedni
+do wstawienia prosto do bazy danych
+
+
+#### Uwagi
+
+Wartość `PEPPER` jest zakodowana bezpośrednio w aplikacji. W przypadku wycieku kodu
+źródłowego lub jego dekompilacji może zostać odczytana. W praktyce zazwyczaj taka zmienna jest
+trzymana w bezpiecznym osobnym pliku, które potrzebuje hasła do odczytu lub w bezpiecznym
+magazynie tajemnic.
+
+W procesie hashowania nie jest używana sól, co osłabia silnośc hasha, lecz podczas pisania
+funkcji skrótu model bazy danych był już stworzony i nie chcieliśmy dodawać pola, który
+nie ma zastosowania w naszym przypadku. Mimo tego dalej uważam, że warto o tym wspomieć.
+
+```java
+
+@Component
+public class PasswordHasher {
+
+    private final String PEPPER = "THE MOST SECURE PEEPER EVER!!!!1!1!1!!";
+
+    public String hashPassword(String password) {
+        try {
+            String pepperedPassword = password + PEPPER;
+
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+
+            byte[] hashBytes = md.digest(pepperedPassword.getBytes());
+
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hashBytes) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+
+                hexString.append(hex);
+            }
+
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Error: Hashing algorithm not found.", e);
+        }
+    }
+
+}
+```

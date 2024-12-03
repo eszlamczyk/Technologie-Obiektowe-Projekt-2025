@@ -9,7 +9,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
-import javafx.stage.Stage;
 import monaditto.cinemaproject.StageInitializer;
 import monaditto.cinemaproject.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +46,7 @@ public class LoginController implements Initializable {
     @FXML
     private void login(ActionEvent event){
         if (userService.authenticate(getEmail(), getPassword())) {
-            lblLogin.setText("Login GUT");
+            lblLogin.setText("Zalogowano!");
             var user = userService.findByEmail(getEmail());
             var isAdmin = user.getRoles().stream().anyMatch(r -> r.getName().equals("admin"));
             if (isAdmin) {

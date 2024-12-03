@@ -14,6 +14,7 @@ public class Screening {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "screening_id")
     private Long id;
 
     @ManyToOne

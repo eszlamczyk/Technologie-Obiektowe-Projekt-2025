@@ -1186,6 +1186,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 > interfejs okna rejestracji
 
+![](img/ui/registration.png)
+
 ```xml
 <AnchorPane stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemaproject.controller.RegistrationController">
@@ -1289,6 +1291,7 @@ public class RegistrationController implements Initializable {
 
 > Interfejs okna logowania
 
+![](img/ui/login.png)
 
 ```xml
 <AnchorPane stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
@@ -1409,6 +1412,8 @@ public class LoginController implements Initializable {
 
 > Interfejs Panelu administratora
 
+![](img/ui/admin-panel.png)
+![](img/ui/edit-user.png)
 ```xml
 <AnchorPane stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemaproject.controller.AdminPanelController">
@@ -1663,11 +1668,190 @@ public class EditUserController implements Serializable {
 Repozytorium obecnie jeszcze zawiera klase UI, która będzie podstawą do przyszłej
 'strony głównej' 
 
-Dodatkowo zawarta jest klasa `javafxApplication` jest to podstawa interfejsu GUI
+Dodatkowo zawarta jest klasa `JavafxApplication` jest to podstawa interfejsu GUI
 javafx. Spring po uruchomieniu odwołuje się do metod w tej klasie żeby wszystko
-dobrze ssetupować
+dobrze zsetupować
+```java
+public class JavafxApplication extends Application {
 
+    protected ConfigurableApplicationContext springContext;
+
+    @Override
+    public void init(){
+        springContext = new SpringApplicationBuilder(CinemaProjectApplication.class).run();
+    }
+    
+    @Override
+    public void start(Stage stage){
+        springContext.publishEvent(new StageReadyEvent(stage));
+    }
+
+    @Override
+    public void stop(){
+        springContext.close();
+        Platform.exit();
+    }
+
+    public static class StageReadyEvent extends ApplicationEvent {
+        public StageReadyEvent(Stage stage) {
+            super(stage);
+        }
+
+        public Stage getStage() {
+            return (Stage) getSource();
+        }
+    }
+}
+```
+
+Klasa `StageInitializer` odpowiada za inicjalizację głównej sceny JavaFX (Stage) po odebraniu zdarzenia `StageReadyEvent`. Umożliwia dynamiczne przełączanie widoków aplikacji, takich jak logowanie, rejestracja czy panel administracyjny, korzystając z plików FXML. Wykorzystuje kontekst Springa do tworzenia kontrolerów widoków i ustawiania sceny z odpowiednim tytułem i rozmiarem.
+```java
+@Component
+public class StageInitializer implements ApplicationListener<StageReadyEvent> {
+    private final Resource loginFxml;
+
+    private final Resource registrationFxml;
+
+    private final Resource adminPanelFxml;
+
+    private final String applicationTitle;
+
+    private final ApplicationContext applicationContext;
+
+    private Stage stage;
+
+    public StageInitializer(@Value("classpath:/fxml/Login.fxml") Resource loginFxml,
+                            @Value("classpath:/fxml/Registration.fxml") Resource registrationFxml,
+                            @Value("classpath:/fxml/AdminPanel.fxml") Resource adminPanelFxml,
+                            @Value("${spring.application.ui.title}") String applicationTitle,
+                            ApplicationContext applicationContext) {
+        this.loginFxml = loginFxml;
+        this.registrationFxml = registrationFxml;
+        this.adminPanelFxml = adminPanelFxml;
+        this.applicationTitle = applicationTitle;
+        this.applicationContext = applicationContext;
+        this.stage = null;
+    }
+
+    public Stage getStage() {
+        return this.stage;
+    }
+
+    @Override
+    public void onApplicationEvent(StageReadyEvent event) {
+        try{
+            this.stage = event.getStage();
+            loadLoginScene();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void loadLoginScene() throws IOException {
+        loadScene(this.loginFxml);
+    }
+
+    public void loadRegistrationScene() throws IOException {
+        loadScene(this.registrationFxml);
+    }
+
+    public void loadAdminPanelScene() throws IOException {
+        loadScene(this.adminPanelFxml);
+    }
+
+    private void loadScene(Resource fxml) throws IOException {
+        URL url = fxml.getURL();
+        FXMLLoader loader = new FXMLLoader(url);
+        loader.setControllerFactory(applicationContext::getBean);
+        Parent root = loader.load();
+        Scene scene = new Scene(root);
+        this.stage.setScene(scene);
+        this.stage.setTitle(this.applicationTitle);
+        this.stage.sizeToScene();
+        this.stage.show();
+    }
+}
+```
 # Dodatki
+## Automatyczne wypełnianie bazy danych
+Klasa `AppConfiguration` wypełnia bazę danych przykładowymi danymi przy pierwszym uruchomieniu aplikacji.
+```java
+@Configuration
+public class AppConfiguration {
+
+    @Bean
+    CommandLineRunner initData(UserService userService, RoleService roleService, PasswordHasher passwordHasher){
+        return args -> {
+            if (userService.getUsers().isEmpty()) {
+                Role admin = roleService.createRole("admin");
+                Role user = roleService.createRole("user");
+
+
+
+
+                User administrator = new User("admin", "admin", "admin@admin.admin",
+                        passwordHasher.hashPassword("admin"));
+
+                List<User> users = new ArrayList<>();
+
+                users.add(new User("Janusz", "Nowak", "janusz.nowak@gmail.com",
+                        passwordHasher.hashPassword("KochamŻone.")));
+                users.add(new User("Anna", "Kowalska", "anna.kowalska@gmail.com",
+                        passwordHasher.hashPassword("Mocna@123")));
+                users.add(new User("Piotr", "Wiśniewski", "piotr.wisniewski@gmail.com",
+                        passwordHasher.hashPassword("Hejka$456")));
+                users.add(new User("Ewa", "Zielińska", "ewa.zielinska@gmail.com",
+                        passwordHasher.hashPassword("EwaZ1234!")));
+                users.add(new User("Tomasz", "Kamiński", "tomasz.kaminski@gmail.com",
+                        passwordHasher.hashPassword("Tommy#789")));
+                users.add(new User("Magda", "Lewandowska", "magda.lewandowska@gmail.com",
+                        passwordHasher.hashPassword("Magda&654")));
+                users.add(new User("Robert", "Nowicki", "robert.nowicki@gmail.com",
+                        passwordHasher.hashPassword("Nowicki!321")));
+                users.add(new User("Karolina", "Mazur", "karolina.mazur@gmail.com",
+                        passwordHasher.hashPassword("Mazur@987")));
+                users.add(new User("Paweł", "Wojciechowski", "pawel.wojciechowski@gmail.com",
+                        passwordHasher.hashPassword("Paweł^4567")));
+                users.add(new User("Marta", "Pawlak", "marta.pawlak@gmail.com",
+                        passwordHasher.hashPassword("Marta+891")));
+
+                users.add(new User("Janusz", "Nowak", "1janusz.nowak@gmail.com",
+                        passwordHasher.hashPassword("KochamŻone.")));
+                users.add(new User("Anna", "Kowalska", "1anna.kowalska@gmail.com",
+                        passwordHasher.hashPassword("Mocna@123")));
+                users.add(new User("Piotr", "Wiśniewski", "1piotr.wisniewski@gmail.com",
+                        passwordHasher.hashPassword("Hejka$456")));
+                users.add(new User("Ewa", "Zielińska", "1ewa.zielinska@gmail.com",
+                        passwordHasher.hashPassword("EwaZ1234!")));
+                users.add(new User("Tomasz", "Kamiński", "1tomasz.kaminski@gmail.com",
+                        passwordHasher.hashPassword("Tommy#789")));
+                users.add(new User("Magda", "Lewandowska", "1magda.lewandowska@gmail.com",
+                        passwordHasher.hashPassword("Magda&654")));
+                users.add(new User("Robert", "Nowicki", "1robert.nowicki@gmail.com",
+                        passwordHasher.hashPassword("Nowicki!321")));
+                users.add(new User("Karolina", "Mazur", "1karolina.mazur@gmail.com",
+                        passwordHasher.hashPassword("Mazur@987")));
+                users.add(new User("Paweł", "Wojciechowski", "1pawel.wojciechowski@gmail.com",
+                        passwordHasher.hashPassword("Paweł^4567")));
+                users.add(new User("Marta", "Pawlak", "1marta.pawlak@gmail.com",
+                        passwordHasher.hashPassword("Marta+891")));
+
+                userService.save(administrator);
+
+                roleService.addRoleToUser(administrator, user);
+                roleService.addRoleToUser(administrator, admin);
+
+                for (User basic_user : users) {
+                    userService.save(basic_user);
+                    roleService.addRoleToUser(basic_user, user);
+                }
+            }
+        };
+    }
+}
+```
+
+
 
 ## Moduł kryptograficzny - krypto
 

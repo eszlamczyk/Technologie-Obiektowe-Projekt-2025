@@ -1,4 +1,4 @@
-package monaditto.cinemaproject;
+package monaditto.cinemafront;
 
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -7,12 +7,13 @@ import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
-import monaditto.cinemaproject.JavafxApplication.StageReadyEvent;
+import monaditto.cinemafront.JavafxApplication.StageReadyEvent;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.URL;
+
 
 @Component
 public class StageInitializer implements ApplicationListener<StageReadyEvent> {
@@ -77,5 +78,9 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
         this.stage.setTitle(this.applicationTitle);
         this.stage.sizeToScene();
         this.stage.show();
+    }
+
+    public ApplicationContext getContext() {
+        return applicationContext;
     }
 }

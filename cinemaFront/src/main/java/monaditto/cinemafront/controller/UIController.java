@@ -1,4 +1,4 @@
-package monaditto.cinemaproject.controller;
+package monaditto.cinemafront.controller;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;

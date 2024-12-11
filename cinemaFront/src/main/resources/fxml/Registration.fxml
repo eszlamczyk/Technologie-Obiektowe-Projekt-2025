@@ -16,7 +16,7 @@
 
 <?import javafx.scene.layout.VBox?>
 <AnchorPane stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
-            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemaproject.controller.RegistrationController">
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.RegistrationController">
 
     <Rectangle fill="CRIMSON" height="500.0" stroke="#ffffff8b" strokeType="INSIDE" width="600.0"/>
     <VBox layoutX="100" layoutY="100" spacing="20">

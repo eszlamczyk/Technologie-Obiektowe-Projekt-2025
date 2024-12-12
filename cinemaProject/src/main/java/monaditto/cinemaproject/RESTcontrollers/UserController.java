@@ -1,12 +1,12 @@
 package monaditto.cinemaproject.RESTcontrollers;
 
 import monaditto.cinemaproject.role.RoleService;
-import monaditto.cinemaproject.user.User;
+import monaditto.cinemaproject.user.CreateUserStatus;
+import monaditto.cinemaproject.user.UserDto;
 import monaditto.cinemaproject.user.UserService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
@@ -19,30 +19,17 @@ public class UserController {
     }
 
     @PutMapping("/{userId}")
-    public ResponseEntity<Void> updateUser(
+    public ResponseEntity<String> updateUser(
             @PathVariable Long userId,
-            @RequestBody User user
+            @RequestBody UserDto userDto
     ) {
-        Optional<User> optionalUser = userService.findById(userId);
-        if (optionalUser.isEmpty()) {
-            return ResponseEntity.notFound().build();
+
+        CreateUserStatus editStatus = userService.editUser(userId, userDto);
+
+        if (editStatus.equals(CreateUserStatus.SUCCESS)) {
+            return ResponseEntity.ok(editStatus.message());
         }
-        User existingUser = optionalUser.get();
-        UserService.UserDto oldUser = new UserService.UserDto(existingUser.getEmail(), existingUser.getFirstName(),
-                existingUser.getLastName(), existingUser.getPassword());
-        UserService.UserDto userDto = new UserService.UserDto(user.getEmail(),user.getFirstName(),user.getLastName(),user.getPassword());
-        userService.editUser(oldUser, userDto);
-        optionalUser = null;
-
-        optionalUser = userService.findById(userId);
-        if (optionalUser.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        existingUser = optionalUser.get();
-
-        System.out.println(existingUser.getFirstName() +" "+ existingUser.getEmail() +" "+ existingUser.getLastName());
-
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(editStatus.message());
     }
 
 }

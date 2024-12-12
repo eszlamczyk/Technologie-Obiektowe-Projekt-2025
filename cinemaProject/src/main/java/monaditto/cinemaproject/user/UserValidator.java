@@ -1,5 +1,6 @@
 package monaditto.cinemaproject.user;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.mail.internet.AddressException;
@@ -8,8 +9,60 @@ import javax.mail.internet.InternetAddress;
 @Component
 public class UserValidator {
 
+    private final UserRepository userRepository;
+
+    @Autowired
+    public UserValidator(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    public CreateUserStatus validateCreateUserDto(UserDto userDto) {
+        CreateUserStatus missingData = validateAllStrings(userDto);
+        if (missingData != null) return missingData;
+
+        User presentUser = userRepository.findByEmail(userDto.email());
+        if (presentUser != null) {
+            return CreateUserStatus.USER_ALREADY_EXISTS;
+        }
+
+        if (!validateEmail(userDto.email())) {
+            return CreateUserStatus.INVALID_EMAIL;
+        }
+        if (!validatePassword(userDto.password())) {
+            return CreateUserStatus.INVALID_PASSWORD;
+        }
+
+        return CreateUserStatus.SUCCESS;
+    }
+
+    public CreateUserStatus validateEditUserDto(UserDto userDto) {
+
+        CreateUserStatus missingData = validateAllStrings(userDto);
+        if (missingData != null) return missingData;
+
+        if (!validateEmail(userDto.email())) {
+            return CreateUserStatus.INVALID_EMAIL;
+        }
+        if (userDto.password() != null && !validatePassword(userDto.password())) {
+            return CreateUserStatus.INVALID_PASSWORD;
+        }
+
+        return CreateUserStatus.SUCCESS;
+    }
+
+    private CreateUserStatus validateAllStrings(UserDto userDto) {
+        if (!validateString(userDto.firstName())
+                || !validateString(userDto.lastName())
+                || !validateString(userDto.email())
+        ) {
+            return CreateUserStatus.MISSING_DATA;
+        }
+        return null;
+    }
+
     public boolean validatePassword(String password) {
-        if (password.length() < 8) {
+
+        if (!validateString(password) || password.length() < 8) {
             return false;
         }
 

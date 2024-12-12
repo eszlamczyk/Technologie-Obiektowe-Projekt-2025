@@ -3,6 +3,7 @@ package monaditto.cinemafront;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -26,6 +27,8 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
     private final String applicationTitle;
 
     private final ApplicationContext applicationContext;
+
+    private Image icon;
 
     private Stage stage;
 
@@ -69,15 +72,40 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
     }
 
     private void loadScene(Resource fxml) throws IOException {
+        Parent root = getRoot(fxml);
+        Scene scene = new Scene(root);
+
+        loadStageIcon();
+        configureScene(scene);
+        this.stage.show();
+    }
+
+    private Parent getRoot(Resource fxml) throws IOException {
         URL url = fxml.getURL();
         FXMLLoader loader = new FXMLLoader(url);
         loader.setControllerFactory(applicationContext::getBean);
-        Parent root = loader.load();
-        Scene scene = new Scene(root);
+        return loader.load();
+    }
+
+    private void configureScene(Scene scene) {
         this.stage.setScene(scene);
+        this.stage.setMinHeight(500);
+        this.stage.setMinWidth(400);
         this.stage.setTitle(this.applicationTitle);
         this.stage.sizeToScene();
-        this.stage.show();
+    }
+
+    private void loadStageIcon() {
+        if (icon == null) {
+            try {
+                icon = new Image("agh_icon.png");
+                this.stage.getIcons().add(icon);
+            } catch(IllegalArgumentException e) {
+                System.out.println("Cannot load the given icon");
+            }
+        } else {
+            this.stage.getIcons().add(icon);
+        }
     }
 
     public ApplicationContext getContext() {

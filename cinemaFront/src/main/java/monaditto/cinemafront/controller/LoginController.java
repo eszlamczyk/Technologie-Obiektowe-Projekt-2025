@@ -5,12 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.shape.Rectangle;
 import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.config.BackendConfig;
 import monaditto.cinemafront.controller.DTO.AuthResponse;
@@ -20,14 +21,12 @@ import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.ResourceBundle;
 
 @Controller
-public class LoginController implements Initializable {
+public class LoginController {
 
     @FXML
     private Button btnLogin;
@@ -40,6 +39,12 @@ public class LoginController implements Initializable {
 
     @FXML
     private Label lblLogin;
+
+    @FXML
+    private Rectangle backgroundRectangle;
+
+    @FXML
+    private AnchorPane rootPane;
 
     private final StageInitializer stageInitializer;
 
@@ -130,8 +135,10 @@ public class LoginController implements Initializable {
         return email.getText();
     }
 
-    @Override
-    public void initialize(URL url, ResourceBundle resourceBundle) {
+    @FXML
+    public void initialize() {
+        backgroundRectangle.widthProperty().bind(rootPane.widthProperty());
+        backgroundRectangle.heightProperty().bind(rootPane.heightProperty());
         Platform.runLater(() -> lblLogin.requestFocus());
     }
 }

@@ -1,6 +1,7 @@
 package monaditto.cinemaproject.RESTcontrollers;
 
 
+import monaditto.cinemaproject.user.UserDto;
 import monaditto.cinemaproject.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,8 +22,8 @@ public class RegistrationController {
 
 
     @PostMapping
-    public String register(@RequestBody UserService.UserDto userDto){
-        return userService.createUser(userDto).toString();
+    public String register(@RequestBody UserDto userDto){
+        return userService.createUser(userDto).message();
     }
 
 }

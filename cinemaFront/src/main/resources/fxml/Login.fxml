@@ -13,35 +13,41 @@
 <?import javafx.scene.text.Text?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.text.TextFlow?>
-<AnchorPane stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<AnchorPane fx:id="rootPane" stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.LoginController">
     <opaqueInsets>
         <Insets/>
     </opaqueInsets>
-    <Rectangle fill="DODGERBLUE" height="300.0" stroke="#ffffff8b" strokeType="INSIDE" width="400.0"/>
-    <Label fx:id="lblLogin" layoutX="97.0" layoutY="46.0" text="Login" textFill="WHITE">
-        <font>
-            <Font size="20.0"/>
-        </font>
-    </Label>
-    <TextField fx:id="email" layoutX="98.0" layoutY="92.0" prefHeight="36.0" prefWidth="204.0"
-               promptText="Email"/>
-    <PasswordField fx:id="password" layoutX="98.0" layoutY="141.0" onAction="#login" prefHeight="36.0" prefWidth="204.0"
-                   promptText="Password"/>
-    <HBox layoutX="98.0" layoutY="190.0">
-        <Text text="Don't have an account yet? " style="-fx-fill: white;"/>
-        <TextFlow>
-            <Text text="Register now" fx:id="clickableText" onMouseClicked="#loadRegisterPage"
-                  style="-fx-fill: yellow; -fx-underline: true;"/>
-        </TextFlow>
-    </HBox>
-    <Button fx:id="btnLogin" layoutX="215.0" layoutY="220.0" mnemonicParsing="false" onAction="#login" prefHeight="30.0"
-            prefWidth="86.0" styleClass="btnGreen" text="Sign In" textFill="WHITE">
-        <font>
-            <Font size="15.0"/>
-        </font>
-        <effect>
-            <DropShadow blurType="ONE_PASS_BOX"/>
-        </effect>
-    </Button>
+    <StackPane>
+        <Rectangle fx:id="backgroundRectangle" fill="DODGERBLUE" height="300.0" stroke="#ffffff8b" strokeType="INSIDE" width="400.0"/>
+        <VBox alignment="CENTER" spacing="20" style="-fx-padding: 20;">
+            <Label fx:id="lblLogin" text="Login" textFill="WHITE">
+                <font>
+                    <Font size="20.0"/>
+                </font>
+            </Label>
+            <TextField fx:id="email" prefHeight="36.0" prefWidth="200"
+                       promptText="Email" maxWidth="200"/>
+            <PasswordField fx:id="password" onAction="#login" prefHeight="36.0" prefWidth="200"
+                           promptText="Password" maxWidth="200"/>
+            <HBox alignment="CENTER">
+                <Text text="Don't have an account yet? " style="-fx-fill: white;"/>
+                <TextFlow>
+                    <Text text="Register now" fx:id="clickableText" onMouseClicked="#loadRegisterPage"
+                          style="-fx-fill: yellow; -fx-underline: true;"/>
+                </TextFlow>
+            </HBox>
+            <Button fx:id="btnLogin" mnemonicParsing="false" onAction="#login" prefHeight="30.0"
+                    prefWidth="86.0" styleClass="btnGreen" text="Sign In" textFill="WHITE">
+                <font>
+                    <Font size="15.0"/>
+                </font>
+                <effect>
+                    <DropShadow blurType="ONE_PASS_BOX"/>
+                </effect>
+            </Button>
+        </VBox>
+    </StackPane>
 </AnchorPane>

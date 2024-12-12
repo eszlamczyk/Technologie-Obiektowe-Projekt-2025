@@ -7,6 +7,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.Button;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.shape.Rectangle;
 import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.config.BackendConfig;
 import org.springframework.stereotype.Controller;
@@ -21,7 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ResourceBundle;
 
 @Controller
-public class RegistrationController implements Initializable {
+public class RegistrationController {
 
     @FXML
     private TextField emailField;
@@ -40,6 +42,12 @@ public class RegistrationController implements Initializable {
 
     @FXML
     private Button loginPageButton;
+
+    @FXML
+    private Rectangle backgroundRectangle;
+
+    @FXML
+    private AnchorPane rootPane;
 
     @FXML
     private Label statusLabel;
@@ -76,16 +84,7 @@ public class RegistrationController implements Initializable {
         client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(HttpResponse::body)
                 .thenAccept(response -> {
-                    String message = switch (response) {
-                        case "SUCCESS" -> "Successfully registered";
-                        case "USER_ALREADY_EXISTS" -> "User with given email already exists";
-                        case "INVALID_EMAIL" -> "Incorrect email";
-                        case "INVALID_PASSWORD" -> "Incorrect password: use lowercase and uppercase letters, a number, and a special character";
-                        case "MISSING_DATA" -> "Please fill up the data correctly";
-                        case "DATABASE_ERROR" -> "Something went wrong in our database";
-                        default -> "Unknown status";
-                    };
-                    Platform.runLater(() -> statusLabel.setText(message));
+                    Platform.runLater(() -> statusLabel.setText(response));
                 })
                 .exceptionally(e -> {
                     Platform.runLater(() -> statusLabel.setText("Error: " + e.getMessage()));
@@ -103,8 +102,10 @@ public class RegistrationController implements Initializable {
         }
     }
 
-    @Override
-    public void initialize(URL url, ResourceBundle resourceBundle) {
+    @FXML
+    public void initialize() {
+        backgroundRectangle.widthProperty().bind(rootPane.widthProperty());
+        backgroundRectangle.heightProperty().bind(rootPane.heightProperty());
         Platform.runLater(() -> statusLabel.requestFocus());
     }
 }

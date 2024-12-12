@@ -14,6 +14,7 @@ import javafx.util.Callback;
 import monaditto.cinemafront.config.BackendConfig;
 import monaditto.cinemafront.databaseMapping.Role;
 import monaditto.cinemafront.databaseMapping.User;
+import monaditto.cinemafront.databaseMapping.UserDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -44,6 +45,9 @@ public class EditUserController {
 
     @FXML
     private ListView<Role> availableRolesListView;
+
+    @FXML
+    private Label statusLabel;
 
     @FXML
     private Button addRoleButton;
@@ -143,18 +147,24 @@ public class EditUserController {
         HttpClient client = HttpClient.newHttpClient();
 
         // Serialize user details
-        String newPassword = !passwordField.getText().isEmpty() ? passwordField.getText() : user.getPassword();
-        User updatedUser = new User(user.getId(), firstNameField.getText(), lastNameField.getText(), emailField.getText(), newPassword);
-        String userJson = serializeUser(updatedUser);
+        String newPassword = !passwordField.getText().isEmpty() ? passwordField.getText() : null;
+        UserDto updatedUser = new UserDto(emailField.getText(), firstNameField.getText(), lastNameField.getText(), newPassword);
+        String userDtoJson = serializeUserDto(updatedUser);
 
         HttpRequest userUpdateRequest = HttpRequest.newBuilder()
                 .uri(URI.create(backendConfig.getBaseUrl() + "/api/users/" + user.getId()))
-                .PUT(HttpRequest.BodyPublishers.ofString(userJson))
+                .PUT(HttpRequest.BodyPublishers.ofString(userDtoJson))
                 .header("Content-Type", "application/json")
                 .build();
 
-        client.sendAsync(userUpdateRequest, HttpResponse.BodyHandlers.discarding())
-                .thenRun(() -> {
+        client.sendAsync(userUpdateRequest, HttpResponse.BodyHandlers.ofString())
+                .thenAccept((response) -> {
+                    Platform.runLater(() -> statusLabel.setText(response.body()));
+                    int statusCode = response.statusCode();
+                    if (statusCode != 200) {
+                        throw new RuntimeException(response.body());
+                    }
+
                     List<Long> roleIds = assignedRolesListView.getItems().stream()
                             .map(Role::getId)
                             .collect(Collectors.toList());
@@ -215,10 +225,10 @@ public class EditUserController {
         }
     }
 
-    private String serializeUser(User user) {
+    private String serializeUserDto(UserDto userDto) {
         try {
-            System.out.println(objectMapper.writeValueAsString(user));
-            return objectMapper.writeValueAsString(user);
+            System.out.println(objectMapper.writeValueAsString(userDto));
+            return objectMapper.writeValueAsString(userDto);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Error serializing user to JSON", e);
         }

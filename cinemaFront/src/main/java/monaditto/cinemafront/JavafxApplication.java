@@ -1,4 +1,4 @@
-package monaditto.cinemaproject;
+package monaditto.cinemafront;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -13,7 +13,7 @@ public class JavafxApplication extends Application {
 
     @Override
     public void init(){
-        springContext = new SpringApplicationBuilder(CinemaProjectApplication.class).run();
+        springContext = new SpringApplicationBuilder(CinemaFrontApplication.class).run();
     }
     
     @Override

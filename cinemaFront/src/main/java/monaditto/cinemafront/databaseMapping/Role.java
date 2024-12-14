@@ -1,28 +1,15 @@
-package monaditto.cinemaproject.role;
+package monaditto.cinemafront.databaseMapping;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
-import monaditto.cinemaproject.user.User;
 
 import java.util.HashSet;
 import java.util.Set;
 
-@Entity
-@Table(name = Role.TABLE_NAME)
 public class Role {
 
-    public static final String TABLE_NAME = "roles";
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "role_id")
     private Long id;
 
-    @Column(nullable = false)
     private String name;
 
-    @JsonIgnore
-    @ManyToMany(mappedBy = "roles")
     private Set<User> users = new HashSet<>();
 
     public Role() {}
@@ -31,8 +18,17 @@ public class Role {
         this.name = name;
     }
 
+    public Role(Long id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
     public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getName() {

@@ -8,7 +8,7 @@
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.ListView?>
 <AnchorPane stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
-            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemaproject.controller.EditUserController">
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.EditUserController">
     <VBox spacing="10">
         <padding>
             <Insets top="24" right="24" bottom="24" left="24"/>
@@ -19,7 +19,7 @@
             <TextField fx:id="lastNameField" promptText="Last name"  />
             <TextField fx:id="emailField" promptText="Email" />
             <PasswordField fx:id="passwordField" promptText="Password" />
-            <VBox>
+            <VBox prefHeight="300">
                 <HBox>
                     <VBox>
                         <Label text="Assigned roles" style="-fx-font-size: 16;" />
@@ -35,7 +35,9 @@
                     <Button fx:id="removeRoleButton" onAction="#handleRemoveRole" text="Remove role" />
                 </HBox>
             </VBox>
-            <VBox prefHeight="20" />
+            <VBox prefHeight="80" style="-fx-padding: 15" alignment="CENTER">
+                <Label fx:id="statusLabel" maxWidth="400" wrapText="true" textAlignment="CENTER"/>
+            </VBox>
             <HBox spacing="6" alignment="CENTER_RIGHT">
                 <Button onAction="#handleCancel" text="Cancel" />
                 <Button onAction="#handleSave" text="Save" />

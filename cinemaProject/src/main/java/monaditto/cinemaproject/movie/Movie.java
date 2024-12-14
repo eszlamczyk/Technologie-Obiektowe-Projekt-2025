@@ -1,5 +1,6 @@
 package monaditto.cinemaproject.movie;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import monaditto.cinemaproject.category.Category;
 import monaditto.cinemaproject.opinion.Opinion;
@@ -29,6 +30,7 @@ public class Movie {
     private int duration;
 
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL)
+    @JsonIgnore
     private Set<Screening> screenings = new HashSet<>();
 
     @ManyToMany

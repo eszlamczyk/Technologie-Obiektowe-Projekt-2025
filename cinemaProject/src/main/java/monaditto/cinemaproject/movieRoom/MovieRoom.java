@@ -1,5 +1,6 @@
 package monaditto.cinemaproject.movieRoom;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import monaditto.cinemaproject.screening.Screening;
 
@@ -24,6 +25,7 @@ public class MovieRoom {
     private int maxSeats;
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
+    @JsonIgnore
     private Set<Screening> screenings = new HashSet<>();
 
     public MovieRoom() {}

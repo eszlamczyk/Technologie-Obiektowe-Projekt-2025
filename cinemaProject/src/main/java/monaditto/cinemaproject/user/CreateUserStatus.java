@@ -1,6 +1,9 @@
 package monaditto.cinemaproject.user;
 
-public enum CreateUserStatus {
+import monaditto.cinemaproject.status.Status;
+
+public enum CreateUserStatus implements Status {
+
     SUCCESS,
     USER_ALREADY_EXISTS,
     INVALID_EMAIL,
@@ -8,6 +11,7 @@ public enum CreateUserStatus {
     MISSING_DATA,
     DATABASE_ERROR;
 
+    @Override
     public String message() {
         return switch(this) {
             case SUCCESS -> "Successfully registered";
@@ -18,5 +22,10 @@ public enum CreateUserStatus {
             case MISSING_DATA -> "Please fill up the data correctly";
             case DATABASE_ERROR -> "Something went wrong in our database";
         };
+    }
+
+    @Override
+    public boolean isSuccess() {
+        return this.equals(SUCCESS);
     }
 }

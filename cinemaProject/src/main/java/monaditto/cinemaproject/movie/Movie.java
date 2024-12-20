@@ -29,6 +29,9 @@ public class Movie {
     @Column(nullable = false)
     private int duration;
 
+    @Column(nullable = false)
+    private String posterUrl;
+
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL)
     @JsonIgnore
     private Set<Screening> screenings = new HashSet<>();
@@ -46,10 +49,11 @@ public class Movie {
 
     public Movie() {}
 
-    public Movie(String title, String description, int duration) {
+    public Movie(String title, String description, int duration, String posterUrl) {
         this.title = title;
         this.description = description;
         this.duration = duration;
+        this.posterUrl = posterUrl;
     }
 
     public Long getId() {

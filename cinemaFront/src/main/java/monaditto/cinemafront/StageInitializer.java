@@ -83,7 +83,7 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
                 icon = new Image("agh_icon.png");
                 this.stage.getIcons().add(icon);
             } catch(IllegalArgumentException e) {
-                System.out.println("Cannot load the given icon");
+                System.err.println("Error loading stage: Cannot load the given icon");
             }
         } else {
             this.stage.getIcons().add(icon);

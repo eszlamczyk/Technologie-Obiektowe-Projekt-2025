@@ -18,7 +18,7 @@ import javafx.stage.Stage;
 import monaditto.cinemafront.controller.ControllerResource;
 import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.config.BackendConfig;
-import monaditto.cinemafront.databaseMapping.User;
+import monaditto.cinemafront.databaseMapping.UserDto;
 import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
@@ -37,16 +37,13 @@ public class AdminUsersController {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @FXML
-    private ListView<User> usersListView;
+    private ListView<UserDto> usersListView;
 
     @FXML
     private Button deleteButton;
 
     @FXML
     private Button editButton;
-
-    @FXML
-    private Button signOutButton;
 
     public AdminUsersController(StageInitializer stageInitializer, BackendConfig backendConfig) {
         this.stageInitializer = stageInitializer;
@@ -57,13 +54,13 @@ public class AdminUsersController {
     private void initialize() {
         usersListView.setCellFactory(list -> new ListCell<>() {
             @Override
-            protected void updateItem(User user, boolean empty) {
-                super.updateItem(user, empty);
-                if (empty || user == null) {
+            protected void updateItem(UserDto userDto, boolean empty) {
+                super.updateItem(userDto, empty);
+                if (empty || userDto == null) {
                     setText(null);
                     setGraphic(null);
                 } else {
-                    setText(user.getFirstName() + " " + user.getLastName());
+                    setText(userDto.firstName() + " " + userDto.lastName());
                 }
             }
         });
@@ -75,11 +72,11 @@ public class AdminUsersController {
 
     @FXML
     private void handleDelete(ActionEvent event) {
-        var user = usersListView.getSelectionModel().getSelectedItem();
-        if (user != null) {
+        UserDto userDto = usersListView.getSelectionModel().getSelectedItem();
+        if (userDto != null) {
             HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(backendConfig.getBaseUrl() + "/api/admin-panel/users/" + user.getId()))
+                    .uri(URI.create(backendConfig.getBaseUrl() + "/api/admin-panel/users/" + userDto.id()))
                     .DELETE()
                     .build();
 
@@ -133,9 +130,9 @@ public class AdminUsersController {
         client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(HttpResponse::body)
                 .thenApply(this::parseUsers)
-                .thenAccept(users -> {
-                    if (users != null) {
-                        Platform.runLater(() -> usersListView.setItems(FXCollections.observableList(users)));
+                .thenAccept(usersDto -> {
+                    if (usersDto != null) {
+                        Platform.runLater(() -> usersListView.setItems(FXCollections.observableList(usersDto)));
                     }
                 })
                 .exceptionally(e -> {
@@ -144,7 +141,7 @@ public class AdminUsersController {
                 });
     }
 
-    private List<User> parseUsers(String responseBody) {
+    private List<UserDto> parseUsers(String responseBody) {
         try {
             return objectMapper.readValue(responseBody, new TypeReference<>() {});
         } catch (JsonProcessingException e) {

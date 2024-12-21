@@ -29,8 +29,9 @@ public class UserService {
         this.userValidator = userValidator;
     }
 
-    public User findByEmail(String email){
-        return userRepository.findByEmail(email);
+    public Optional<UserDto> findByEmail(String email){
+        return userRepository.findByEmail(email)
+                .map(UserDto::userToUserDto);
     }
 
     public User save(User entity){
@@ -38,17 +39,19 @@ public class UserService {
     }
 
     public boolean authenticate(String email, String password){
-        User user = this.findByEmail(email);
-        if (user == null){
+        Optional<User> user = userRepository.findByEmail(email);
+        if (user.isEmpty()){
             return false;
         }else{
             String hashedPassword = passwordHasher.hashPassword(password);
-            return hashedPassword.equals(user.getPassword());
+            return hashedPassword.equals(user.get().getPassword());
         }
     }
 
-    public List<User> getUsers() {
-        return userRepository.findAll();
+    public List<UserDto> getUsers() {
+        return userRepository.findAll().stream()
+                .map(UserDto::userToUserDto)
+                .toList();
     }
 
     public CreateUserStatus editUser(Long id, UserDto userDto) {
@@ -104,8 +107,14 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
-    public Optional<User> findById(Long userId) {
-        return userRepository.findById(userId);
-    }
+    public Optional<UserDto> findById(Long userId) {
+        Optional<User> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isEmpty()) {
+            return Optional.empty();
+        }
+        User user = optionalUser.get();
 
+        UserDto userDto = UserDto.userToUserDto(user);
+        return Optional.of(userDto);
+    }
 }

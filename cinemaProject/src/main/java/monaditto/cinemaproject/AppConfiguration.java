@@ -4,6 +4,7 @@ import monaditto.cinemaproject.category.Category;
 import monaditto.cinemaproject.category.CategoryService;
 import monaditto.cinemaproject.crypto.PasswordHasher;
 import monaditto.cinemaproject.role.Role;
+import monaditto.cinemaproject.role.RoleRepository;
 import monaditto.cinemaproject.role.RoleService;
 import monaditto.cinemaproject.user.User;
 import monaditto.cinemaproject.user.UserService;
@@ -18,20 +19,27 @@ import java.util.List;
 public class AppConfiguration {
 
     @Bean
-    CommandLineRunner initData(UserService userService, RoleService roleService, PasswordHasher passwordHasher, CategoryService categoryService) {
+    CommandLineRunner initData(
+            UserService userService,
+            RoleService roleService,
+            RoleRepository roleRepository,
+            PasswordHasher passwordHasher,
+            CategoryService categoryService) {
         return args -> {
-            initUsers(userService, roleService, passwordHasher);
+            initUsers(userService, roleService, roleRepository, passwordHasher);
             initCategories(categoryService);
         };
     }
 
-    private static void initUsers(UserService userService, RoleService roleService, PasswordHasher passwordHasher) {
+    private static void initUsers(
+            UserService userService,
+            RoleService roleService,
+            RoleRepository roleRepository,
+            PasswordHasher passwordHasher) {
+
         if (userService.getUsers().isEmpty()) {
-            Role admin = roleService.createRole("admin");
-            Role user = roleService.createRole("user");
-
-
-
+            Role admin = new Role("admin");
+            Role user = new Role("user");
 
             User administrator = new User("admin", "admin", "admin@admin.admin",
                     passwordHasher.hashPassword("admin"));
@@ -82,13 +90,17 @@ public class AppConfiguration {
 
             userService.save(administrator);
 
-            roleService.addRoleToUser(administrator, user);
-            roleService.addRoleToUser(administrator, admin);
+            roleRepository.save(admin);
+            roleRepository.save(user);
 
             for (User basic_user : users) {
                 userService.save(basic_user);
-                roleService.addRoleToUser(basic_user, user);
+                roleService.addRoleToUser(basic_user.getId(), user.getId());
             }
+
+            roleService.addRoleToUser(administrator.getId(), user.getId());
+            roleService.addRoleToUser(administrator.getId(), admin.getId());
+
         }
     }
 

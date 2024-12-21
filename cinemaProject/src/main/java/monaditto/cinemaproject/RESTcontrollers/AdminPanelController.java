@@ -1,5 +1,6 @@
 package monaditto.cinemaproject.RESTcontrollers;
 
+import monaditto.cinemaproject.user.UserDto;
 import monaditto.cinemaproject.user.UserService;
 import monaditto.cinemaproject.user.User;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +18,7 @@ public class AdminPanelController {
     }
 
     @GetMapping("/users")
-    public List<User> getAllUsers() {
+    public List<UserDto> getAllUsers() {
         return userService.getUsers();
     }
 

@@ -68,6 +68,14 @@ public class Movie {
         this.title = title;
     }
 
+    public String getPosterUrl() {
+        return posterUrl;
+    }
+
+    public void setPosterUrl(String posterUrl) {
+        this.posterUrl = posterUrl;
+    }
+
     public String getDescription() {
         return description;
     }

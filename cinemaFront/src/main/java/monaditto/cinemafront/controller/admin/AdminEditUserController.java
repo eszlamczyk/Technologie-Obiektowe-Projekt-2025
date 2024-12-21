@@ -12,8 +12,7 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import monaditto.cinemafront.config.BackendConfig;
-import monaditto.cinemafront.databaseMapping.Role;
-import monaditto.cinemafront.databaseMapping.User;
+import monaditto.cinemafront.databaseMapping.RoleDto;
 import monaditto.cinemafront.databaseMapping.UserDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -41,10 +40,10 @@ public class AdminEditUserController {
     private PasswordField passwordField;
 
     @FXML
-    private ListView<Role> assignedRolesListView;
+    private ListView<RoleDto> assignedRolesListView;
 
     @FXML
-    private ListView<Role> availableRolesListView;
+    private ListView<RoleDto> availableRolesListView;
 
     @FXML
     private Label statusLabel;
@@ -58,7 +57,7 @@ public class AdminEditUserController {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private BackendConfig backendConfig;
-    private User user;
+    private UserDto userDto;
     private Runnable afterSave;
 
     @Autowired
@@ -80,27 +79,27 @@ public class AdminEditUserController {
         removeRoleButton.disableProperty().bind(Bindings.isEmpty(assignedRolesListView.getSelectionModel().getSelectedItems()));
     }
 
-    public void init(User user, Runnable afterSave) {
-        this.user = user;
+    public void init(UserDto userDto, Runnable afterSave) {
+        this.userDto = userDto;
         this.afterSave = afterSave;
 
-        firstNameField.setText(user.getFirstName());
-        lastNameField.setText(user.getLastName());
-        emailField.setText(user.getEmail());
+        firstNameField.setText(userDto.firstName());
+        lastNameField.setText(userDto.lastName());
+        emailField.setText(userDto.email());
 
         loadRoles();
     }
 
     private void loadRoles() {
-        Callback<ListView<Role>, ListCell<Role>> cellFactory = list -> new ListCell<>() {
+        Callback<ListView<RoleDto>, ListCell<RoleDto>> cellFactory = list -> new ListCell<>() {
             @Override
-            protected void updateItem(Role role, boolean empty) {
-                super.updateItem(role, empty);
-                if (empty || role == null) {
+            protected void updateItem(RoleDto roleDto, boolean empty) {
+                super.updateItem(roleDto, empty);
+                if (empty || roleDto == null) {
                     setText(null);
                     setGraphic(null);
                 } else {
-                    setText(role.getName());
+                    setText(roleDto.name());
                 }
             }
         };
@@ -113,7 +112,7 @@ public class AdminEditUserController {
 
         // Fetch assigned roles
         HttpRequest assignedRequest = HttpRequest.newBuilder()
-                .uri(URI.create(backendConfig.getBaseUrl() + "/api/roles/assigned/" + user.getId()))
+                .uri(URI.create(backendConfig.getBaseUrl() + "/api/roles/assigned/" + userDto.id()))
                 .GET()
                 .build();
 
@@ -128,7 +127,7 @@ public class AdminEditUserController {
 
         // Fetch available roles
         HttpRequest availableRequest = HttpRequest.newBuilder()
-                .uri(URI.create(backendConfig.getBaseUrl() + "/api/roles/available/" + user.getId()))
+                .uri(URI.create(backendConfig.getBaseUrl() + "/api/roles/available/" + userDto.id()))
                 .GET()
                 .build();
 
@@ -148,11 +147,11 @@ public class AdminEditUserController {
 
         // Serialize user details
         String newPassword = !passwordField.getText().isEmpty() ? passwordField.getText() : null;
-        UserDto updatedUser = new UserDto(emailField.getText(), firstNameField.getText(), lastNameField.getText(), newPassword);
+        UserDto updatedUser = new UserDto(userDto.id(), emailField.getText(), firstNameField.getText(), lastNameField.getText(), newPassword);
         String userDtoJson = serializeUserDto(updatedUser);
 
         HttpRequest userUpdateRequest = HttpRequest.newBuilder()
-                .uri(URI.create(backendConfig.getBaseUrl() + "/api/users/" + user.getId()))
+                .uri(URI.create(backendConfig.getBaseUrl() + "/api/users/" + userDto.id()))
                 .PUT(HttpRequest.BodyPublishers.ofString(userDtoJson))
                 .header("Content-Type", "application/json")
                 .build();
@@ -166,12 +165,12 @@ public class AdminEditUserController {
                     }
 
                     List<Long> roleIds = assignedRolesListView.getItems().stream()
-                            .map(Role::getId)
+                            .map(RoleDto::id)
                             .collect(Collectors.toList());
                     String roleIdsJson = serializeRoleIds(roleIds);
 
                     HttpRequest rolesUpdateRequest = HttpRequest.newBuilder()
-                            .uri(URI.create(backendConfig.getBaseUrl() + "/api/roles/update/" + user.getId()))
+                            .uri(URI.create(backendConfig.getBaseUrl() + "/api/roles/update/" + userDto.id()))
                             .POST(HttpRequest.BodyPublishers.ofString(roleIdsJson))
                             .header("Content-Type", "application/json")
                             .build();
@@ -217,7 +216,7 @@ public class AdminEditUserController {
         assignedRolesListView.getItems().removeAll(selectedRoles);
     }
 
-    private List<Role> parseRoles(String responseBody) {
+    private List<RoleDto> parseRoles(String responseBody) {
         try {
             return objectMapper.readValue(responseBody, new TypeReference<>() {});
         } catch (JsonProcessingException e) {
@@ -227,7 +226,6 @@ public class AdminEditUserController {
 
     private String serializeUserDto(UserDto userDto) {
         try {
-            System.out.println(objectMapper.writeValueAsString(userDto));
             return objectMapper.writeValueAsString(userDto);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Error serializing user to JSON", e);

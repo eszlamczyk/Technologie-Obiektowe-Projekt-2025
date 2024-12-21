@@ -5,3 +5,24 @@
 .background{
     -fx-background-color: DODGERBLUE;
 }
+
+.adminPanelLabel {
+    -fx-font-size: 50;
+    -fx-font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', sans-serif;
+    -fx-text-fill: white;
+}
+
+.adminPanelButton {
+    -fx-padding: 5;
+    -fx-border-radius: 20;
+    -fx-min-width: 200;
+    -fx-min-height: 50;
+    -fx-font-size: 15;
+    -fx-background-color: crimson;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.adminPanelButton:hover {
+    -fx-text-fill: aquamarine;
+}

@@ -1,4 +1,4 @@
-package monaditto.cinemafront.controller;
+package monaditto.cinemafront.controller.admin;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Controller
-public class EditUserController {
+public class AdminEditUserController {
 
     @FXML
     private TextField firstNameField;
@@ -62,11 +62,11 @@ public class EditUserController {
     private Runnable afterSave;
 
     @Autowired
-    public EditUserController(BackendConfig backendConfig) {
+    public AdminEditUserController(BackendConfig backendConfig) {
         this.backendConfig = backendConfig;
     }
 
-    public EditUserController(){}
+    public AdminEditUserController(){}
 
     @Autowired
     public void setBackendConfig(BackendConfig backendConfig) {

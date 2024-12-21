@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/adminPanel")
+@RequestMapping("/api/admin-panel")
 public class AdminPanelController {
 
     private final UserService userService;

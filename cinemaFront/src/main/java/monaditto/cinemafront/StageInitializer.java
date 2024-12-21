@@ -5,6 +5,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import monaditto.cinemafront.controller.ControllerResource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
@@ -87,6 +88,10 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
         } else {
             this.stage.getIcons().add(icon);
         }
+    }
+
+    public Scene getScene() {
+        return this.stage.getScene();
     }
 
     public ApplicationContext getContext() {

@@ -1,4 +1,4 @@
-package monaditto.cinemafront.controller;
+package monaditto.cinemafront.controller.admin;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -15,7 +15,7 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
-import monaditto.cinemafront.ControllerResource;
+import monaditto.cinemafront.controller.ControllerResource;
 import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.config.BackendConfig;
 import monaditto.cinemafront.databaseMapping.User;
@@ -29,7 +29,7 @@ import java.net.http.HttpResponse;
 import java.util.List;
 
 @Controller
-public class AdminPanelController {
+public class AdminUsersController {
 
     private final StageInitializer stageInitializer;
     private final BackendConfig backendConfig;
@@ -48,7 +48,7 @@ public class AdminPanelController {
     @FXML
     private Button signOutButton;
 
-    public AdminPanelController(StageInitializer stageInitializer, BackendConfig backendConfig) {
+    public AdminUsersController(StageInitializer stageInitializer, BackendConfig backendConfig) {
         this.stageInitializer = stageInitializer;
         this.backendConfig = backendConfig;
     }
@@ -79,7 +79,7 @@ public class AdminPanelController {
         if (user != null) {
             HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(backendConfig.getBaseUrl() + "/api/adminPanel/users/" + user.getId()))
+                    .uri(URI.create(backendConfig.getBaseUrl() + "/api/admin-panel/users/" + user.getId()))
                     .DELETE()
                     .build();
 
@@ -105,7 +105,7 @@ public class AdminPanelController {
             throw new RuntimeException(e);
         }
 
-        EditUserController controller = loader.getController();
+        AdminEditUserController controller = loader.getController();
         controller.init(usersListView.getSelectionModel().getSelectedItem(), this::loadUsers);
 
         var newScene = new Scene(newRoot);
@@ -115,9 +115,9 @@ public class AdminPanelController {
     }
 
     @FXML
-    private void handleSignOut(ActionEvent event) {
+    private void handleGoBack(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.LOGIN);
+            stageInitializer.loadStage(ControllerResource.ADMIN_PANEL);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -126,7 +126,7 @@ public class AdminPanelController {
     private void loadUsers() {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(backendConfig.getBaseUrl() + "/api/adminPanel/users"))
+                .uri(URI.create(backendConfig.getBaseUrl() + "/api/admin-panel/users"))
                 .GET()
                 .build();
 

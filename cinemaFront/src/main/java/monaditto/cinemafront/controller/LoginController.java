@@ -12,6 +12,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.shape.Rectangle;
+import monaditto.cinemafront.ControllerResource;
 import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.config.BackendConfig;
 import monaditto.cinemafront.controller.DTO.AuthResponse;
@@ -96,7 +97,7 @@ public class LoginController {
                             if (isAdmin) {
                                 Platform.runLater(() -> {
                                     try {
-                                        stageInitializer.loadAdminPanelScene();
+                                        stageInitializer.loadStage(ControllerResource.ADMIN_PANEL);
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
@@ -121,7 +122,7 @@ public class LoginController {
     @FXML
     private void loadRegisterPage(MouseEvent event) {
         try {
-            stageInitializer.loadRegistrationScene();
+            stageInitializer.loadStage(ControllerResource.REGISTRATION);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -11,7 +11,8 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.StackPane?>
 <AnchorPane fx:id="rootPane" stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
-            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.RegistrationController">
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.RegistrationController"
+            prefHeight="500" prefWidth="400">
 
     <StackPane>
     <Rectangle fx:id="backgroundRectangle" fill="CRIMSON" height="550.0" stroke="#ffffff8b" strokeType="INSIDE" width="600.0"/>

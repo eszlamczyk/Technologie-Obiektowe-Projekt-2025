@@ -9,6 +9,7 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.Button;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.shape.Rectangle;
+import monaditto.cinemafront.ControllerResource;
 import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.config.BackendConfig;
 import org.springframework.stereotype.Controller;
@@ -96,7 +97,7 @@ public class RegistrationController {
     @FXML
     public void loadLoginPage() {
         try {
-            stageInitializer.loadLoginScene();
+            stageInitializer.loadStage(ControllerResource.LOGIN);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

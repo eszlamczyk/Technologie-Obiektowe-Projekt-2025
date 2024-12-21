@@ -15,6 +15,7 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import monaditto.cinemafront.ControllerResource;
 import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.config.BackendConfig;
 import monaditto.cinemafront.databaseMapping.User;
@@ -116,7 +117,7 @@ public class AdminPanelController {
     @FXML
     private void handleSignOut(ActionEvent event) {
         try {
-            stageInitializer.loadLoginScene();
+            stageInitializer.loadStage(ControllerResource.LOGIN);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

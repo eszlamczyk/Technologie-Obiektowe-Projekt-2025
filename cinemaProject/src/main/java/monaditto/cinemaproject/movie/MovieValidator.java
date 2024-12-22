@@ -9,9 +9,9 @@ import java.net.URL;
 public class MovieValidator {
 
     public CreateMovieStatus validateMovieDto(MovieDto movieDto) {
-        if (!validateString(movieDto.title())
-            || !validateString(movieDto.description())
-            || !validateString(movieDto.posterUrl())) {
+        if (!validateString(movieDto.title()) ||
+                !validateString(movieDto.description()) ||
+                movieDto.duration() < 1) {
             return CreateMovieStatus.MISSING_DATA;
         }
 
@@ -42,9 +42,9 @@ public class MovieValidator {
     }
 
     private boolean validateString(String string) {
-        if (string == null || string.isEmpty()) {
-            return false;
-        }
-        return !string.contains(" ");
+        return string != null &&
+                !string.isEmpty() &&
+                !string.startsWith(" ") &&
+                !string.endsWith(" ");
     }
 }

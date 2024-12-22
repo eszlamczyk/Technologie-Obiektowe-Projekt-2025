@@ -1,51 +1,70 @@
 package monaditto.cinemaproject.movie;
 
 import monaditto.cinemaproject.category.Category;
+import monaditto.cinemaproject.category.CategoryDto;
 import monaditto.cinemaproject.category.CategoryRepository;
+import monaditto.cinemaproject.category.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Transactional
 public class MovieService {
 
     private final MovieRepository movieRepository;
 
     private final CategoryRepository categoryRepository;
 
+    private final CategoryService categoryService;
+
     private final MovieValidator movieValidator;
 
     @Autowired
-    public MovieService(MovieRepository movieRepository, CategoryRepository categoryRepository, MovieValidator movieValidator) {
+    public MovieService(MovieRepository movieRepository,
+                        CategoryRepository categoryRepository,
+                        MovieValidator movieValidator,
+                        CategoryService categoryService) {
         this.movieRepository = movieRepository;
         this.categoryRepository = categoryRepository;
         this.movieValidator = movieValidator;
+        this.categoryService = categoryService;
     }
 
-    public List<Movie> getMovies() {
-        return movieRepository.findAll();
+    public List<MovieDto> getMovies() {
+        return movieRepository.findAll().stream()
+                .map(MovieDto::movieToMovieDto)
+                .toList();
     }
 
-    public Optional<Movie> getMovieById(Long id) {
-        return movieRepository.findById(id);
+    public Optional<MovieDto> getMovieById(Long id) {
+        return movieRepository.findById(id)
+                .map(MovieDto::movieToMovieDto);
     }
 
     public CreateMovieStatus createMovie(MovieDto movieDto) {
+        return createMovie(movieDto, List.of());
+    }
+
+    public CreateMovieStatus createMovie(MovieDto movieDto, List<String> categoryNames) {
         CreateMovieStatus movieStatus = movieValidator.validateMovieDto(movieDto);
         if (movieStatus != CreateMovieStatus.SUCCESS) {
             return movieStatus;
         }
-        Movie movie = createMovieFromMovieDto(movieDto);
 
+        Movie movie = createMovieFromMovieDto(movieDto);
         movieRepository.save(movie);
 
-        return CreateMovieStatus.SUCCESS;
+        List<Long> categoryIds = categoryService.getCategoryIdsByName(categoryNames);
+
+        return setCategories(movie.getId(), categoryIds);
     }
 
-    public CreateMovieStatus addCategories(Long movieId, List<Long> categoryIds) {
+    public CreateMovieStatus setCategories(Long movieId, List<Long> categoryIds) {
         Movie movie = movieRepository.findById(movieId)
                 .orElse(null);
         if (movie == null) {
@@ -62,11 +81,8 @@ public class MovieService {
             categories.add(category);
         }
 
-        categories.forEach(category -> {
-            movie.addCategory(category);
-            category.addMovie(movie);
-            categoryRepository.save(category);
-        });
+        movie.clearCategories();
+        categories.forEach(movie::addCategory);
         movieRepository.save(movie);
 
         return CreateMovieStatus.SUCCESS;
@@ -77,7 +93,8 @@ public class MovieService {
                 movieDto.title(),
                 movieDto.description(),
                 movieDto.duration(),
-                movieDto.posterUrl()
+                movieDto.posterUrl(),
+                movieDto.releaseDate()
         );
     }
 }

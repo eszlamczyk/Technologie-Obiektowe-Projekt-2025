@@ -22,6 +22,11 @@ public class MovieController {
         this.movieService = movieService;
     }
 
+    @GetMapping()
+    public ResponseEntity<List<MovieDto>> getMovies() {
+        return ResponseEntity.ok().body(movieService.getMovies());
+    }
+
     @PutMapping("/create")
     public ResponseEntity<String> createMovie(@RequestBody MovieDto movieDto) {
         Status createMovieStatus = movieService.createMovie(movieDto);
@@ -33,14 +38,14 @@ public class MovieController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(createMovieStatus.message());
     }
 
-    @PutMapping("/edit/add-categories/{id}")
-    public ResponseEntity<String> addCategories(@PathVariable Long id, @RequestBody List<Long> categoryIds) {
-        Status addCategoriesStatus = movieService.addCategories(id, categoryIds);
+    @PutMapping("/edit/set-categories/{id}")
+    public ResponseEntity<String> setCategories(@PathVariable Long id, @RequestBody List<Long> categoryIds) {
+        Status setCategoriesStatus = movieService.setCategories(id, categoryIds);
 
-        if (addCategoriesStatus.isSuccess()) {
-            return ResponseEntity.ok(addCategoriesStatus.message());
+        if (setCategoriesStatus.isSuccess()) {
+            return ResponseEntity.ok(setCategoriesStatus.message());
         }
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(addCategoriesStatus.message());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(setCategoriesStatus.message());
     }
 }

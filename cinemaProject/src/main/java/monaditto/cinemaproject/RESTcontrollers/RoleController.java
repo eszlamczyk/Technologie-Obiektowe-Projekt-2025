@@ -1,9 +1,7 @@
 package monaditto.cinemaproject.RESTcontrollers;
 
-import monaditto.cinemaproject.role.Role;
 import monaditto.cinemaproject.role.RoleDto;
 import monaditto.cinemaproject.role.RoleService;
-import monaditto.cinemaproject.user.User;
 import monaditto.cinemaproject.user.UserDto;
 import monaditto.cinemaproject.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,16 +12,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/roles")
-public class RolesController {
+public class RoleController {
     UserService userService;
     RoleService roleService;
 
     @Autowired
-    public RolesController(UserService userService, RoleService roleService){
+    public RoleController(UserService userService, RoleService roleService){
         this.userService = userService;
         this.roleService = roleService;
     }

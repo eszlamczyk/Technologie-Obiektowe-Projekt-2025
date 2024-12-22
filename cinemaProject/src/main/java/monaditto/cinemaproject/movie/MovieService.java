@@ -64,6 +64,16 @@ public class MovieService {
         return setCategories(movie.getId(), categoryIds);
     }
 
+    public boolean deleteMovie(Long id) {
+        Optional<Movie> movie = movieRepository.findById(id);
+        if (movie.isEmpty()) {
+            return false;
+        }
+
+        movieRepository.delete(movie.get());
+        return true;
+    }
+
     public CreateMovieStatus setCategories(Long movieId, List<Long> categoryIds) {
         Movie movie = movieRepository.findById(movieId)
                 .orElse(null);

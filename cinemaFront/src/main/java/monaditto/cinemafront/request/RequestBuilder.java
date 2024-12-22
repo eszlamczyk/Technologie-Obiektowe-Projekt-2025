@@ -11,4 +11,10 @@ public class RequestBuilder {
                 .GET()
                 .build();
     }
+    public static HttpRequest buildRequestDELETE(String url) {
+        return HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .DELETE()
+                .build();
+    }
 }

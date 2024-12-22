@@ -27,6 +27,15 @@ public class MovieController {
         return ResponseEntity.ok().body(movieService.getMovies());
     }
 
+    @DeleteMapping("delete/{id}")
+    public ResponseEntity<String> deleteMovie(@PathVariable Long id) {
+        if (movieService.deleteMovie(id)) {
+            return ResponseEntity.ok().body("Successfully deleted the movie");
+        }
+        String message = String.format("Movie with given id (id = %d) doesn't exist", id);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(message);
+    }
+
     @PutMapping("/create")
     public ResponseEntity<String> createMovie(@RequestBody MovieDto movieDto) {
         Status createMovieStatus = movieService.createMovie(movieDto);

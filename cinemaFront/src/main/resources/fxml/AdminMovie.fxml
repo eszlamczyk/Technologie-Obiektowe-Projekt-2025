@@ -18,6 +18,7 @@
             <VBox spacing="10" prefWidth="600" prefHeight="300" alignment="CENTER">
                 <ListView fx:id="moviesListView" maxWidth="600"/>
                 <HBox spacing="10" alignment="CENTER">
+                    <Button text="Add" styleClass="moviesButton" onAction="#handleAdd" />
                     <Button text="Edit" fx:id="editButton" styleClass="moviesButton" onAction="#handleEdit" />
                     <Button text="Delete" fx:id="deleteButton" styleClass="moviesButton" onAction="#handleDelete" />
                 </HBox>

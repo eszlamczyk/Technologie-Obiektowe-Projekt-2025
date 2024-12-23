@@ -1,8 +1,10 @@
 package monaditto.cinemaproject.RESTcontrollers;
 
+import monaditto.cinemaproject.category.CategoryDto;
 import monaditto.cinemaproject.movie.CreateMovieStatus;
 import monaditto.cinemaproject.movie.MovieDto;
 import monaditto.cinemaproject.movie.MovieService;
+import monaditto.cinemaproject.movie.MovieWithCategoriesDto;
 import monaditto.cinemaproject.status.Status;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -37,8 +39,8 @@ public class MovieController {
     }
 
     @PutMapping("/create")
-    public ResponseEntity<String> createMovie(@RequestBody MovieDto movieDto) {
-        Status createMovieStatus = movieService.createMovie(movieDto);
+    public ResponseEntity<String> createMovie(@RequestBody MovieWithCategoriesDto wrapperDto) {
+        Status createMovieStatus = movieService.createMovie(wrapperDto.movieDto(), wrapperDto.categories());
 
         if (createMovieStatus.isSuccess()) {
             return ResponseEntity.ok(createMovieStatus.message());

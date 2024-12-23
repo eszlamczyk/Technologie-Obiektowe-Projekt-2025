@@ -4,8 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import monaditto.cinemafront.config.BackendConfig;
+import monaditto.cinemafront.databaseMapping.CategoryDto;
 import monaditto.cinemafront.databaseMapping.MovieDto;
+import monaditto.cinemafront.databaseMapping.MovieWithCategoriesDto;
 import monaditto.cinemafront.request.RequestBuilder;
+import monaditto.cinemafront.response.ResponseResult;
 import org.springframework.stereotype.Component;
 
 import java.net.http.HttpClient;
@@ -22,23 +26,45 @@ public class MovieClientAPI {
 
     private String deleteUrl;
 
-    private final ObjectMapper objectMapper;
+    private String createUrl;
 
     private String baseUrl;
 
-    public MovieClientAPI() {
+    private final ObjectMapper objectMapper;
+
+    private final BackendConfig backendConfig;
+
+    public MovieClientAPI(BackendConfig backendConfig) {
+        this.backendConfig = backendConfig;
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
+        initializeUrls();
     }
 
-    public void initializeUrls() {
+    private void initializeUrls() {
+        baseUrl = backendConfig.getBaseUrl();
         endpointUrl = baseUrl + "/api/movies";
         deleteUrl = endpointUrl + "/delete";
+        createUrl = endpointUrl + "/create";
     }
 
-    public void setBaseUrl(String baseUrl) {
-        this.baseUrl = baseUrl;
-        initializeUrls();
+    public CompletableFuture<ResponseResult> createMovie(MovieDto movieDto, List<CategoryDto> categories) {
+        MovieWithCategoriesDto wrapperDto = new MovieWithCategoriesDto(movieDto, categories);
+        String jsonBody = serializeWrapperDto(wrapperDto);
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = RequestBuilder.buildRequestPUT(createUrl, jsonBody);
+
+        return sendCreateMovieRequest(client, request);
+    }
+
+    private CompletableFuture<ResponseResult> sendCreateMovieRequest(HttpClient client, HttpRequest request) {
+        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(response -> new ResponseResult(response.statusCode(), response.body()))
+                .exceptionally(e -> {
+                    System.err.println("Error loading the movies: " + e.getMessage());
+                    return new ResponseResult(500, "Error " + e.getMessage());
+                });
     }
 
     public CompletableFuture<List<MovieDto>> loadMovies() {
@@ -63,6 +89,14 @@ public class MovieClientAPI {
             return objectMapper.readValue(responseBody, new TypeReference<>() {});
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Error parsing movie list: " + e.getMessage(), e);
+        }
+    }
+
+    private String serializeWrapperDto(MovieWithCategoriesDto wrapperDto) {
+        try {
+            return objectMapper.writeValueAsString(wrapperDto);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
         }
     }
 

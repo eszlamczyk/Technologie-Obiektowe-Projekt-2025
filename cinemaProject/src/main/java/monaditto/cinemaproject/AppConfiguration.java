@@ -146,7 +146,7 @@ public class AppConfiguration {
                 poster,
                 LocalDate.parse("06-10-2017", formatter));
         List<String> categories = List.of("science fiction", "drama");
-        CreateMovieStatus movieStatus = movieService.createMovie(movie, categories);
+        CreateMovieStatus movieStatus = movieService.createMovieByNames(movie, categories);
         System.out.println(movieStatus.message());
 
         poster = "https://resizing.flixster.com/MmthunuWaOp36uHIu8b53wT-y20=/206x305" +
@@ -159,7 +159,7 @@ public class AppConfiguration {
                 poster,
                 LocalDate.parse("12-06-1981", formatter));
         categories = List.of("action");
-        movieStatus = movieService.createMovie(movie, categories);
+        movieStatus = movieService.createMovieByNames(movie, categories);
         System.out.println(movieStatus.message());
     }
 }

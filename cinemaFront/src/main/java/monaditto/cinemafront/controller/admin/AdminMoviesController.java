@@ -26,6 +26,8 @@ public class AdminMoviesController {
     private final StageInitializer stageInitializer;
     private final BackendConfig backendConfig;
 
+    private final AdminEditMovieController adminEditMovieController;
+
     private ObservableList<MovieDto> movieDtoList;
 
     @Autowired
@@ -46,15 +48,16 @@ public class AdminMoviesController {
     @FXML
     private AnchorPane rootPane;
 
-    public AdminMoviesController(StageInitializer stageInitializer, BackendConfig backendConfig) {
+    public AdminMoviesController(StageInitializer stageInitializer,
+                                 BackendConfig backendConfig,
+                                 AdminEditMovieController adminEditMovieController) {
         this.stageInitializer = stageInitializer;
         this.backendConfig = backendConfig;
+        this.adminEditMovieController = adminEditMovieController;
     }
 
     @FXML
     private void initialize() {
-        movieClientAPI.setBaseUrl(backendConfig.getBaseUrl());
-
         initializeMovieListView();
         initializeButtons();
         initializeResponsiveness();
@@ -114,7 +117,23 @@ public class AdminMoviesController {
 
     @FXML
     private void handleEdit(ActionEvent event) {
+        try {
+            MovieDto toEdit = moviesListView.getSelectionModel().getSelectedItem();
+            stageInitializer.loadStage(ControllerResource.ADMIN_EDIT_MOVIE);
+            adminEditMovieController.setMovieDto(toEdit);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
+    @FXML
+    private void handleAdd(ActionEvent event) {
+        try {
+            stageInitializer.loadStage(ControllerResource.ADMIN_EDIT_MOVIE);
+            adminEditMovieController.resetMovieDto();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @FXML

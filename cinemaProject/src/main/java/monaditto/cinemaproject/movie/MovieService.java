@@ -50,7 +50,23 @@ public class MovieService {
         return createMovie(movieDto, List.of());
     }
 
-    public CreateMovieStatus createMovie(MovieDto movieDto, List<String> categoryNames) {
+    public CreateMovieStatus createMovie(MovieDto movieDto, List<CategoryDto> categories) {
+        CreateMovieStatus movieStatus = movieValidator.validateMovieDto(movieDto);
+        if (movieStatus != CreateMovieStatus.SUCCESS) {
+            return movieStatus;
+        }
+
+        Movie movie = createMovieFromMovieDto(movieDto);
+        movieRepository.save(movie);
+
+        List<Long> categoryIds = categories.stream()
+                .map(CategoryDto::id)
+                .toList();
+
+        return setCategories(movie.getId(), categoryIds);
+    }
+
+    public CreateMovieStatus createMovieByNames(MovieDto movieDto, List<String> categoryNames) {
         CreateMovieStatus movieStatus = movieValidator.validateMovieDto(movieDto);
         if (movieStatus != CreateMovieStatus.SUCCESS) {
             return movieStatus;

@@ -9,7 +9,8 @@ public enum ControllerResource {
     ADMIN_PANEL,
     ADMIN_USER,
     ADMIN_EDIT_USER,
-    ADMIN_MOVIE;
+    ADMIN_MOVIE,
+    ADMIN_EDIT_MOVIE;
 
     public Resource getResource() {
         String resourceUrl = switch(this) {
@@ -19,6 +20,7 @@ public enum ControllerResource {
             case ADMIN_USER -> "fxml/AdminUser.fxml";
             case ADMIN_EDIT_USER -> "fxml/EditUser.fxml";
             case ADMIN_MOVIE -> "fxml/AdminMovie.fxml";
+            case ADMIN_EDIT_MOVIE -> "fxml/EditMovie.fxml";
         };
 
         return new ClassPathResource(resourceUrl);

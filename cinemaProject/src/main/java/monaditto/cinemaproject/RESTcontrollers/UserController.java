@@ -1,6 +1,7 @@
 package monaditto.cinemaproject.RESTcontrollers;
 
 import monaditto.cinemaproject.role.RoleService;
+import monaditto.cinemaproject.status.Status;
 import monaditto.cinemaproject.user.CreateUserStatus;
 import monaditto.cinemaproject.user.UserDto;
 import monaditto.cinemaproject.user.UserService;
@@ -24,9 +25,9 @@ public class UserController {
             @RequestBody UserDto userDto
     ) {
 
-        CreateUserStatus editStatus = userService.editUser(userId, userDto);
+        Status editStatus = userService.editUser(userId, userDto);
 
-        if (editStatus.equals(CreateUserStatus.SUCCESS)) {
+        if (editStatus.isSuccess()) {
             return ResponseEntity.ok(editStatus.message());
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(editStatus.message());

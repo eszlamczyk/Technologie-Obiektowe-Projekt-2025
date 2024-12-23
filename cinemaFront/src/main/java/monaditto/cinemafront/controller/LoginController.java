@@ -16,6 +16,7 @@ import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.config.BackendConfig;
 import monaditto.cinemafront.controller.DTO.AuthResponse;
 import monaditto.cinemafront.controller.DTO.LoginRequest;
+import monaditto.cinemafront.databaseMapping.RoleDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -24,6 +25,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 
 @Controller
 public class LoginController {
@@ -90,13 +92,14 @@ public class LoginController {
                             } catch (JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
+
                             boolean isAdmin = authResponse.getRoles().stream()
-                                    .anyMatch(role -> role.getName().equals("admin"));
+                                    .anyMatch(roleDto -> roleDto.name().equals("admin"));
 
                             if (isAdmin) {
                                 Platform.runLater(() -> {
                                     try {
-                                        stageInitializer.loadAdminPanelScene();
+                                        stageInitializer.loadStage(ControllerResource.ADMIN_PANEL);
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
@@ -121,7 +124,7 @@ public class LoginController {
     @FXML
     private void loadRegisterPage(MouseEvent event) {
         try {
-            stageInitializer.loadRegistrationScene();
+            stageInitializer.loadStage(ControllerResource.REGISTRATION);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

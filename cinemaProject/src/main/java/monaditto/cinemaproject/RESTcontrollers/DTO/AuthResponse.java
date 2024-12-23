@@ -1,21 +1,21 @@
 package monaditto.cinemaproject.RESTcontrollers.DTO;
 
-import monaditto.cinemaproject.role.Role;
+import monaditto.cinemaproject.role.RoleDto;
 
 import java.util.List;
 
 public class AuthResponse {
-    private List<Role> roles;
+    private List<RoleDto> roles;
 
-    public AuthResponse(List<Role> roles) {
+    public AuthResponse(List<RoleDto> roles) {
         this.roles = roles;
     }
 
-    public List<Role> getRoles() {
+    public List<RoleDto> getRoles() {
         return roles;
     }
 
-    public void setRoles(List<Role> roles) {
+    public void setRoles(List<RoleDto> roles) {
         this.roles = roles;
     }
 }

@@ -2,6 +2,7 @@ package monaditto.cinemaproject.screening;
 
 import jakarta.transaction.Transactional;
 import monaditto.cinemaproject.movie.Movie;
+import monaditto.cinemaproject.movie.MovieDto;
 import monaditto.cinemaproject.movie.MovieRepository;
 import monaditto.cinemaproject.movieRoom.MovieRoom;
 import monaditto.cinemaproject.movieRoom.MovieRoomRepository;
@@ -51,7 +52,7 @@ public class ScreeningService {
                 .orElseThrow(() -> new IllegalArgumentException("Movie room not found with id: " + id));
     }
 
-    public Screening saveScreening(ScreeningDto screeningDto) {
+    public ScreeningDto saveScreening(ScreeningDto screeningDto) {
         Movie movie = getMovie(screeningDto.movieId());
         MovieRoom movieRoom = getMovieRoom(screeningDto.movieRoomId());
 
@@ -64,15 +65,20 @@ public class ScreeningService {
         movie.addScreening(newScreening);
         movieRoom.addScreening(newScreening);
 
-        return screeningRepository.save(newScreening);
+        screeningRepository.save(newScreening);
+
+        return ScreeningDto.screeningToScreeningDto(newScreening);
     }
 
-    public List<Screening> getAllScreenings() {
-        return screeningRepository.findAll();
+    public List<ScreeningDto> getAllScreenings() {
+        return screeningRepository.findAll().stream()
+                .map(ScreeningDto::screeningToScreeningDto)
+                .toList();
     }
 
-    public Optional<Screening> getScreeningById(Long id) {
-        return screeningRepository.findById(id);
+    public Optional<ScreeningDto> getScreeningById(Long id) {
+        return screeningRepository.findById(id)
+                .map(ScreeningDto::screeningToScreeningDto);
     }
 
     public boolean deleteScreening(Long id) {
@@ -83,15 +89,20 @@ public class ScreeningService {
         return false;
     }
 
-    public List<Screening> getScreeningsByDate(LocalDate date) {
-        return screeningRepository.findByStartBetween(date.atStartOfDay(), date.atTime(23, 59, 59));
+    public List<ScreeningDto> getScreeningsByDate(LocalDate date) {
+        return screeningRepository
+                .findByStartBetween(date.atStartOfDay(), date.atTime(23, 59, 59)).stream()
+                .map(ScreeningDto::screeningToScreeningDto)
+                .toList();
     }
 
-    public List<Screening> getUpcomingScreeningsAfter(LocalDateTime dateTime) {
-        return screeningRepository.findByStartAfter(dateTime);
+    public List<ScreeningDto> getUpcomingScreeningsAfter(LocalDateTime dateTime) {
+        return screeningRepository.findByStartAfter(dateTime).stream()
+                .map(ScreeningDto::screeningToScreeningDto)
+                .toList();
     }
 
-    public Screening updateScreening(Long id, ScreeningDto screeningDto) {
+    public ScreeningDto updateScreening(Long id, ScreeningDto screeningDto) {
         Screening screening = screeningRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Screening not found with id: " + id));
 
@@ -103,6 +114,8 @@ public class ScreeningService {
         screening.setPrice(screeningDto.price());
         screening.setStart(screeningDto.start());
 
-        return screeningRepository.save(screening);
+        screeningRepository.save(screening);
+
+        return ScreeningDto.screeningToScreeningDto(screening);
     }
 }

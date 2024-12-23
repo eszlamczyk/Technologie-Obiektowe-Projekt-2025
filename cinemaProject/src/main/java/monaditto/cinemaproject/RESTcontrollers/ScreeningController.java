@@ -20,25 +20,25 @@ public class ScreeningController {
     private ScreeningService screeningService;
 
     @GetMapping
-    public ResponseEntity<List<Screening>> getAllScreenings() {
-        List<Screening> screenings = screeningService.getAllScreenings();
+    public ResponseEntity<List<ScreeningDto>> getAllScreenings() {
+        List<ScreeningDto> screenings = screeningService.getAllScreenings();
         return ResponseEntity.ok(screenings);
     }
 
     @PostMapping
-    public ResponseEntity<Screening> createScreening(@RequestBody ScreeningDto screeningDto) {
-        Screening createdScreening = screeningService.saveScreening(screeningDto);
+    public ResponseEntity<ScreeningDto> createScreening(@RequestBody ScreeningDto screeningDto) {
+        ScreeningDto createdScreening = screeningService.saveScreening(screeningDto);
         return ResponseEntity.ok(createdScreening);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Screening> getScreeningById(@PathVariable Long id) {
-        Optional<Screening> screening = screeningService.getScreeningById(id);
+    public ResponseEntity<ScreeningDto> getScreeningById(@PathVariable Long id) {
+        Optional<ScreeningDto> screening = screeningService.getScreeningById(id);
         return screening.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Screening> updateScreening(@PathVariable Long id, @RequestBody ScreeningDto screeningDto) {
+    public ResponseEntity<ScreeningDto> updateScreening(@PathVariable Long id, @RequestBody ScreeningDto screeningDto) {
         return ResponseEntity.ok(screeningService.updateScreening(id, screeningDto));
     }
 
@@ -52,14 +52,14 @@ public class ScreeningController {
     }
 
     @GetMapping("/by-date")
-    public ResponseEntity<List<Screening>> getScreeningsByDate(@RequestParam LocalDate date) {
-        List<Screening> screenings = screeningService.getScreeningsByDate(date);
+    public ResponseEntity<List<ScreeningDto>> getScreeningsByDate(@RequestParam LocalDate date) {
+        List<ScreeningDto> screenings = screeningService.getScreeningsByDate(date);
         return ResponseEntity.ok(screenings);
     }
 
     @GetMapping("/upcoming")
-    public ResponseEntity<List<Screening>> getUpcomingScreenings(@RequestParam LocalDateTime dateTime) {
-        List<Screening> screenings = screeningService.getUpcomingScreeningsAfter(dateTime);
+    public ResponseEntity<List<ScreeningDto>> getUpcomingScreenings(@RequestParam LocalDateTime dateTime) {
+        List<ScreeningDto> screenings = screeningService.getUpcomingScreeningsAfter(dateTime);
         return ResponseEntity.ok(screenings);
     }
 }

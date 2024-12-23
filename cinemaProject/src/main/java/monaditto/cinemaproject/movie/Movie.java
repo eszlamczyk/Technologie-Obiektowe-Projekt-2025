@@ -5,7 +5,11 @@ import jakarta.persistence.*;
 import monaditto.cinemaproject.category.Category;
 import monaditto.cinemaproject.opinion.Opinion;
 import monaditto.cinemaproject.screening.Screening;
+import org.springframework.cglib.core.Local;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -29,6 +33,12 @@ public class Movie {
     @Column(nullable = false)
     private int duration;
 
+    @Column(nullable = false)
+    private String posterUrl;
+
+    @Column(nullable = false)
+    private LocalDate releaseDate;
+
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL)
     @JsonIgnore
     private Set<Screening> screenings = new HashSet<>();
@@ -39,17 +49,19 @@ public class Movie {
             joinColumns = @JoinColumn(name = "movie_id"),
             inverseJoinColumns = @JoinColumn(name = "category_id")
     )
-    private Set<Category> categories;
+    private Set<Category> categories = new HashSet<>();
 
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL)
-    private Set<Opinion> opinions;
+    private Set<Opinion> opinions = new HashSet<>();
 
     public Movie() {}
 
-    public Movie(String title, String description, int duration) {
+    public Movie(String title, String description, int duration, String posterUrl, LocalDate releaseDate) {
         this.title = title;
         this.description = description;
         this.duration = duration;
+        this.posterUrl = posterUrl;
+        this.releaseDate = releaseDate;
     }
 
     public Long getId() {
@@ -62,6 +74,14 @@ public class Movie {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getPosterUrl() {
+        return posterUrl;
+    }
+
+    public void setPosterUrl(String posterUrl) {
+        this.posterUrl = posterUrl;
     }
 
     public String getDescription() {
@@ -109,11 +129,23 @@ public class Movie {
         screening.setMovie(this);
     }
 
+    public LocalDate getReleaseDate() {
+        return releaseDate;
+    }
+
+    public void setReleaseDate(LocalDate releaseDate) {
+        this.releaseDate = releaseDate;
+    }
+
     public void addCategory(Category category) {
         categories.add(category);
     }
 
     public void addOpinion(Opinion opinion) {
         opinions.add(opinion);
+    }
+
+    public void clearCategories() {
+        categories.clear();
     }
 }

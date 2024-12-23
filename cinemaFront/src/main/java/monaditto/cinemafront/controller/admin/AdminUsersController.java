@@ -1,4 +1,4 @@
-package monaditto.cinemafront.controller;
+package monaditto.cinemafront.controller.admin;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -15,9 +15,10 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import monaditto.cinemafront.controller.ControllerResource;
 import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.config.BackendConfig;
-import monaditto.cinemafront.databaseMapping.User;
+import monaditto.cinemafront.databaseMapping.UserDto;
 import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
@@ -28,7 +29,7 @@ import java.net.http.HttpResponse;
 import java.util.List;
 
 @Controller
-public class AdminPanelController {
+public class AdminUsersController {
 
     private final StageInitializer stageInitializer;
     private final BackendConfig backendConfig;
@@ -36,7 +37,7 @@ public class AdminPanelController {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @FXML
-    private ListView<User> usersListView;
+    private ListView<UserDto> usersListView;
 
     @FXML
     private Button deleteButton;
@@ -44,10 +45,7 @@ public class AdminPanelController {
     @FXML
     private Button editButton;
 
-    @FXML
-    private Button signOutButton;
-
-    public AdminPanelController(StageInitializer stageInitializer, BackendConfig backendConfig) {
+    public AdminUsersController(StageInitializer stageInitializer, BackendConfig backendConfig) {
         this.stageInitializer = stageInitializer;
         this.backendConfig = backendConfig;
     }
@@ -56,13 +54,13 @@ public class AdminPanelController {
     private void initialize() {
         usersListView.setCellFactory(list -> new ListCell<>() {
             @Override
-            protected void updateItem(User user, boolean empty) {
-                super.updateItem(user, empty);
-                if (empty || user == null) {
+            protected void updateItem(UserDto userDto, boolean empty) {
+                super.updateItem(userDto, empty);
+                if (empty || userDto == null) {
                     setText(null);
                     setGraphic(null);
                 } else {
-                    setText(user.getFirstName() + " " + user.getLastName());
+                    setText(userDto.firstName() + " " + userDto.lastName());
                 }
             }
         });
@@ -74,11 +72,11 @@ public class AdminPanelController {
 
     @FXML
     private void handleDelete(ActionEvent event) {
-        var user = usersListView.getSelectionModel().getSelectedItem();
-        if (user != null) {
+        UserDto userDto = usersListView.getSelectionModel().getSelectedItem();
+        if (userDto != null) {
             HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(backendConfig.getBaseUrl() + "/api/adminPanel/users/" + user.getId()))
+                    .uri(URI.create(backendConfig.getBaseUrl() + "/api/admin-panel/users/" + userDto.id()))
                     .DELETE()
                     .build();
 
@@ -104,7 +102,7 @@ public class AdminPanelController {
             throw new RuntimeException(e);
         }
 
-        EditUserController controller = loader.getController();
+        AdminEditUserController controller = loader.getController();
         controller.init(usersListView.getSelectionModel().getSelectedItem(), this::loadUsers);
 
         var newScene = new Scene(newRoot);
@@ -114,9 +112,9 @@ public class AdminPanelController {
     }
 
     @FXML
-    private void handleSignOut(ActionEvent event) {
+    private void handleGoBack(ActionEvent event) {
         try {
-            stageInitializer.loadLoginScene();
+            stageInitializer.loadStage(ControllerResource.ADMIN_PANEL);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -125,16 +123,16 @@ public class AdminPanelController {
     private void loadUsers() {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(backendConfig.getBaseUrl() + "/api/adminPanel/users"))
+                .uri(URI.create(backendConfig.getBaseUrl() + "/api/admin-panel/users"))
                 .GET()
                 .build();
 
         client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(HttpResponse::body)
                 .thenApply(this::parseUsers)
-                .thenAccept(users -> {
-                    if (users != null) {
-                        Platform.runLater(() -> usersListView.setItems(FXCollections.observableList(users)));
+                .thenAccept(usersDto -> {
+                    if (usersDto != null) {
+                        Platform.runLater(() -> usersListView.setItems(FXCollections.observableList(usersDto)));
                     }
                 })
                 .exceptionally(e -> {
@@ -143,7 +141,7 @@ public class AdminPanelController {
                 });
     }
 
-    private List<User> parseUsers(String responseBody) {
+    private List<UserDto> parseUsers(String responseBody) {
         try {
             return objectMapper.readValue(responseBody, new TypeReference<>() {});
         } catch (JsonProcessingException e) {

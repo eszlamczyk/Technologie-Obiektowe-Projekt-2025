@@ -8,7 +8,8 @@
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.ListView?>
 <AnchorPane stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
-            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.EditUserController">
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.admin.AdminEditUserController"
+            prefHeight="600" prefWidth="800">
     <VBox spacing="10">
         <padding>
             <Insets top="24" right="24" bottom="24" left="24"/>

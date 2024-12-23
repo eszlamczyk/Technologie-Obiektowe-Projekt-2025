@@ -2,7 +2,6 @@ package monaditto.cinemafront.controller;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.PasswordField;
@@ -15,12 +14,10 @@ import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.ResourceBundle;
 
 @Controller
 public class RegistrationController {
@@ -96,7 +93,7 @@ public class RegistrationController {
     @FXML
     public void loadLoginPage() {
         try {
-            stageInitializer.loadLoginScene();
+            stageInitializer.loadStage(ControllerResource.LOGIN);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

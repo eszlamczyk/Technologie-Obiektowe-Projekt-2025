@@ -5,6 +5,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import monaditto.cinemafront.controller.ControllerResource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
@@ -18,11 +19,6 @@ import java.net.URL;
 
 @Component
 public class StageInitializer implements ApplicationListener<StageReadyEvent> {
-    private final Resource loginFxml;
-
-    private final Resource registrationFxml;
-
-    private final Resource adminPanelFxml;
 
     private final String applicationTitle;
 
@@ -32,14 +28,8 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
 
     private Stage stage;
 
-    public StageInitializer(@Value("classpath:/fxml/Login.fxml") Resource loginFxml,
-                            @Value("classpath:/fxml/Registration.fxml") Resource registrationFxml,
-                            @Value("classpath:/fxml/AdminPanel.fxml") Resource adminPanelFxml,
-                            @Value("${spring.application.ui.title}") String applicationTitle,
+    public StageInitializer(@Value("${spring.application.ui.title}") String applicationTitle,
                             ApplicationContext applicationContext) {
-        this.loginFxml = loginFxml;
-        this.registrationFxml = registrationFxml;
-        this.adminPanelFxml = adminPanelFxml;
         this.applicationTitle = applicationTitle;
         this.applicationContext = applicationContext;
         this.stage = null;
@@ -53,26 +43,14 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
     public void onApplicationEvent(StageReadyEvent event) {
         try{
             this.stage = event.getStage();
-            loadLoginScene();
+            loadStage(ControllerResource.LOGIN);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void loadLoginScene() throws IOException {
-        loadScene(this.loginFxml);
-    }
-
-    public void loadRegistrationScene() throws IOException {
-        loadScene(this.registrationFxml);
-    }
-
-    public void loadAdminPanelScene() throws IOException {
-        loadScene(this.adminPanelFxml);
-    }
-
-    private void loadScene(Resource fxml) throws IOException {
-        Parent root = getRoot(fxml);
+    public void loadStage(ControllerResource controllerResource) throws IOException {
+        Parent root = getRoot(controllerResource.getResource());
         Scene scene = new Scene(root);
 
         loadStageIcon();
@@ -89,10 +67,14 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
 
     private void configureScene(Scene scene) {
         this.stage.setScene(scene);
-        this.stage.setMinHeight(500);
-        this.stage.setMinWidth(400);
-        this.stage.setTitle(this.applicationTitle);
+        double prefHeight = scene.getRoot().prefHeight(-1);
+        double prefWidth = scene.getRoot().prefWidth(-1);
         this.stage.sizeToScene();
+        this.stage.setMinHeight(prefHeight);
+        this.stage.setHeight(prefHeight);
+        this.stage.setMinWidth(prefWidth);
+        this.stage.setWidth(prefWidth);
+        this.stage.setTitle(this.applicationTitle);
     }
 
     private void loadStageIcon() {
@@ -101,11 +83,15 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
                 icon = new Image("agh_icon.png");
                 this.stage.getIcons().add(icon);
             } catch(IllegalArgumentException e) {
-                System.out.println("Cannot load the given icon");
+                System.err.println("Error loading stage: Cannot load the given icon");
             }
         } else {
             this.stage.getIcons().add(icon);
         }
+    }
+
+    public Scene getScene() {
+        return this.stage.getScene();
     }
 
     public ApplicationContext getContext() {

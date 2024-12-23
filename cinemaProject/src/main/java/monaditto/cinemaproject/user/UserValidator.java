@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
+import java.util.Optional;
 
 @Component
 public class UserValidator {
@@ -20,8 +21,8 @@ public class UserValidator {
         CreateUserStatus missingData = validateAllStrings(userDto);
         if (missingData != null) return missingData;
 
-        User presentUser = userRepository.findByEmail(userDto.email());
-        if (presentUser != null) {
+        Optional<User> optionalUser = userRepository.findByEmail(userDto.email());
+        if (optionalUser.isPresent()) {
             return CreateUserStatus.USER_ALREADY_EXISTS;
         }
 

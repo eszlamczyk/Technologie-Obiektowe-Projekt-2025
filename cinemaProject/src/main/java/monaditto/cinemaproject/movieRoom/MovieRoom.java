@@ -18,7 +18,7 @@ public class MovieRoom {
     @Column(name = "movie_room_id")
     private Long id;
 
-    @Column(name = "movie_room_name", nullable = false)
+    @Column(name = "movie_room_name", nullable = false, unique = true)
     private String movieRoomName;
 
     @Column(name = "max_seats", nullable = false)

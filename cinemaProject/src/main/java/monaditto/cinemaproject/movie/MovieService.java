@@ -46,6 +46,16 @@ public class MovieService {
                 .map(MovieDto::movieToMovieDto);
     }
 
+    public List<CategoryDto> getMovieCategories(Long id) {
+        return movieRepository.findById(id)
+                .map(Movie::getCategories)
+                .map(categories -> categories.stream()
+                        .map(CategoryDto::categoryToCategoryDto)
+                        .toList()
+                )
+                .orElseGet(List::of);
+    }
+
     public CreateMovieStatus createMovie(MovieDto movieDto) {
         return createMovie(movieDto, List.of());
     }
@@ -59,9 +69,7 @@ public class MovieService {
         Movie movie = createMovieFromMovieDto(movieDto);
         movieRepository.save(movie);
 
-        List<Long> categoryIds = categories.stream()
-                .map(CategoryDto::id)
-                .toList();
+        List<Long> categoryIds = getCategoriesIds(categories);
 
         return setCategories(movie.getId(), categoryIds);
     }
@@ -78,6 +86,30 @@ public class MovieService {
         List<Long> categoryIds = categoryService.getCategoryIdsByName(categoryNames);
 
         return setCategories(movie.getId(), categoryIds);
+    }
+
+    public CreateMovieStatus editMovie(Long movieId, MovieDto newMovieDto, List<CategoryDto> categories) {
+        CreateMovieStatus movieStatus = movieValidator.validateMovieDto(newMovieDto);
+        if (movieStatus != CreateMovieStatus.SUCCESS) {
+            return movieStatus;
+        }
+
+        Optional<Movie> optionalMovie = movieRepository.findById(movieId);
+        if (optionalMovie.isEmpty()) {
+            return CreateMovieStatus.MOVIE_DOESNT_EXIST;
+        }
+        Movie movie = optionalMovie.get();
+
+        updateMovie(movie, newMovieDto);
+
+        List<Long> categoriesIds = getCategoriesIds(categories);
+        CreateMovieStatus setCategoriesStatus = setCategories(movie.getId(), categoriesIds);
+        if (!setCategoriesStatus.isSuccess()) {
+            return setCategoriesStatus;
+        }
+
+        movieRepository.save(movie);
+        return CreateMovieStatus.SUCCESS;
     }
 
     public boolean deleteMovie(Long id) {
@@ -112,6 +144,20 @@ public class MovieService {
         movieRepository.save(movie);
 
         return CreateMovieStatus.SUCCESS;
+    }
+
+    private void updateMovie(Movie movie, MovieDto movieDto) {
+        movie.setTitle(movieDto.title());
+        movie.setDescription(movieDto.description());
+        movie.setDuration(movieDto.duration());
+        movie.setPosterUrl(movieDto.posterUrl());
+        movie.setReleaseDate(movieDto.releaseDate());
+    }
+
+    private List<Long> getCategoriesIds(List<CategoryDto> categories) {
+        return categories.stream()
+                .map(CategoryDto::id)
+                .toList();
     }
 
     private Movie createMovieFromMovieDto(MovieDto movieDto) {

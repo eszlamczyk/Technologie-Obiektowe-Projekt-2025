@@ -58,7 +58,7 @@ public class CategoryClientAPI {
                 });
     }
 
-    private List<CategoryDto> parseCategoryList(String responseBody) {
+    public List<CategoryDto> parseCategoryList(String responseBody) {
         try {
             return objectMapper.readValue(responseBody, new TypeReference<>() {});
         } catch (JsonProcessingException e) {

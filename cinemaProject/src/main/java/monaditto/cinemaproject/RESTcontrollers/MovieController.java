@@ -49,14 +49,21 @@ public class MovieController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(createMovieStatus.message());
     }
 
-    @PutMapping("/edit/set-categories/{id}")
-    public ResponseEntity<String> setCategories(@PathVariable Long id, @RequestBody List<Long> categoryIds) {
-        Status setCategoriesStatus = movieService.setCategories(id, categoryIds);
+    @PutMapping("/edit/{id}")
+    public ResponseEntity<String> editMovie(@PathVariable Long id, @RequestBody MovieWithCategoriesDto wrapperDto) {
+        Status editMovieStatus = movieService.editMovie(id, wrapperDto.movieDto(), wrapperDto.categories());
 
-        if (setCategoriesStatus.isSuccess()) {
-            return ResponseEntity.ok(setCategoriesStatus.message());
+        if (editMovieStatus.isSuccess()) {
+            return ResponseEntity.ok(editMovieStatus.message());
         }
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(setCategoriesStatus.message());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(editMovieStatus.message());
+    }
+
+    @GetMapping("/categories/{id}")
+    public ResponseEntity<List<CategoryDto>> editMovie(@PathVariable Long id) {
+        List<CategoryDto> categories = movieService.getMovieCategories(id);
+
+        return ResponseEntity.ok().body(categories);
     }
 }

@@ -27,7 +27,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 @Controller
 public class AdminEditMovieController {
@@ -57,7 +56,7 @@ public class AdminEditMovieController {
     private TextField titleField;
 
     @FXML
-    private TextField descriptionField;
+    private TextArea descriptionField;
 
     @FXML
     private TextField durationField;
@@ -147,10 +146,12 @@ public class AdminEditMovieController {
     }
 
     private void loadEditedMovie() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
         titleField.setText(movieDto.title());
         descriptionField.setText(movieDto.description());
         durationField.setText(String.valueOf(movieDto.duration()));
-        releaseDateField.setText(movieDto.releaseDate().toString());
+        releaseDateField.setText(movieDto.releaseDate().format(formatter));
         posterUrlField.setText(movieDto.posterUrl());
     }
 
@@ -166,6 +167,18 @@ public class AdminEditMovieController {
         categoryClientAPI.loadCategories()
                 .thenAccept(categoryList -> {
                     availableCategories.setAll(categoryList);
+                });
+        assignLoadedCategories();
+    }
+
+    private void assignLoadedCategories() {
+        if (movieDto == null) {
+            return;
+        }
+        movieClientAPI.getMovieCategories(movieDto)
+                .thenAccept(movieCategories -> {
+                    assignedCategories.addAll(movieCategories);
+                    availableCategories.removeAll(movieCategories);
                 });
     }
 
@@ -186,7 +199,6 @@ public class AdminEditMovieController {
         availableCategories.removeAll(selectedCategories);
         clearCategorySelection();
     }
-
 
     @FXML
     private void handleRemoveCategory(ActionEvent event) {
@@ -229,7 +241,6 @@ public class AdminEditMovieController {
                         handleAddSuccess();
                     }
                 });
-
     }
 
     private void handleAddSuccess() {
@@ -267,7 +278,18 @@ public class AdminEditMovieController {
     }
 
     private void editMovie() {
+        Optional<MovieDto> newMovieDto = createMovieDto();
+        if (newMovieDto.isEmpty()) return;
 
+        List<CategoryDto> categories = assignedCategoriesListView.getItems();
+
+        movieClientAPI.editMovie(movieDto.id(), newMovieDto.get(), categories)
+                .thenAccept(responseResult -> {
+                    setStatusLabelText(responseResult.body());
+                    if (responseResult.statusCode() == 200) {
+                        handleAddSuccess();
+                    }
+                });
     }
 
     @FXML

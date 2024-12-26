@@ -59,6 +59,15 @@ public class AdminPanelController {
     }
 
     @FXML
+    private void handleScreenings(ActionEvent event) {
+        try {
+            stageInitializer.loadStage(ControllerResource.ADMIN_SCREENINGS);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
     private void handleSignOut(ActionEvent event) {
         try {
             stageInitializer.loadStage(ControllerResource.LOGIN);

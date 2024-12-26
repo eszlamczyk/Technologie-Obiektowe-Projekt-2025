@@ -3,6 +3,7 @@ package monaditto.cinemaproject.screening;
 import java.time.LocalDateTime;
 
 public record ScreeningDto(
+        Long id,
         Long movieId,
         Long movieRoomId,
         LocalDateTime start,
@@ -15,6 +16,7 @@ public record ScreeningDto(
 
                 return new ScreeningDto(
                         screening.getScreeningId(),
+                        screening.getMovie().getId(),
                         screening.getRoom().getMovieRoomId(),
                         screening.getStart(),
                         screening.getPrice()

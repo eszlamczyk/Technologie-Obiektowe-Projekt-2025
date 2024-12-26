@@ -180,7 +180,7 @@ public class UserScreeningsController {
     @FXML
     private void handleGoBack(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_PANEL);
+            stageInitializer.loadStage(ControllerResource.USER_PANEL);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

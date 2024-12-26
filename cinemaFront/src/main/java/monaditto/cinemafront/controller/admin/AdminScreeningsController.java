@@ -218,7 +218,7 @@ public class AdminScreeningsController {
     @FXML
     private void handleGoBack(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.USER_PANEL);
+            stageInitializer.loadStage(ControllerResource.ADMIN_PANEL);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

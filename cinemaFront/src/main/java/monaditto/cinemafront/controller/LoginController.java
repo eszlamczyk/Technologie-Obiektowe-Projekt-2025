@@ -105,7 +105,13 @@ public class LoginController {
                                     }
                                 });
                             } else {
-                                Platform.runLater(() -> lblLogin.setText("Logged in, but no admin access."));
+                                Platform.runLater(() -> {
+                                    try {
+                                        stageInitializer.loadStage(ControllerResource.USER_PANEL);
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                });
                             }
                         } else {
                             // Handle login failure

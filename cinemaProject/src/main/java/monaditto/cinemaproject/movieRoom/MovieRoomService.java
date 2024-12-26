@@ -18,7 +18,8 @@ public class MovieRoomService {
         this.movieRoomRepository = movieRoomRepository;
     }
 
-    public MovieRoom save(MovieRoom movieRoom) {
+    public MovieRoom save(MovieRoomDto movieRoomDto) {
+        MovieRoom movieRoom = new MovieRoom(movieRoomDto.movieRoomName(), movieRoomDto.maxSeats());
         return movieRoomRepository.save(movieRoom);
     }
 

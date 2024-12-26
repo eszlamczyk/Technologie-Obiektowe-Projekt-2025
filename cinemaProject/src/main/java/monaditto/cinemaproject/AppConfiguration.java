@@ -9,9 +9,14 @@ import monaditto.cinemaproject.movie.CreateMovieStatus;
 import monaditto.cinemaproject.movie.MovieDto;
 import monaditto.cinemaproject.movie.MovieRepository;
 import monaditto.cinemaproject.movie.MovieService;
+import monaditto.cinemaproject.movieRoom.MovieRoom;
+import monaditto.cinemaproject.movieRoom.MovieRoomDto;
+import monaditto.cinemaproject.movieRoom.MovieRoomService;
 import monaditto.cinemaproject.role.Role;
 import monaditto.cinemaproject.role.RoleRepository;
 import monaditto.cinemaproject.role.RoleService;
+import monaditto.cinemaproject.screening.ScreeningDto;
+import monaditto.cinemaproject.screening.ScreeningService;
 import monaditto.cinemaproject.user.User;
 import monaditto.cinemaproject.user.UserService;
 import org.springframework.boot.CommandLineRunner;
@@ -35,12 +40,16 @@ public class AppConfiguration {
             RoleRepository roleRepository,
             PasswordHasher passwordHasher,
             CategoryService categoryService,
-            MovieService movieService) {
+            MovieService movieService,
+            MovieRoomService movieRoomService,
+            ScreeningService screeningService) {
         return args -> {
             if (userService.getUsers().isEmpty()) {
                 initUsers(userService, roleService, roleRepository, passwordHasher);
                 initCategories(categoryService);
                 initMovies(movieService);
+                initMovieRooms(movieRoomService);
+                initScreenings(screeningService);
             }
         };
     }
@@ -161,5 +170,32 @@ public class AppConfiguration {
         categories = List.of("action");
         movieStatus = movieService.createMovieByNames(movie, categories);
         System.out.println(movieStatus.message());
+    }
+
+    private static void initMovieRooms(MovieRoomService movieRoomService) {
+        movieRoomService.save(new MovieRoomDto("ROOM 1", 50));
+        movieRoomService.save(new MovieRoomDto("ROOM 2", 10));
+        movieRoomService.save(new MovieRoomDto("ROOM 3", 20));
+        movieRoomService.save(new MovieRoomDto("ROOM 4", 30));
+        movieRoomService.save(new MovieRoomDto("ROOM 5", 40));
+    }
+
+    private static void initScreenings(ScreeningService screeningService) {
+        List<ScreeningDto> screeningDtos = new ArrayList<>();
+
+        screeningDtos.add(new ScreeningDto((Long) null, 1L, 1L, LocalDateTime.now().plusDays(0), 20.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 2L, 2L, LocalDateTime.now().plusMinutes(50), 25.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 2L, 3L, LocalDateTime.now().plusDays(1), 30.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 2L, 4L, LocalDateTime.now().plusDays(1), 15.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 1L, 1L, LocalDateTime.now().plusDays(2), 20.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 1L, 2L, LocalDateTime.now().plusDays(2), 35.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 2L, 1L, LocalDateTime.now().plusDays(3), 20.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 1L, 2L, LocalDateTime.now().plusDays(3), 35.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 1L, 1L, LocalDateTime.now().plusDays(4), 20.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 2L, 2L, LocalDateTime.now().plusDays(4), 35.00));
+
+        for (ScreeningDto screeningDto : screeningDtos) {
+            screeningService.saveScreening(screeningDto);
+        }
     }
 }

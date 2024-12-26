@@ -25,7 +25,7 @@ public class ScreeningController {
         return ResponseEntity.ok(screenings);
     }
 
-    @PostMapping
+    @PutMapping
     public ResponseEntity<ScreeningDto> createScreening(@RequestBody ScreeningDto screeningDto) {
         ScreeningDto createdScreening = screeningService.saveScreening(screeningDto);
         return ResponseEntity.ok(createdScreening);
@@ -43,9 +43,9 @@ public class ScreeningController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteScreening(@PathVariable Long id) {
+    public ResponseEntity<String> deleteScreening(@PathVariable Long id) {
         if (screeningService.deleteScreening(id)) {
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.ok().body("Successfully deleted the screening");
         } else {
             return ResponseEntity.notFound().build();
         }

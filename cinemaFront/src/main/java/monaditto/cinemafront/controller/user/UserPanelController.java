@@ -1,4 +1,4 @@
-package monaditto.cinemafront.controller.admin;
+package monaditto.cinemafront.controller.user;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -6,20 +6,17 @@ import javafx.scene.Cursor;
 import javafx.scene.control.Button;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.shape.Rectangle;
-import monaditto.cinemafront.controller.ControllerResource;
 import monaditto.cinemafront.StageInitializer;
+import monaditto.cinemafront.controller.ControllerResource;
 import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
 import java.util.List;
 
 @Controller
-public class AdminPanelController {
+public class UserPanelController {
 
     private final StageInitializer stageInitializer;
-
-    @FXML
-    private Button usersButton;
 
     @FXML
     private Button moviesButton;
@@ -36,32 +33,23 @@ public class AdminPanelController {
     @FXML
     private AnchorPane rootPane;
 
-    public AdminPanelController(StageInitializer stageInitializer) {
+    public UserPanelController(StageInitializer stageInitializer) {
         this.stageInitializer = stageInitializer;
     }
 
     @FXML
-    private void handleAdminUsers(ActionEvent event) {
+    private void handleUserMovies(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_USER);
+            stageInitializer.loadStage(ControllerResource.USER_MOVIE);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     @FXML
-    private void handleAdminMovies(ActionEvent event) {
+    private void handleUserScreenings(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_MOVIE);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @FXML
-    private void handleScreenings(ActionEvent event) {
-        try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_SCREENINGS);
+            stageInitializer.loadStage(ControllerResource.USER_SCREENINGS);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -81,7 +69,7 @@ public class AdminPanelController {
         backgroundRectangle.widthProperty().bind(rootPane.widthProperty());
         backgroundRectangle.heightProperty().bind(rootPane.heightProperty());
 
-        List<Button> buttons = List.of(usersButton, moviesButton, screeningsButton, signOutButton);
+        List<Button> buttons = List.of(moviesButton, screeningsButton, signOutButton);
         buttons.forEach(this::initializeButtons);
     }
 

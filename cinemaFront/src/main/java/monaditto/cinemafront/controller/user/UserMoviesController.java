@@ -1,4 +1,4 @@
-package monaditto.cinemafront.controller.admin;
+package monaditto.cinemafront.controller.user;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -12,8 +12,8 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.shape.Rectangle;
 import monaditto.cinemafront.StageInitializer;
-import monaditto.cinemafront.config.BackendConfig;
 import monaditto.cinemafront.controller.ControllerResource;
+import monaditto.cinemafront.controller.admin.MovieClientAPI;
 import monaditto.cinemafront.databaseMapping.MovieDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -21,13 +21,9 @@ import org.springframework.stereotype.Controller;
 import java.io.IOException;
 
 @Controller
-public class AdminMoviesController {
+public class UserMoviesController {
 
     private final StageInitializer stageInitializer;
-
-    private final BackendConfig backendConfig;
-
-    private final AdminEditMovieController adminEditMovieController;
 
     private ObservableList<MovieDto> movieDtoList;
 
@@ -38,10 +34,7 @@ public class AdminMoviesController {
     private ListView<MovieDto> moviesListView;
 
     @FXML
-    private Button deleteButton;
-
-    @FXML
-    private Button editButton;
+    private Button rateButton;
 
     @FXML
     private Rectangle backgroundRectangle;
@@ -49,30 +42,16 @@ public class AdminMoviesController {
     @FXML
     private AnchorPane rootPane;
 
-    public AdminMoviesController(StageInitializer stageInitializer,
-                                 BackendConfig backendConfig,
-                                 AdminEditMovieController adminEditMovieController) {
+    public UserMoviesController(StageInitializer stageInitializer) {
         this.stageInitializer = stageInitializer;
-        this.backendConfig = backendConfig;
-        this.adminEditMovieController = adminEditMovieController;
     }
 
     @FXML
     private void initialize() {
         initializeMovieListView();
-        initializeButtons();
         initializeResponsiveness();
+        initializeButtons();
         loadMovies();
-    }
-
-    private void initializeButtons() {
-        BooleanBinding isSingleCellSelected = Bindings.createBooleanBinding(
-                () -> moviesListView.getSelectionModel().getSelectedItems().size() != 1,
-                moviesListView.getSelectionModel().getSelectedItems()
-        );
-
-        deleteButton.disableProperty().bind(isSingleCellSelected);
-        editButton.disableProperty().bind(isSingleCellSelected);
     }
 
     private void initializeMovieListView() {
@@ -104,43 +83,19 @@ public class AdminMoviesController {
                 .thenAccept(movieDtoList::addAll);
     }
 
-    @FXML
-    private void handleDelete(ActionEvent event) {
-        MovieDto toDelete = moviesListView.getSelectionModel().getSelectedItem();
+    private void initializeButtons() {
+        BooleanBinding isSingleCellSelected = Bindings.createBooleanBinding(
+                () -> moviesListView.getSelectionModel().getSelectedItems().size() != 1,
+                moviesListView.getSelectionModel().getSelectedItems()
+        );
 
-        int status = movieClientAPI.delete(toDelete);
-        if (status != 200) {
-            System.err.println("Failed to delete the movie, status code = " + status);
-            return;
-        }
-        movieDtoList.remove(toDelete);
-    }
-
-    @FXML
-    private void handleEdit(ActionEvent event) {
-        try {
-            MovieDto toEdit = moviesListView.getSelectionModel().getSelectedItem();
-            stageInitializer.loadStage(ControllerResource.ADMIN_EDIT_MOVIE);
-            adminEditMovieController.setMovieDto(toEdit);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @FXML
-    private void handleAdd(ActionEvent event) {
-        try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_EDIT_MOVIE);
-            adminEditMovieController.resetMovieDto();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        rateButton.disableProperty().bind(isSingleCellSelected);
     }
 
     @FXML
     private void handleGoBack(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_PANEL);
+            stageInitializer.loadStage(ControllerResource.USER_PANEL);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

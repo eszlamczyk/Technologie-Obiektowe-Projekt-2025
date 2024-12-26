@@ -17,7 +17,7 @@
                 <Label text="Siema siema admin co tam?" styleClass="adminPanelLabel"/>
                 <Button fx:id="usersButton" styleClass="adminPanelButton" text="Users" onAction="#handleAdminUsers"/>
                 <Button fx:id="moviesButton" styleClass="adminPanelButton" text="Movies" onAction="#handleAdminMovies"/>
-                <Button fx:id="screeningsButton" styleClass="adminPanelButton" text="Screenings"/>
+                <Button fx:id="screeningsButton" styleClass="adminPanelButton" text="Screenings" onAction="#handleScreenings"/>
                 <Button fx:id="signOutButton" styleClass="adminPanelButton" text="Sign out" onAction="#handleSignOut"/>
             </VBox>
     </StackPane>

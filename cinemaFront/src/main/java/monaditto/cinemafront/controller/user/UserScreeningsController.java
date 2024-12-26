@@ -1,4 +1,4 @@
-package monaditto.cinemafront.controller.admin;
+package monaditto.cinemafront.controller.user;
 
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -15,10 +15,14 @@ import javafx.scene.shape.Rectangle;
 import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.config.BackendConfig;
 import monaditto.cinemafront.controller.ControllerResource;
+import monaditto.cinemafront.controller.admin.AdminEditScreeningController;
+import monaditto.cinemafront.controller.admin.MovieClientAPI;
+import monaditto.cinemafront.controller.admin.ScreeningClientAPI;
 import monaditto.cinemafront.databaseMapping.MovieDto;
 import monaditto.cinemafront.databaseMapping.ScreeningDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -29,7 +33,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Controller
-public class AdminScreeningsController {
+public class UserScreeningsController {
 
     private final StageInitializer stageInitializer;
 
@@ -55,12 +59,6 @@ public class AdminScreeningsController {
     private ListView<ScreeningDto> screeningsListView;
 
     @FXML
-    private Button deleteButton;
-
-    @FXML
-    private Button editButton;
-
-    @FXML
     private Rectangle backgroundRectangle;
 
     @FXML
@@ -84,9 +82,9 @@ public class AdminScreeningsController {
     @FXML
     private Button buyButton;
 
-    public AdminScreeningsController(StageInitializer stageInitializer,
-                                 BackendConfig backendConfig,
-                                 AdminEditScreeningController adminEditScreeningController) {
+    public UserScreeningsController(StageInitializer stageInitializer,
+                                     BackendConfig backendConfig,
+                                     AdminEditScreeningController adminEditScreeningController) {
         this.stageInitializer = stageInitializer;
         this.backendConfig = backendConfig;
         this.adminEditScreeningController = adminEditScreeningController;
@@ -96,21 +94,10 @@ public class AdminScreeningsController {
     private void initialize() {
         allScreenings = new ArrayList<>();
         initializeScreeningListView();
-        initializeButtons();
         initializeResponsiveness();
-        loadScreenings();
+        initializeButtons();
+        loadUpcomingScreenings();
         initializeDayButtons();
-    }
-
-    private void initializeButtons() {
-        BooleanBinding isSingleCellSelected = Bindings.createBooleanBinding(
-                () -> screeningsListView.getSelectionModel().getSelectedItems().size() != 1,
-                screeningsListView.getSelectionModel().getSelectedItems()
-        );
-
-        deleteButton.disableProperty().bind(isSingleCellSelected);
-        editButton.disableProperty().bind(isSingleCellSelected);
-        buyButton.disableProperty().bind(isSingleCellSelected);
     }
 
     private void initializeScreeningListView() {
@@ -142,9 +129,18 @@ public class AdminScreeningsController {
         backgroundRectangle.heightProperty().bind(rootPane.heightProperty());
     }
 
-    private void loadScreenings() {
+    private void initializeButtons() {
+        BooleanBinding isSingleCellSelected = Bindings.createBooleanBinding(
+                () -> screeningsListView.getSelectionModel().getSelectedItems().size() != 1,
+                screeningsListView.getSelectionModel().getSelectedItems()
+        );
+
+        buyButton.disableProperty().bind(isSingleCellSelected);
+    }
+
+    private void loadUpcomingScreenings() {
         loadMovieMap();
-        screeningClientAPI.loadScreenings()
+        screeningClientAPI.loadUpcomingScreenings()
                 .thenAccept(screeningDtos -> {
                     screeningsDtoList.addAll(screeningDtos);
                     allScreenings.addAll(screeningDtos);
@@ -182,43 +178,9 @@ public class AdminScreeningsController {
     }
 
     @FXML
-    private void handleDelete(ActionEvent event) {
-        ScreeningDto toDelete = screeningsListView.getSelectionModel().getSelectedItem();
-
-        int status = screeningClientAPI.delete(toDelete);
-        if (status != 200) {
-            System.err.println("Failed to delete the screening, status code = " + status);
-            return;
-        }
-        screeningsDtoList.remove(toDelete);
-        allScreenings.remove(toDelete);
-    }
-
-    @FXML
-    private void handleEdit(ActionEvent event) {
-        try {
-            ScreeningDto toEdit = screeningsListView.getSelectionModel().getSelectedItem();
-            stageInitializer.loadStage(ControllerResource.ADMIN_EDIT_SCREENING);
-            adminEditScreeningController.setScreeningDto(toEdit);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @FXML
-    private void handleAdd(ActionEvent event) {
-        try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_EDIT_SCREENING);
-            adminEditScreeningController.resetScreeningDto();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @FXML
     private void handleGoBack(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.USER_PANEL);
+            stageInitializer.loadStage(ControllerResource.ADMIN_PANEL);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

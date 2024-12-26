@@ -13,9 +13,13 @@ import monaditto.cinemafront.request.RequestBuilder;
 import monaditto.cinemafront.response.ResponseResult;
 import org.springframework.stereotype.Component;
 
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -75,6 +79,37 @@ public class ScreeningClientAPI {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Error parsing screening list: " + e.getMessage(), e);
         }
+    }
+
+    public CompletableFuture<List<ScreeningDto>> loadUpcomingScreenings() {
+        HttpClient client = HttpClient.newHttpClient();
+
+        String urlWithParam = getRequestWithDate();
+
+        HttpRequest request = RequestBuilder.buildRequestGET(urlWithParam);
+
+        return sendLoadUpcomingScreeningsRequest(client, request);
+    }
+
+    private String getRequestWithDate() {
+        LocalDateTime dateTime = LocalDateTime.now();
+
+        String formattedDateTime = URLEncoder.encode(
+                dateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                StandardCharsets.UTF_8
+        );
+
+        return endpointUrl + "/upcoming?dateTime=" + formattedDateTime;
+    }
+
+    private CompletableFuture<List<ScreeningDto>> sendLoadUpcomingScreeningsRequest(HttpClient client, HttpRequest request) {
+        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(HttpResponse::body)
+                .thenApply(this::parseScreenings)
+                .exceptionally(e -> {
+                    System.err.println("Error loading the movies: " + e.getMessage());
+                    return new ArrayList<>();
+                });
     }
 
     public int delete(ScreeningDto toDelete) {

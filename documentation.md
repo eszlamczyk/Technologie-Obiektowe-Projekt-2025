@@ -758,12 +758,13 @@ public class Purchase {
     @Column(name = "bought_seats", nullable = false)
     private int boughtSeats;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "reservation_status", nullable = false)
-    private String reservationStatus;
+    private ReservationStatus reservationStatus;
 
     public Purchase() {}
 
-    public Purchase(User user, Screening screening, int boughtSeats, String reservationStatus) {
+    public Purchase(User user, Screening screening, int boughtSeats, ReservationStatus reservationStatus) {
         this.user = user;
         this.screening = screening;
         this.boughtSeats = boughtSeats;
@@ -794,11 +795,11 @@ public class Purchase {
         return boughtSeats;
     }
 
-    public void setReservationStatus(String reservationStatus) {
+    public void setReservationStatus(ReservationStatus reservationStatus) {
         this.reservationStatus = reservationStatus;
     }
 
-    public String getReservationStatus() {
+    public ReservationStatus getReservationStatus() {
         return reservationStatus;
     }
 
@@ -809,13 +810,149 @@ public class Purchase {
 ```
 
 #### Klasy pomocnicze
+Enumeracja `ReservationStatus` modeluje możliwe statusy rezerwacji.
+```java
+public enum ReservationStatus {
+    UNPAID,
+    PAID,
+    CANCELLED,
+    EXPIRED;
+}
+```
 
 #### Warstwa serwisowa
+```java
+@Service
+@Transactional
+public class PurchaseService {
+
+    @Autowired
+    private PurchaseRepository purchaseRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private ScreeningRepository screeningRepository;
+
+    public List<Purchase> findAll() {
+        return purchaseRepository.findAll();
+    }
+
+    public Purchase findById(Long id) {
+        return purchaseRepository.findById(id).orElse(null);
+    }
+
+    public List<Purchase> findByUser(Long userId) {
+        return purchaseRepository.findByUserId(userId);
+    }
+
+    public List<Purchase> findByScreening(Long screeningId) {
+        return purchaseRepository.findByScreeningId(screeningId);
+    }
+
+    public List<Purchase> findByStatus(ReservationStatus status) {
+        return purchaseRepository.findByReservationStatus(status);
+    }
+
+    public Purchase create(PurchaseDto purchaseDto) {
+        var user = userRepository.findById(purchaseDto.userId());
+        if(user.isEmpty()) {
+            throw new IllegalArgumentException("User not found");
+        }
+
+        var screening = screeningRepository.findById(purchaseDto.screeningId());
+        if(screening.isEmpty()) {
+            throw new IllegalArgumentException("Screening not found");
+        }
+
+        if(purchaseDto.boughtSeats() <= 0) {
+            throw new IllegalArgumentException("Bought seats must be greater than 0");
+        }
+
+        validateSeatAvailability(screening.get(), purchaseDto.boughtSeats());
+        validatePurchaseTimeWindow(screening.get());
+
+        var purchase = new Purchase(user.get(), screening.get(), purchaseDto.boughtSeats(), ReservationStatus.UNPAID);
+        purchaseRepository.save(purchase);
+        return purchase;
+    }
+
+    public void deletePurchase(Long purchaseId) {
+        var purchaseResult = purchaseRepository.findById(purchaseId);
+        if(purchaseResult.isEmpty()) {
+            throw new IllegalArgumentException("Purchase not found");
+        }
+
+        var purchase = purchaseResult.get();
+        purchaseRepository.delete(purchase);
+    }
+
+    public void confirmPayment(Long purchaseId) {
+        updateStatusIfValid(
+                purchaseId,
+                ReservationStatus.PAID,
+                status -> status == ReservationStatus.PAID,
+                "Purchase is already paid"
+        );
+    }
+
+    public void cancelPurchase(Long purchaseId) {
+        updateStatusIfValid(
+                purchaseId,
+                ReservationStatus.CANCELLED,
+                status -> status == ReservationStatus.CANCELLED,
+                "Purchase is already cancelled"
+        );
+    }
+
+    private void updateStatusIfValid(
+            Long purchaseId,
+            ReservationStatus newStatus,
+            Predicate<ReservationStatus> invalidCondition,
+            String errorMessage
+    ) {
+        var purchase = findById(purchaseId);
+        if (purchase == null) {
+            throw new IllegalArgumentException("Purchase not found");
+        }
+        if (invalidCondition.test(purchase.getReservationStatus())) {
+            throw new IllegalStateException(errorMessage);
+        }
+        purchase.setReservationStatus(newStatus);
+        purchaseRepository.save(purchase);
+    }
+
+    private void validateSeatAvailability(Screening screening, int requestedSeats) {
+        int availableSeats = screening.getRoom().getMaxSeats() - purchaseRepository
+                .findByScreeningId(screening.getScreeningId())
+                .stream()
+                .mapToInt(Purchase::getBoughtSeats)
+                .sum();
+
+        if (requestedSeats > availableSeats) {
+            throw new IllegalStateException("Not enough seats available");
+        }
+    }
+
+    private void validatePurchaseTimeWindow(Screening screening) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime screeningTime = screening.getStart();
+
+        if (now.isAfter(screeningTime)) {
+            throw new IllegalStateException("Cannot purchase tickets for past screenings");
+        }
+    }
+}
+```
 
 #### Warstwa repozytorium
 
 ```java
 public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
+    List<Purchase> findByUserId(Long userId);
+    List<Purchase> findByScreeningId(Long screeningId);
+    List<Purchase> findByReservationStatus(ReservationStatus status);
 }
 ```
 
@@ -1790,6 +1927,124 @@ public class ScreeningController {
     public ResponseEntity<List<ScreeningDto>> getUpcomingScreenings(@RequestParam LocalDateTime dateTime) {
         List<ScreeningDto> screenings = screeningService.getUpcomingScreeningsAfter(dateTime);
         return ResponseEntity.ok(screenings);
+    }
+}
+```
+
+## PurchaseController
+```java
+@RestController
+@RequestMapping("/api/purchases")
+public class PurchaseController {
+
+    @Autowired
+    private PurchaseService purchaseService;
+
+    @GetMapping
+    public ResponseEntity<List<PurchaseResponseDto>> getAllPurchases() {
+        List<PurchaseResponseDto> purchases = purchaseService.findAll()
+                .stream()
+                .map(PurchaseResponseDto::fromEntity)
+                .toList();
+        return ResponseEntity.ok(purchases);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<PurchaseResponseDto> getPurchaseById(@PathVariable Long id) {
+        Purchase purchase = purchaseService.findById(id);
+        return purchase != null ? ResponseEntity.ok(PurchaseResponseDto.fromEntity(purchase))
+                : ResponseEntity.notFound().build();
+    }
+
+    @PostMapping
+    public ResponseEntity<PurchaseResponseDto> createPurchase(@RequestBody PurchaseDto purchaseDto) {
+        try {
+            Purchase purchase = purchaseService.create(purchaseDto);
+            return ResponseEntity.ok(PurchaseResponseDto.fromEntity(purchase));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .build();
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePurchase(@PathVariable Long id) {
+        try {
+            purchaseService.deletePurchase(id);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<PurchaseResponseDto>> getPurchasesByUser(@PathVariable Long userId) {
+        List<PurchaseResponseDto> purchases = purchaseService.findByUser(userId)
+                .stream()
+                .map(PurchaseResponseDto::fromEntity)
+                .toList();
+        return ResponseEntity.ok(purchases);
+    }
+
+    @GetMapping("/screening/{screeningId}")
+    public ResponseEntity<List<PurchaseResponseDto>> getPurchasesByScreening(@PathVariable Long screeningId) {
+        List<PurchaseResponseDto> purchases = purchaseService.findByScreening(screeningId)
+                .stream()
+                .map(PurchaseResponseDto::fromEntity)
+                .toList();
+        return ResponseEntity.ok(purchases);
+    }
+
+    @GetMapping("/status/{status}")
+    public ResponseEntity<List<PurchaseResponseDto>> getPurchasesByStatus(
+            @PathVariable ReservationStatus status) {
+        List<PurchaseResponseDto> purchases = purchaseService.findByStatus(status)
+                .stream()
+                .map(PurchaseResponseDto::fromEntity)
+                .toList();
+        return ResponseEntity.ok(purchases);
+    }
+
+    @PostMapping("/{id}/confirm")
+    public ResponseEntity<PurchaseResponseDto> confirmPurchase(@PathVariable Long id) {
+        try {
+            purchaseService.confirmPayment(id);
+            Purchase purchase = purchaseService.findById(id);
+            return ResponseEntity.ok(PurchaseResponseDto.fromEntity(purchase));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .build();
+        }
+    }
+
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<PurchaseResponseDto> cancelPurchase(@PathVariable Long id) {
+        try {
+            purchaseService.cancelPurchase(id);
+            Purchase purchase = purchaseService.findById(id);
+            return ResponseEntity.ok(PurchaseResponseDto.fromEntity(purchase));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .build();
+        }
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, String>> handleValidationExceptions(
+            MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+        return ResponseEntity.badRequest().body(errors);
     }
 }
 ```

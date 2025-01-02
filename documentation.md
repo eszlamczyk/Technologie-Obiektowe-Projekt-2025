@@ -92,12 +92,136 @@ public class Category {
 ```
 #### Klasy pomocnicze
 
+Dodatkowa klasa typu DTO
+```java
+public record CategoryDto (
+    Long id,
+    String categoryName
+) {
+    public CategoryDto(String categoryName) {
+        this(null, categoryName);
+    }
+
+    public static CategoryDto categoryToCategoryDto(Category category) {
+        if (category == null) {
+            return null;
+        }
+
+        return new CategoryDto(
+                category.getCategoryId(),
+                category.getCategoryName()
+        );
+    }
+}
+```
+
 #### Warstwa serwisowa
+
+Warstwa serwisowa implementuje następujące podstawowe funkcjonalności
+
+- `createCategory` przyjmuje obiekt DTO i jeżeli nie ma już kategorii z taką 
+nazwą to dodaje ją do bazy danych
+- `getCategoryByName` wyszukuje kategorie po jej nazwie,
+a następnie to co zostało znalezione konwertuje na obiekt DTO
+- `getCategoryIdsByName` robi to samo tylko zwraca ich ID zamiast całego obiektu
+- `editCategory` edytuje kategorie
+- `deleteCategory` i `deleteCategories` usuwa kategorie po id (lub liście je zawierających)
+
+```java
+@Service
+@Transactional
+public class CategoryService {
+
+    private final CategoryRepository categoryRepository;
+
+    @Autowired
+    public CategoryService(CategoryRepository categoryRepository) {
+        this.categoryRepository = categoryRepository;
+    }
+
+    public List<CategoryDto> getCategories() {
+        return categoryRepository.findAll().stream()
+                .map(CategoryDto::categoryToCategoryDto)
+                .toList();
+    }
+
+    public boolean createCategory(CategoryDto categoryDto) {
+        if (categoryRepository.findByCategoryName(categoryDto.categoryName()).isPresent()) {
+            return false;
+        }
+        Category category = new Category(categoryDto.categoryName());
+        categoryRepository.save(category);
+        return true;
+    }
+
+    public Optional<CategoryDto> getCategoryByName(String categoryName) {
+        return categoryRepository.findByCategoryName(categoryName)
+                .map(CategoryDto::categoryToCategoryDto);
+    }
+
+    public List<Long> getCategoryIdsByName(List<String> categoryNames) {
+        return categoryNames.stream()
+                .map(this::getCategoryByName)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .map(CategoryDto::id)
+                .toList();
+    }
+
+    public boolean editCategory(Long id, CategoryDto categoryDto) {
+
+        Optional<Category> categoryWithName = categoryRepository.findByCategoryName(categoryDto.categoryName());
+
+        if (categoryWithName.isPresent() &&
+                categoryDto.categoryName().equals(categoryWithName.get().getCategoryName()) &&
+                !Objects.equals(categoryWithName.get().getCategoryId(), id)) {
+            return false;
+        }
+
+        Optional<Category> optionalCategory = categoryRepository.findById(id);
+        if (optionalCategory.isPresent()) {
+            Category category = optionalCategory.get();
+            category.setCategoryName(categoryDto.categoryName());
+            categoryRepository.save(category);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean deleteCategory(Long id) {
+        Optional<Category> optionalCategory = categoryRepository.findById(id);
+        if (optionalCategory.isPresent()) {
+            Category category = optionalCategory.get();
+            categoryRepository.delete(category);
+            return true;
+        }
+        return false;
+    }
+
+    public List<String> deleteCategories(List<Long> ids) {
+        List<String> deletedCategories = new ArrayList<>();
+        for (Long id : ids) {
+            Optional<Category> optionalCategory = categoryRepository.findById(id);
+            if (optionalCategory.isPresent()) {
+                Category category = optionalCategory.get();
+                categoryRepository.delete(category);
+                deletedCategories.add(category.getCategoryName());
+            }
+        }
+        return deletedCategories;
+    }
+}
+```
 
 #### Warstwa repozytorium
 
+Warstwa repozytorium implementuje dodatkowo:
+- wyszukiwanie po nazwie kategorii
+
 ```java
 public interface CategoryRepository extends JpaRepository<Category, Long> {
+
+    Optional<Category> findByCategoryName(String categoryName);
 }
 ```
 
@@ -270,7 +394,7 @@ public class MovieRoom {
     @Column(name = "movie_room_id")
     private Long id;
 
-    @Column(name = "movie_room_name", nullable = false)
+    @Column(name = "movie_room_name", nullable = false, unique = true)
     private String movieRoomName;
 
     @Column(name = "max_seats", nullable = false)
@@ -323,14 +447,147 @@ public class MovieRoom {
 
 #### Klasy pomocnicze
 
+Została zaimplementowana dodatkowa klasa typu DTO `MovieRoomDTO`
+
+```java
+public record MovieRoomDto(
+        Long id,
+        String movieRoomName,
+        int maxSeats
+) {
+
+    public MovieRoomDto(String movieRoomName, int maxSeats) {
+        this(null,movieRoomName, maxSeats);
+    }
+
+    public static MovieRoomDto movieRoomtoMovieRoomDto(MovieRoom movieRoom) {
+        if (movieRoom == null) {
+            return null;
+        }
+
+        return new MovieRoomDto(
+                movieRoom.getMovieRoomId(),
+                movieRoom.getMovieRoomName(),
+                movieRoom.getMaxSeats()
+        );
+    }
+
+}
+```
+
 #### Warstwa serwisowa
+
+Warstwa Serwisowa zawiera podstawowe operacje potrzebne do obsługi poszczególnych
+operacji dotyczących sal w kompleksie kinowym.
+
+- `createMovieRoom` przyjmuje pomocniczą klase `movieRoomDto`, poczym przekształca ją 
+na klase typu entity, a następnie przy użyciu repozytorium dodaje ją do bazy danych
+- `getMovieRoom` przyjmuje nazwe sali poczym poszukuje sali wg tej nazwy, a następnie mapuje ją na klase DTO
+- `getAllMovieRooms` zwraca liste wszystkich sal w formacie DTO
+- `editMovieRoom` przy użyciu id oraz klasy DTO determinuje czy została wykonana jakaś zmiana i jak tak to 
+zapisuje ją w bazie danych
+- `deleteMovieRoom` i `deleteMovieRooms` przyjmują odpowiednio id oraz liste id, poczym próbują usunąć 
+wszystkie odpowiadające im recordy z bazy
+
+```java
+@Service
+public class MovieRoomService {
+
+    private final MovieRoomRepository movieRoomRepository;
+
+    @Autowired
+    public MovieRoomService(MovieRoomRepository movieRoomRepository) {
+        this.movieRoomRepository = movieRoomRepository;
+    }
+
+    public MovieRoom save(MovieRoomDto movieRoomDto) {
+        MovieRoom movieRoom = new MovieRoom(movieRoomDto.movieRoomName(), movieRoomDto.maxSeats());
+        return movieRoomRepository.save(movieRoom);
+    }
+
+    public boolean createMovieRoom(MovieRoomDto movieRoomDto) {
+        if (movieRoomRepository.findByMovieRoomName(movieRoomDto.movieRoomName()).isPresent()) {
+            return false;
+        }
+        MovieRoom movieRoom =  new MovieRoom(
+                movieRoomDto.movieRoomName(),
+                movieRoomDto.maxSeats());
+
+        movieRoomRepository.save(movieRoom);
+        return true;
+    }
+
+    public Optional<MovieRoomDto> getMovieRoom(String movieRoomName) {
+        return movieRoomRepository.findByMovieRoomName(movieRoomName)
+                .map(MovieRoomDto::movieRoomtoMovieRoomDto);
+    }
+
+    public List<MovieRoomDto> getAllMovieRooms() {
+        return movieRoomRepository.findAll()
+                .stream().map(MovieRoomDto::movieRoomtoMovieRoomDto).collect(Collectors.toList());
+    }
+
+    public boolean editMovieRoom(Long id, MovieRoomDto movieRoomDto) {
+        Optional<MovieRoom> movieRoomWithTheName =
+                movieRoomRepository.findByMovieRoomName(movieRoomDto.movieRoomName());
+
+        if (movieRoomWithTheName.isPresent() &&
+                (movieRoomWithTheName.get().getMovieRoomName().equals(movieRoomDto.movieRoomName()) &&
+                    !Objects.equals(movieRoomWithTheName.get().getMovieRoomId(), id))) {
+            return false;
+        }
+
+        Optional<MovieRoom> optionalMovieRoom = movieRoomRepository.findById(id);
+        if(optionalMovieRoom.isPresent()) {
+
+            MovieRoom movieRoom = optionalMovieRoom.get();
+            movieRoom.setMovieRoomName(movieRoomDto.movieRoomName());
+            movieRoom.setMaxSeats(movieRoomDto.maxSeats());
+            return true;
+        }
+        return false;
+    }
+
+    public boolean deleteMovieRoom(Long id) {
+        Optional<MovieRoom> optionalMovieRoom = movieRoomRepository.findById(id);
+        if(optionalMovieRoom.isPresent()) {
+            MovieRoom movieRoom = optionalMovieRoom.get();
+            movieRoomRepository.delete(movieRoom);
+            return true;
+        }
+        return false;
+    }
+
+    public List<String> deleteMovieRooms(List<Long> ids) {
+        List<String> successfullyDeletedMovieRooms = new ArrayList<>();
+        for (Long id : ids) {
+            Optional<MovieRoom> optionalMovieRoom = movieRoomRepository.findById(id);
+            if (optionalMovieRoom.isPresent()) {
+                MovieRoom movieRoom = optionalMovieRoom.get();
+                movieRoomRepository.delete(movieRoom);
+                successfullyDeletedMovieRooms.add(movieRoom.getMovieRoomName());
+            }
+        }
+        return successfullyDeletedMovieRooms;
+    }
+}
+```
 
 #### Warstwa repozytorium
 
+Repozytorium zawiera dodatkową metode mającą na celu znajdowanie recordów
+(zawsze będzie maksymalnie jeden ze względu na unikalność kolumny `movieRoomName`)
+poprzez ich nazwę
+
 ```java
+@Repository
 public interface MovieRoomRepository extends JpaRepository<MovieRoom, Long> {
+
+    Optional<MovieRoom> findByMovieRoomName(String movieRoomName);
+
 }
 ```
+
 
 
 ## Opinion
@@ -1163,6 +1420,409 @@ public interface UserRepository extends JpaRepository<User, Long> {
 }
 ```
 
+# KontroleryREST
+
+Kontrolery REST używają technologii webowych aby wysyłać i obsługiwać requesty, które
+gui wysyła
+
+## Dodatkowe klasy DTO
+
+### AuthResponse
+
+```java
+public class AuthResponse {
+    private List<RoleDto> roles;
+
+    public AuthResponse(List<RoleDto> roles) {
+        this.roles = roles;
+    }
+
+    public List<RoleDto> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<RoleDto> roles) {
+        this.roles = roles;
+    }
+}
+```
+
+### LoginRequest
+
+```java
+public class LoginRequest {
+    private String email;
+    private String password;
+
+    public LoginRequest(String email, String password) {
+        this.email = email;
+        this.password = password;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+}
+```
+
+## AdminPanelController
+
+```java
+@RestController
+@RequestMapping("/api/admin-panel")
+public class AdminPanelController {
+
+    private final UserService userService;
+
+    public AdminPanelController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @GetMapping("/users")
+    public List<UserDto> getAllUsers() {
+        return userService.getUsers();
+    }
+
+    @DeleteMapping("/users/{id}")
+    public void deleteUser(@PathVariable Long id) {
+        userService.deleteUserById(id);
+    }
+}
+```
+
+## AuthController
+
+```java
+@RestController
+@RequestMapping("/api/auth")
+public class AuthController {
+
+    private final UserService userService;
+
+    private final RoleService roleService;
+
+    @Autowired
+    public AuthController(UserService userService, RoleService roleService) {
+        this.userService = userService;
+        this.roleService = roleService;
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+        boolean isAuthenticated = userService.authenticate(loginRequest.getEmail(), loginRequest.getPassword());
+        UserDto userDto = userService.findByEmail(loginRequest.getEmail()).get();
+
+        if (isAuthenticated) {
+            AuthResponse authResponse = new AuthResponse(roleService.getUserRoles(userDto.id()).stream().toList());
+            return ResponseEntity.ok(authResponse);
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
+        }
+    }
+}
+```
+
+## CategoryController
+
+```java
+@RestController
+@RequestMapping("api/categories")
+public class CategoryController {
+
+    private final CategoryService categoryService;
+
+    @Autowired
+    public CategoryController(CategoryService categoryService) {
+        this.categoryService = categoryService;
+    }
+
+    @GetMapping()
+    public ResponseEntity<List<CategoryDto>> getCategories() {
+        return ResponseEntity.ok().body(categoryService.getCategories());
+    }
+}
+```
+
+## MovieController
+
+```java
+@RestController
+@RequestMapping("api/movies")
+public class MovieController {
+
+    private final MovieService movieService;
+
+    @Autowired
+    public MovieController(MovieService movieService) {
+        this.movieService = movieService;
+    }
+
+    @GetMapping()
+    public ResponseEntity<List<MovieDto>> getMovies() {
+        return ResponseEntity.ok().body(movieService.getMovies());
+    }
+
+    @DeleteMapping("delete/{id}")
+    public ResponseEntity<String> deleteMovie(@PathVariable Long id) {
+        if (movieService.deleteMovie(id)) {
+            return ResponseEntity.ok().body("Successfully deleted the movie");
+        }
+        String message = String.format("Movie with given id (id = %d) doesn't exist", id);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(message);
+    }
+
+    @PutMapping("/create")
+    public ResponseEntity<String> createMovie(@RequestBody MovieWithCategoriesDto wrapperDto) {
+        Status createMovieStatus = movieService.createMovie(wrapperDto.movieDto(), wrapperDto.categories());
+
+        if (createMovieStatus.isSuccess()) {
+            return ResponseEntity.ok(createMovieStatus.message());
+        }
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(createMovieStatus.message());
+    }
+
+    @PutMapping("/edit/{id}")
+    public ResponseEntity<String> editMovie(@PathVariable Long id, @RequestBody MovieWithCategoriesDto wrapperDto) {
+        Status editMovieStatus = movieService.editMovie(id, wrapperDto.movieDto(), wrapperDto.categories());
+
+        if (editMovieStatus.isSuccess()) {
+            return ResponseEntity.ok(editMovieStatus.message());
+        }
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(editMovieStatus.message());
+    }
+
+    @GetMapping("/categories/{id}")
+    public ResponseEntity<List<CategoryDto>> editMovie(@PathVariable Long id) {
+        List<CategoryDto> categories = movieService.getMovieCategories(id);
+
+        return ResponseEntity.ok().body(categories);
+    }
+}
+```
+
+## MovieRoomController
+
+```java
+@RestController
+@RequestMapping("/api/movieRooms")
+public class MovieRoomController {
+
+    private final MovieRoomService movieRoomService;
+
+    @Autowired
+    public MovieRoomController(MovieRoomService movieRoomService) {
+        this.movieRoomService = movieRoomService;
+    }
+
+    @GetMapping
+    public List<MovieRoomDto> getAllMovieRooms() {
+        return movieRoomService.getAllMovieRooms();
+    }
+
+    @GetMapping("/movieRoom/{movieRoomName}")
+    public Optional<MovieRoomDto> getMovieRoom(@PathVariable String movieRoomName) {
+        return movieRoomService.getMovieRoom(movieRoomName);
+    }
+
+    @PutMapping("/{movieRoomID}")
+    public boolean updateMovieRoom(@PathVariable Long movieRoomID,
+                                   @RequestBody MovieRoomDto movieRoomDto) {
+        return movieRoomService.editMovieRoom(movieRoomID,movieRoomDto);
+    }
+
+    @PostMapping
+    public boolean addMovieRoom(@RequestBody MovieRoomDto movieRoomDto) {
+        return movieRoomService.createMovieRoom(movieRoomDto);
+    }
+
+    @DeleteMapping("delete/{movieRoomID}")
+    public boolean deleteMovieRoom(@PathVariable Long movieRoomID) {
+        return movieRoomService.deleteMovieRoom(movieRoomID);
+    }
+
+    @DeleteMapping
+    public List<String> deleteMovieRooms(@RequestBody List<Long> movieRoomIDs) {
+        return movieRoomService.deleteMovieRooms(movieRoomIDs);
+    }
+
+}
+```
+
+## RegistrationController
+
+```java
+@RestController
+@RequestMapping("/api/registration")
+public class RegistrationController {
+
+    private final UserService userService;
+
+    @Autowired
+    public RegistrationController(UserService userService){
+        this.userService = userService;
+    }
+
+
+    @PostMapping
+    public String register(@RequestBody UserDto userDto){
+        return userService.createUser(userDto).message();
+    }
+
+}
+```
+
+## RoleController
+
+```java
+@RestController
+@RequestMapping("/api/roles")
+public class RoleController {
+    UserService userService;
+    RoleService roleService;
+
+    @Autowired
+    public RoleController(UserService userService, RoleService roleService){
+        this.userService = userService;
+        this.roleService = roleService;
+    }
+
+    @GetMapping("/assigned/{userId}")
+    List<RoleDto> getUserRoles(@PathVariable Long userId){
+        Optional<UserDto> optionalUser = userService.findById(userId);
+        if (optionalUser.isEmpty()){
+            return List.of();
+        }
+        UserDto userDto = optionalUser.get();
+        return roleService.getUserRoles(userDto.id());
+    }
+
+    @GetMapping("/available/{userId}")
+    List<RoleDto> getAvailableRolesForUser(@PathVariable Long userId){
+        Optional<UserDto> optionalUser = userService.findById(userId);
+        if (optionalUser.isEmpty()){
+            return List.of();
+        }
+        UserDto userDto = optionalUser.get();
+        return roleService.getAvailableRoles(userDto.id());
+    }
+
+    @PostMapping("/update/{userId}")
+    public ResponseEntity<Void> updateRoles(
+            @PathVariable Long userId,
+            @RequestBody List<Long> roleIds
+    ) {
+        Optional<UserDto> optionalUser = userService.findById(userId);
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        UserDto userDto = optionalUser.get();
+        Set<Long> roleIdsSet = new HashSet<>(roleIds);
+        roleService.updateRoles(userDto.id(), roleIdsSet);
+        return ResponseEntity.ok().build();
+    }
+}
+```
+
+## ScreeningController
+
+```java
+@RestController
+@RequestMapping("/api/screenings")
+public class ScreeningController {
+
+    @Autowired
+    private ScreeningService screeningService;
+
+    @GetMapping
+    public ResponseEntity<List<ScreeningDto>> getAllScreenings() {
+        List<ScreeningDto> screenings = screeningService.getAllScreenings();
+        return ResponseEntity.ok(screenings);
+    }
+
+    @PutMapping
+    public ResponseEntity<ScreeningDto> createScreening(@RequestBody ScreeningDto screeningDto) {
+        ScreeningDto createdScreening = screeningService.saveScreening(screeningDto);
+        return ResponseEntity.ok(createdScreening);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ScreeningDto> getScreeningById(@PathVariable Long id) {
+        Optional<ScreeningDto> screening = screeningService.getScreeningById(id);
+        return screening.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ScreeningDto> updateScreening(@PathVariable Long id, @RequestBody ScreeningDto screeningDto) {
+        return ResponseEntity.ok(screeningService.updateScreening(id, screeningDto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteScreening(@PathVariable Long id) {
+        if (screeningService.deleteScreening(id)) {
+            return ResponseEntity.ok().body("Successfully deleted the screening");
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/by-date")
+    public ResponseEntity<List<ScreeningDto>> getScreeningsByDate(@RequestParam LocalDate date) {
+        List<ScreeningDto> screenings = screeningService.getScreeningsByDate(date);
+        return ResponseEntity.ok(screenings);
+    }
+
+    @GetMapping("/upcoming")
+    public ResponseEntity<List<ScreeningDto>> getUpcomingScreenings(@RequestParam LocalDateTime dateTime) {
+        List<ScreeningDto> screenings = screeningService.getUpcomingScreeningsAfter(dateTime);
+        return ResponseEntity.ok(screenings);
+    }
+}
+```
+
+## UserController
+
+```java
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+
+    private final UserService userService;
+
+    public UserController(UserService userService, RoleService roleService) {
+        this.userService = userService;
+    }
+
+    @PutMapping("/{userId}")
+    public ResponseEntity<String> updateUser(
+            @PathVariable Long userId,
+            @RequestBody UserDto userDto
+    ) {
+
+        Status editStatus = userService.editUser(userId, userDto);
+
+        if (editStatus.isSuccess()) {
+            return ResponseEntity.ok(editStatus.message());
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(editStatus.message());
+    }
+
+}
+```
 
 # GUI
 

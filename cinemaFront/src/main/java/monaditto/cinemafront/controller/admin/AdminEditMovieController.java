@@ -12,12 +12,13 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Callback;
 import monaditto.cinemafront.StageInitializer;
+import monaditto.cinemafront.clientapi.CategoryClientAPI;
+import monaditto.cinemafront.clientapi.MovieClientAPI;
 import monaditto.cinemafront.config.BackendConfig;
 import monaditto.cinemafront.controller.ControllerResource;
 import monaditto.cinemafront.databaseMapping.CategoryDto;
 import monaditto.cinemafront.databaseMapping.MovieDto;
 import monaditto.cinemafront.request.PosterDownloader;
-import monaditto.cinemafront.response.ResponseResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 

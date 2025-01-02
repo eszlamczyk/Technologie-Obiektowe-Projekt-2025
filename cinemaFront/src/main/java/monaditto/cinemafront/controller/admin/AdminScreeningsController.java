@@ -13,6 +13,8 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.shape.Rectangle;
 import monaditto.cinemafront.StageInitializer;
+import monaditto.cinemafront.clientapi.MovieClientAPI;
+import monaditto.cinemafront.clientapi.ScreeningClientAPI;
 import monaditto.cinemafront.config.BackendConfig;
 import monaditto.cinemafront.controller.ControllerResource;
 import monaditto.cinemafront.databaseMapping.MovieDto;

@@ -12,6 +12,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.shape.Rectangle;
 import monaditto.cinemafront.StageInitializer;
+import monaditto.cinemafront.clientapi.MovieClientAPI;
+import monaditto.cinemafront.clientapi.ScreeningClientAPI;
 import monaditto.cinemafront.config.BackendConfig;
 import monaditto.cinemafront.controller.ControllerResource;
 import monaditto.cinemafront.databaseMapping.MovieDto;
@@ -22,7 +24,6 @@ import org.springframework.stereotype.Controller;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import java.awt.*;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;

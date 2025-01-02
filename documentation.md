@@ -260,13 +260,20 @@ public class Movie {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 511)
     private String description;
 
     @Column(nullable = false)
     private int duration;
 
+    @Column(nullable = false)
+    private String posterUrl;
+
+    @Column(nullable = false)
+    private LocalDate releaseDate;
+
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL)
+    @JsonIgnore
     private Set<Screening> screenings = new HashSet<>();
 
     @ManyToMany
@@ -275,17 +282,19 @@ public class Movie {
             joinColumns = @JoinColumn(name = "movie_id"),
             inverseJoinColumns = @JoinColumn(name = "category_id")
     )
-    private Set<Category> categories;
+    private Set<Category> categories = new HashSet<>();
 
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL)
-    private Set<Opinion> opinions;
+    private Set<Opinion> opinions = new HashSet<>();
 
     public Movie() {}
 
-    public Movie(String title, String description, int duration) {
+    public Movie(String title, String description, int duration, String posterUrl, LocalDate releaseDate) {
         this.title = title;
         this.description = description;
         this.duration = duration;
+        this.posterUrl = posterUrl;
+        this.releaseDate = releaseDate;
     }
 
     public Long getId() {
@@ -298,6 +307,14 @@ public class Movie {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getPosterUrl() {
+        return posterUrl;
+    }
+
+    public void setPosterUrl(String posterUrl) {
+        this.posterUrl = posterUrl;
     }
 
     public String getDescription() {
@@ -345,6 +362,14 @@ public class Movie {
         screening.setMovie(this);
     }
 
+    public LocalDate getReleaseDate() {
+        return releaseDate;
+    }
+
+    public void setReleaseDate(LocalDate releaseDate) {
+        this.releaseDate = releaseDate;
+    }
+
     public void addCategory(Category category) {
         categories.add(category);
     }
@@ -352,12 +377,300 @@ public class Movie {
     public void addOpinion(Opinion opinion) {
         opinions.add(opinion);
     }
+
+    public void clearCategories() {
+        categories.clear();
+    }
 }
 ```
 
 #### Klasy pomocnicze
 
+`Klasa DTO`
+
+```java
+public record MovieDto(
+        Long id,
+        String title,
+        String description,
+        int duration,
+        String posterUrl,
+        LocalDate releaseDate
+) {
+    public MovieDto(String title, String description, int duration, String posterUrl, LocalDate releaseDate) {
+        this(null, title, description, duration, posterUrl, releaseDate);
+    }
+
+    public static MovieDto movieToMovieDto(Movie movie) {
+        if (movie == null) {
+            return null;
+        }
+
+        return new MovieDto(
+                movie.getId(),
+                movie.getTitle(),
+                movie.getDescription(),
+                movie.getDuration(),
+                movie.getPosterUrl(),
+                movie.getReleaseDate()
+        );
+    }
+}
+```
+
+`MovieWithCategoriesDto` - do przesłania danych do stworzenia filmu razem z kategoriami
+
+```java
+public record MovieWithCategoriesDto(
+        MovieDto movieDto,
+        List<CategoryDto> categories
+) {}
+```
+
+`CreateMovieStatus`
+
+```java
+public enum CreateMovieStatus implements Status {
+
+    SUCCESS,
+    INVALID_URL,
+    MOVIE_DOESNT_EXIST,
+    CATEGORY_DOESNT_EXIST,
+    MISSING_DATA,
+    DATABASE_ERROR;
+
+    @Override
+    public String message() {
+        return switch(this) {
+            case SUCCESS -> "Successfully created the movie";
+            case INVALID_URL -> "Given image url is invalid";
+            case MOVIE_DOESNT_EXIST -> "No such movie";
+            case CATEGORY_DOESNT_EXIST -> "No such category";
+            case MISSING_DATA -> "Please fill up the data correctly";
+            case DATABASE_ERROR -> "Something went wrong in our database";
+        };
+    }
+
+    @Override
+    public boolean isSuccess() {
+        return this.equals(SUCCESS);
+    }
+}
+```
+
+
+`MovieValidator`
+
+```java
+@Component
+public class MovieValidator {
+
+    public CreateMovieStatus validateMovieDto(MovieDto movieDto) {
+        if (!validateString(movieDto.title()) ||
+                !validateString(movieDto.description()) ||
+                movieDto.duration() < 1) {
+            return CreateMovieStatus.MISSING_DATA;
+        }
+
+        if (!validateImageUrl(movieDto.posterUrl())) {
+            return CreateMovieStatus.INVALID_URL;
+        }
+
+        return CreateMovieStatus.SUCCESS;
+    }
+
+    private boolean validateImageUrl(String url) {
+        try {
+            URL imageUrl = new URL(url);
+            HttpURLConnection connection = (HttpURLConnection) imageUrl.openConnection();
+            connection.setRequestMethod("HEAD");
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(5000);
+            connection.connect();
+
+            int responseCode = connection.getResponseCode();
+            String contentType = connection.getContentType();
+
+            return responseCode == HttpURLConnection.HTTP_OK &&
+                    contentType.startsWith("image/");
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean validateString(String string) {
+        return string != null &&
+                !string.isEmpty() &&
+                !string.startsWith(" ") &&
+                !string.endsWith(" ");
+    }
+}
+```
+
 #### Warstwa serwisowa
+
+`MovieService`
+
+```java
+@Service
+@Transactional
+public class MovieService {
+
+    private final MovieRepository movieRepository;
+
+    private final CategoryRepository categoryRepository;
+
+    private final CategoryService categoryService;
+
+    private final MovieValidator movieValidator;
+
+    @Autowired
+    public MovieService(MovieRepository movieRepository,
+                        CategoryRepository categoryRepository,
+                        MovieValidator movieValidator,
+                        CategoryService categoryService) {
+        this.movieRepository = movieRepository;
+        this.categoryRepository = categoryRepository;
+        this.movieValidator = movieValidator;
+        this.categoryService = categoryService;
+    }
+
+    public List<MovieDto> getMovies() {
+        return movieRepository.findAll().stream()
+                .map(MovieDto::movieToMovieDto)
+                .toList();
+    }
+
+    public Optional<MovieDto> getMovieById(Long id) {
+        return movieRepository.findById(id)
+                .map(MovieDto::movieToMovieDto);
+    }
+
+    public List<CategoryDto> getMovieCategories(Long id) {
+        return movieRepository.findById(id)
+                .map(Movie::getCategories)
+                .map(categories -> categories.stream()
+                        .map(CategoryDto::categoryToCategoryDto)
+                        .toList()
+                )
+                .orElseGet(List::of);
+    }
+
+    public CreateMovieStatus createMovie(MovieDto movieDto) {
+        return createMovie(movieDto, List.of());
+    }
+
+    public CreateMovieStatus createMovie(MovieDto movieDto, List<CategoryDto> categories) {
+        CreateMovieStatus movieStatus = movieValidator.validateMovieDto(movieDto);
+        if (movieStatus != CreateMovieStatus.SUCCESS) {
+            return movieStatus;
+        }
+
+        Movie movie = createMovieFromMovieDto(movieDto);
+        movieRepository.save(movie);
+
+        List<Long> categoryIds = getCategoriesIds(categories);
+
+        return setCategories(movie.getId(), categoryIds);
+    }
+
+    public CreateMovieStatus createMovieByNames(MovieDto movieDto, List<String> categoryNames) {
+        CreateMovieStatus movieStatus = movieValidator.validateMovieDto(movieDto);
+        if (movieStatus != CreateMovieStatus.SUCCESS) {
+            return movieStatus;
+        }
+
+        Movie movie = createMovieFromMovieDto(movieDto);
+        movieRepository.save(movie);
+
+        List<Long> categoryIds = categoryService.getCategoryIdsByName(categoryNames);
+
+        return setCategories(movie.getId(), categoryIds);
+    }
+
+    public CreateMovieStatus editMovie(Long movieId, MovieDto newMovieDto, List<CategoryDto> categories) {
+        CreateMovieStatus movieStatus = movieValidator.validateMovieDto(newMovieDto);
+        if (movieStatus != CreateMovieStatus.SUCCESS) {
+            return movieStatus;
+        }
+
+        Optional<Movie> optionalMovie = movieRepository.findById(movieId);
+        if (optionalMovie.isEmpty()) {
+            return CreateMovieStatus.MOVIE_DOESNT_EXIST;
+        }
+        Movie movie = optionalMovie.get();
+
+        updateMovie(movie, newMovieDto);
+
+        List<Long> categoriesIds = getCategoriesIds(categories);
+        CreateMovieStatus setCategoriesStatus = setCategories(movie.getId(), categoriesIds);
+        if (!setCategoriesStatus.isSuccess()) {
+            return setCategoriesStatus;
+        }
+
+        movieRepository.save(movie);
+        return CreateMovieStatus.SUCCESS;
+    }
+
+    public boolean deleteMovie(Long id) {
+        Optional<Movie> movie = movieRepository.findById(id);
+        if (movie.isEmpty()) {
+            return false;
+        }
+
+        movieRepository.delete(movie.get());
+        return true;
+    }
+
+    public CreateMovieStatus setCategories(Long movieId, List<Long> categoryIds) {
+        Movie movie = movieRepository.findById(movieId)
+                .orElse(null);
+        if (movie == null) {
+            return CreateMovieStatus.MOVIE_DOESNT_EXIST;
+        }
+
+        List<Category> categories = new ArrayList<>();
+        for (Long categoryId : categoryIds) {
+            Category category = categoryRepository.findById(categoryId)
+                    .orElse(null);
+            if (category == null) {
+                return CreateMovieStatus.CATEGORY_DOESNT_EXIST;
+            }
+            categories.add(category);
+        }
+
+        movie.clearCategories();
+        categories.forEach(movie::addCategory);
+        movieRepository.save(movie);
+
+        return CreateMovieStatus.SUCCESS;
+    }
+
+    private void updateMovie(Movie movie, MovieDto movieDto) {
+        movie.setTitle(movieDto.title());
+        movie.setDescription(movieDto.description());
+        movie.setDuration(movieDto.duration());
+        movie.setPosterUrl(movieDto.posterUrl());
+        movie.setReleaseDate(movieDto.releaseDate());
+    }
+
+    private List<Long> getCategoriesIds(List<CategoryDto> categories) {
+        return categories.stream()
+                .map(CategoryDto::id)
+                .toList();
+    }
+
+    private Movie createMovieFromMovieDto(MovieDto movieDto) {
+        return new Movie(
+                movieDto.title(),
+                movieDto.description(),
+                movieDto.duration(),
+                movieDto.posterUrl(),
+                movieDto.releaseDate()
+        );
+    }
+}
+```
 
 #### Warstwa repozytorium
 
@@ -2306,6 +2619,128 @@ public class UserController {
 }
 ```
 
+## Komponenty pomocnicze
+
+`EquestBuilder` - buduje requesty o danym adresie url
+
+```java
+public class RequestBuilder {
+
+    public static HttpRequest buildRequestGET(String url) {
+        return HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Content-Type", "application/json")
+                .GET()
+                .build();
+    }
+
+    public static HttpRequest buildRequestPUT(String url, String jsonBody) {
+        return HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Content-Type", "application/json")
+                .PUT(HttpRequest.BodyPublishers.ofString(jsonBody))
+                .build();
+    }
+
+    public static HttpRequest buildRequestDELETE(String url) {
+        return HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Content-Type", "application/json")
+                .DELETE()
+                .build();
+    }
+}
+```
+
+`ControllerResource`
+
+```java
+public enum ControllerResource {
+    LOGIN,
+    REGISTRATION,
+    ADMIN_PANEL,
+    ADMIN_USER,
+    ADMIN_EDIT_USER,
+    ADMIN_MOVIE,
+    ADMIN_EDIT_MOVIE,
+    ADMIN_SCREENINGS,
+    ADMIN_EDIT_SCREENING,
+    USER_PANEL,
+    USER_MOVIE,
+    USER_SCREENINGS;
+
+    public Resource getResource() {
+        String resourceUrl = switch(this) {
+            case LOGIN -> "fxml/Login.fxml";
+            case REGISTRATION -> "fxml/Registration.fxml";
+            case ADMIN_PANEL -> "fxml/AdminPanel.fxml";
+            case ADMIN_USER -> "fxml/AdminUser.fxml";
+            case ADMIN_EDIT_USER -> "fxml/EditUser.fxml";
+            case ADMIN_MOVIE -> "fxml/AdminMovie.fxml";
+            case ADMIN_EDIT_MOVIE -> "fxml/EditMovie.fxml";
+            case ADMIN_SCREENINGS -> "fxml/AdminScreenings.fxml";
+            case ADMIN_EDIT_SCREENING -> "fxml/EditScreening.fxml";
+            case USER_PANEL -> "fxml/UserPanel.fxml";
+            case USER_MOVIE -> "fxml/UserMovie.fxml";
+            case USER_SCREENINGS -> "fxml/UserScreenings.fxml";
+        };
+
+        return new ClassPathResource(resourceUrl);
+    }
+}
+```
+
+`PosterDownloader`
+
+```java
+@Component
+public class PosterDownloader {
+
+    private Image poster = null;
+
+    public boolean isPosterUrlValid(String stringUrl) {
+        try {
+            URL imageUrl = new URL(stringUrl);
+            HttpURLConnection connection = getHttpURLConnection(imageUrl);
+
+            int responseCode = connection.getResponseCode();
+            String contentType = connection.getContentType();
+
+            if (responseCode == HttpURLConnection.HTTP_OK && contentType.startsWith("image/")) {
+                poster = new Image(imageUrl.toString());
+                return true;
+            } else {
+                throw new Exception();
+            }
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public Image getPoster() {
+        return poster;
+    }
+
+    private HttpURLConnection getHttpURLConnection(URL imageUrl) throws IOException {
+        HttpURLConnection connection = (HttpURLConnection) imageUrl.openConnection();
+        connection.setRequestMethod("GET");
+        connection.setConnectTimeout(5000);
+        connection.setReadTimeout(5000);
+        connection.connect();
+        return connection;
+    }
+}
+```
+
+`ResponseResult` - rekord zwracający *body* oraz *statusCode* z odpowiedzi
+
+```java
+public record ResponseResult(
+   int statusCode,
+   String body
+) {}
+```
+
 ## Rejestracja użytkownika
 
 `Registration.fxml`
@@ -2622,6 +3057,432 @@ public class LoginController {
     }
 }
 
+```
+
+## User Panel
+
+`UserPanel.fxml`
+
+```xml
+<AnchorPane stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.user.UserPanelController"
+            fx:id="rootPane" prefHeight="600" prefWidth="800">
+
+    <StackPane>
+        <Rectangle fx:id="backgroundRectangle" fill="AQUAMARINE" stroke="#ffffff8b" strokeType="INSIDE"/>
+        <VBox spacing="50" style="-fx-padding: 24" alignment="CENTER">
+            <Label text="Siema siema user here?" styleClass="adminPanelLabel"/>
+            <Button fx:id="moviesButton" styleClass="adminPanelButton" text="Movies" onAction="#handleUserMovies"/>
+            <Button fx:id="screeningsButton" styleClass="adminPanelButton" text="Screenings" onAction="#handleUserScreenings"/>
+            <Button fx:id="signOutButton" styleClass="adminPanelButton" text="Sign out" onAction="#handleSignOut"/>
+        </VBox>
+    </StackPane>
+
+</AnchorPane>
+```
+
+`UserPanelController`
+
+```java
+@Controller
+public class UserPanelController {
+
+    private final StageInitializer stageInitializer;
+
+    @FXML
+    private Button moviesButton;
+
+    @FXML
+    private Button screeningsButton;
+
+    @FXML
+    private Button signOutButton;
+
+    @FXML
+    private Rectangle backgroundRectangle;
+
+    @FXML
+    private AnchorPane rootPane;
+
+    public UserPanelController(StageInitializer stageInitializer) {
+        this.stageInitializer = stageInitializer;
+    }
+
+    @FXML
+    private void handleUserMovies(ActionEvent event) {
+        try {
+            stageInitializer.loadStage(ControllerResource.USER_MOVIE);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
+    private void handleUserScreenings(ActionEvent event) {
+        try {
+            stageInitializer.loadStage(ControllerResource.USER_SCREENINGS);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
+    private void handleSignOut(ActionEvent event) {
+        try {
+            stageInitializer.loadStage(ControllerResource.LOGIN);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
+    private void initialize() {
+        backgroundRectangle.widthProperty().bind(rootPane.widthProperty());
+        backgroundRectangle.heightProperty().bind(rootPane.heightProperty());
+
+        List<Button> buttons = List.of(moviesButton, screeningsButton, signOutButton);
+        buttons.forEach(this::initializeButtons);
+    }
+
+    private void initializeButtons(Button button) {
+        button.setOnMouseEntered(e -> button.setCursor(Cursor.HAND));
+        button.setOnMouseExited(e -> button.setCursor(Cursor.DEFAULT));
+    }
+}
+```
+
+`UserMovie.fxml`
+
+```xml
+<AnchorPane stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.user.UserMoviesController"
+            fx:id="rootPane" prefHeight="600" prefWidth="800">
+    <StackPane>
+        <Rectangle fx:id="backgroundRectangle" fill="CADETBLUE" stroke="#ffffff8b" strokeType="INSIDE"/>
+        <VBox spacing="20" alignment="CENTER">
+            <Label text="ALL MOVIES" styleClass="moviesLabel"/>
+            <VBox spacing="10" prefWidth="600" prefHeight="300" alignment="CENTER">
+                <ListView fx:id="moviesListView" maxWidth="600"/>
+                <HBox spacing="10" alignment="CENTER">
+                    <Button text="Rate" fx:id="rateButton" styleClass="moviesButton" />
+                </HBox>
+            </VBox>
+            <Button text="Go Back" styleClass="moviesButton" onAction="#handleGoBack" />
+        </VBox>
+    </StackPane>
+</AnchorPane>
+```
+
+`UserMoviesController`
+
+```java
+@Controller
+public class UserMoviesController {
+
+    private final StageInitializer stageInitializer;
+
+    private ObservableList<MovieDto> movieDtoList;
+
+    @Autowired
+    private MovieClientAPI movieClientAPI;
+
+    @FXML
+    private ListView<MovieDto> moviesListView;
+
+    @FXML
+    private Button rateButton;
+
+    @FXML
+    private Rectangle backgroundRectangle;
+
+    @FXML
+    private AnchorPane rootPane;
+
+    public UserMoviesController(StageInitializer stageInitializer) {
+        this.stageInitializer = stageInitializer;
+    }
+
+    @FXML
+    private void initialize() {
+        initializeMovieListView();
+        initializeResponsiveness();
+        initializeButtons();
+        loadMovies();
+    }
+
+    private void initializeMovieListView() {
+        movieDtoList = FXCollections.observableArrayList();
+        moviesListView.setItems(movieDtoList);
+
+        moviesListView.setCellFactory(list -> new ListCell<>() {
+            @Override
+            protected void updateItem(MovieDto movieDto, boolean empty) {
+                super.updateItem(movieDto, empty);
+                if (empty || movieDto == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(movieDto.title() + " (" + movieDto.releaseDate().getYear() + ")");
+                }
+            }
+        });
+
+    }
+
+    private void initializeResponsiveness() {
+        backgroundRectangle.widthProperty().bind(rootPane.widthProperty());
+        backgroundRectangle.heightProperty().bind(rootPane.heightProperty());
+    }
+
+    private void loadMovies() {
+        movieClientAPI.loadMovies()
+                .thenAccept(movieDtoList::addAll);
+    }
+
+    private void initializeButtons() {
+        BooleanBinding isSingleCellSelected = Bindings.createBooleanBinding(
+                () -> moviesListView.getSelectionModel().getSelectedItems().size() != 1,
+                moviesListView.getSelectionModel().getSelectedItems()
+        );
+
+        rateButton.disableProperty().bind(isSingleCellSelected);
+    }
+
+    @FXML
+    private void handleGoBack(ActionEvent event) {
+        try {
+            stageInitializer.loadStage(ControllerResource.USER_PANEL);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+```
+
+`UserScreenings.fxml`
+
+```xml
+<AnchorPane stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.user.UserScreeningsController"
+            fx:id="rootPane" prefHeight="600" prefWidth="800">
+    <StackPane>
+        <Rectangle fx:id="backgroundRectangle" fill="CADETBLUE" stroke="#ffffff8b" strokeType="INSIDE"/>
+        <VBox spacing="20" alignment="CENTER">
+            <Label text="ALL SCREENINGS" styleClass="moviesLabel"/>
+            <HBox spacing="10" alignment="CENTER">
+                <Button text="Dzisiaj" fx:id="buttonToday" styleClass="moviesButton" onAction="#handleDateToday"/>
+                <Button text="Jutro" fx:id="buttonTomorrow" styleClass="moviesButton" onAction="#handleDateTomorrow"/>
+                <Button text="Pojutrze" fx:id="buttonPlusTwo" styleClass="moviesButton" onAction="#handleDate_plus_2"/>
+                <Button text="Popojutrze" fx:id="buttonPlusThree" styleClass="moviesButton" onAction="#handleDate_plus_3"/>
+                <Button text="Popopojutrze" fx:id="buttonPlusFour" styleClass="moviesButton" onAction="#handleDate_plus_4"/>
+            </HBox>
+            <VBox spacing="10" prefWidth="600" prefHeight="300" alignment="CENTER">
+                <ListView fx:id="screeningsListView" maxWidth="600"/>
+                <HBox spacing="10" alignment="CENTER">
+                    <Button text="Buy ticket!" fx:id="buyButton" styleClass="moviesButton" />
+                </HBox>
+            </VBox>
+            <Button text="Go Back" styleClass="moviesButton" onAction="#handleGoBack" />
+        </VBox>
+    </StackPane>
+</AnchorPane>
+```
+
+`UserScreeningsController`
+
+```java
+@Controller
+public class UserScreeningsController {
+
+    private final StageInitializer stageInitializer;
+
+    private final BackendConfig backendConfig;
+
+    private final AdminEditScreeningController adminEditScreeningController;
+
+    private ObservableList<ScreeningDto> screeningsDtoList;
+
+    private List<ScreeningDto> allScreenings;
+
+    private List<MovieDto> movieDtoList;
+
+    private Map<Long, String> movieMap;
+
+    @Autowired
+    private ScreeningClientAPI screeningClientAPI;
+
+    @Autowired
+    private MovieClientAPI movieClientAPI;
+
+    @FXML
+    private ListView<ScreeningDto> screeningsListView;
+
+    @FXML
+    private Rectangle backgroundRectangle;
+
+    @FXML
+    private AnchorPane rootPane;
+
+    @FXML
+    private Button buttonToday;
+
+    @FXML
+    private Button buttonTomorrow;
+
+    @FXML
+    private Button buttonPlusTwo;
+
+    @FXML
+    private Button buttonPlusThree;
+
+    @FXML
+    private Button buttonPlusFour;
+
+    @FXML
+    private Button buyButton;
+
+    public UserScreeningsController(StageInitializer stageInitializer,
+                                     BackendConfig backendConfig,
+                                     AdminEditScreeningController adminEditScreeningController) {
+        this.stageInitializer = stageInitializer;
+        this.backendConfig = backendConfig;
+        this.adminEditScreeningController = adminEditScreeningController;
+    }
+
+    @FXML
+    private void initialize() {
+        allScreenings = new ArrayList<>();
+        initializeScreeningListView();
+        initializeResponsiveness();
+        initializeButtons();
+        loadUpcomingScreenings();
+        initializeDayButtons();
+    }
+
+    private void initializeScreeningListView() {
+        screeningsDtoList = FXCollections.observableArrayList();
+        screeningsListView.setItems(screeningsDtoList);
+
+        screeningsListView.setCellFactory(list -> new ListCell<>() {
+            @Override
+            protected void updateItem(ScreeningDto screeningDto, boolean empty) {
+                super.updateItem(screeningDto, empty);
+                if (empty || screeningDto == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, dd MMMM yyyy, HH:mm");
+                    String formattedDate = screeningDto.start().format(formatter);
+
+                    String movieName = movieMap.get(screeningDto.movieId());
+                    LocalDateTime date = screeningDto.start();
+                    setText(movieName + " in room: " + screeningDto.movieRoomId() + ". Start: " + formattedDate);
+                }
+            }
+        });
+
+    }
+
+    private void initializeResponsiveness() {
+        backgroundRectangle.widthProperty().bind(rootPane.widthProperty());
+        backgroundRectangle.heightProperty().bind(rootPane.heightProperty());
+    }
+
+    private void initializeButtons() {
+        BooleanBinding isSingleCellSelected = Bindings.createBooleanBinding(
+                () -> screeningsListView.getSelectionModel().getSelectedItems().size() != 1,
+                screeningsListView.getSelectionModel().getSelectedItems()
+        );
+
+        buyButton.disableProperty().bind(isSingleCellSelected);
+    }
+
+    private void loadUpcomingScreenings() {
+        loadMovieMap();
+        screeningClientAPI.loadUpcomingScreenings()
+                .thenAccept(screeningDtos -> {
+                    screeningsDtoList.addAll(screeningDtos);
+                    allScreenings.addAll(screeningDtos);
+                });
+    }
+
+    private void loadMovieMap() {
+        new Thread(() -> {
+            try {
+                movieDtoList = movieClientAPI.loadMovies().get();
+
+                movieMap = movieDtoList.stream()
+                        .collect(Collectors.toMap(MovieDto::id, MovieDto::title));
+
+            } catch (Exception e) {
+                Platform.runLater(() -> {
+                    System.err.println("Error loading movies: " + e.getMessage());
+                });
+            }
+        }).start();
+    }
+
+    private void initializeDayButtons() {
+        LocalDate today = LocalDate.now();
+        LocalDate tomorrow = today.plusDays(1);
+        LocalDate plusTwo = today.plusDays(2);
+        LocalDate plusThree = today.plusDays(3);
+        LocalDate plusFour = today.plusDays(4);
+
+        buttonToday.setText(today.format(DateTimeFormatter.ofPattern("dd.MM")));
+        buttonTomorrow.setText(tomorrow.format(DateTimeFormatter.ofPattern("dd.MM")));
+        buttonPlusTwo.setText(plusTwo.format(DateTimeFormatter.ofPattern("dd.MM")));
+        buttonPlusThree.setText(plusThree.format(DateTimeFormatter.ofPattern("dd.MM")));
+        buttonPlusFour.setText(plusFour.format(DateTimeFormatter.ofPattern("dd.MM")));
+    }
+
+    @FXML
+    private void handleGoBack(ActionEvent event) {
+        try {
+            stageInitializer.loadStage(ControllerResource.USER_PANEL);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
+    private void handleDateToday(ActionEvent event) {
+        LocalDate targetDate = LocalDate.now();
+        setScreeningsOn(targetDate);
+    }
+
+    @FXML
+    private void handleDateTomorrow(ActionEvent event) {
+        LocalDate targetDate = LocalDate.now().plusDays(1);
+        setScreeningsOn(targetDate);
+    }
+
+    @FXML
+    private void handleDate_plus_2(ActionEvent event) {
+        LocalDate targetDate = LocalDate.now().plusDays(2);
+        setScreeningsOn(targetDate);
+    }
+
+    @FXML
+    private void handleDate_plus_3(ActionEvent event) {
+        LocalDate targetDate = LocalDate.now().plusDays(3);
+        setScreeningsOn(targetDate);
+    }
+
+    @FXML
+    private void handleDate_plus_4(ActionEvent event) {
+        LocalDate targetDate = LocalDate.now().plusDays(4);
+        setScreeningsOn(targetDate);
+    }
+
+    private void setScreeningsOn(LocalDate targetDate) {
+        List<ScreeningDto> filteredScreenings = allScreenings.stream()
+                .filter(screening -> screening.start().toLocalDate().equals(targetDate))
+                .collect(Collectors.toList());
+
+        screeningsDtoList.setAll(filteredScreenings);
+    }
+}
 ```
 
 ## Admin Panel

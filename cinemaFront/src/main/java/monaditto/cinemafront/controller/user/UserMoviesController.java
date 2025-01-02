@@ -13,7 +13,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.shape.Rectangle;
 import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.controller.ControllerResource;
-import monaditto.cinemafront.controller.admin.MovieClientAPI;
+import monaditto.cinemafront.clientapi.MovieClientAPI;
 import monaditto.cinemafront.databaseMapping.MovieDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class MovieRoomService {
@@ -35,12 +36,14 @@ public class MovieRoomService {
         return true;
     }
 
-    public Optional<MovieRoom> getMovieRoom(String movieRoomName) {
-        return movieRoomRepository.findByMovieRoomName(movieRoomName);
+    public Optional<MovieRoomDto> getMovieRoom(String movieRoomName) {
+        return movieRoomRepository.findByMovieRoomName(movieRoomName)
+                .map(MovieRoomDto::movieRoomtoMovieRoomDto);
     }
 
-    public List<MovieRoom> getAllMovieRooms() {
-        return movieRoomRepository.findAll();
+    public List<MovieRoomDto> getAllMovieRooms() {
+        return movieRoomRepository.findAll()
+                .stream().map(MovieRoomDto::movieRoomtoMovieRoomDto).collect(Collectors.toList());
     }
 
     public boolean editMovieRoom(Long id, MovieRoomDto movieRoomDto) {

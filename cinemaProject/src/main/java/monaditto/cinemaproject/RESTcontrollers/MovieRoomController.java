@@ -1,6 +1,5 @@
 package monaditto.cinemaproject.RESTcontrollers;
 
-import monaditto.cinemaproject.movieRoom.MovieRoom;
 import monaditto.cinemaproject.movieRoom.MovieRoomDto;
 import monaditto.cinemaproject.movieRoom.MovieRoomService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,12 +20,12 @@ public class MovieRoomController {
     }
 
     @GetMapping
-    public List<MovieRoom> getAllMovieRooms() {
+    public List<MovieRoomDto> getAllMovieRooms() {
         return movieRoomService.getAllMovieRooms();
     }
 
     @GetMapping("/movieRoom/{movieRoomName}")
-    public Optional<MovieRoom> getMovieRoom(@PathVariable String movieRoomName) {
+    public Optional<MovieRoomDto> getMovieRoom(@PathVariable String movieRoomName) {
         return movieRoomService.getMovieRoom(movieRoomName);
     }
 

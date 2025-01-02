@@ -26,12 +26,13 @@ public class Purchase {
     @Column(name = "bought_seats", nullable = false)
     private int boughtSeats;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "reservation_status", nullable = false)
-    private String reservationStatus;
+    private ReservationStatus reservationStatus;
 
     public Purchase() {}
 
-    public Purchase(User user, Screening screening, int boughtSeats, String reservationStatus) {
+    public Purchase(User user, Screening screening, int boughtSeats, ReservationStatus reservationStatus) {
         this.user = user;
         this.screening = screening;
         this.boughtSeats = boughtSeats;
@@ -62,11 +63,11 @@ public class Purchase {
         return boughtSeats;
     }
 
-    public void setReservationStatus(String reservationStatus) {
+    public void setReservationStatus(ReservationStatus reservationStatus) {
         this.reservationStatus = reservationStatus;
     }
 
-    public String getReservationStatus() {
+    public ReservationStatus getReservationStatus() {
         return reservationStatus;
     }
 

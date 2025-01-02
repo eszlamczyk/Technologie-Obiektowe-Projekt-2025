@@ -270,7 +270,7 @@ public class MovieRoom {
     @Column(name = "movie_room_id")
     private Long id;
 
-    @Column(name = "movie_room_name", nullable = false)
+    @Column(name = "movie_room_name", nullable = false, unique = true)
     private String movieRoomName;
 
     @Column(name = "max_seats", nullable = false)
@@ -323,14 +323,147 @@ public class MovieRoom {
 
 #### Klasy pomocnicze
 
+Została zaimplementowana dodatkowa klasa typu DTO `MovieRoomDTO`
+
+```java
+public record MovieRoomDto(
+        Long id,
+        String movieRoomName,
+        int maxSeats
+) {
+
+    public MovieRoomDto(String movieRoomName, int maxSeats) {
+        this(null,movieRoomName, maxSeats);
+    }
+
+    public static MovieRoomDto movieRoomtoMovieRoomDto(MovieRoom movieRoom) {
+        if (movieRoom == null) {
+            return null;
+        }
+
+        return new MovieRoomDto(
+                movieRoom.getMovieRoomId(),
+                movieRoom.getMovieRoomName(),
+                movieRoom.getMaxSeats()
+        );
+    }
+
+}
+```
+
 #### Warstwa serwisowa
+
+Warstwa Serwisowa zawiera podstawowe operacje potrzebne do obsługi poszczególnych
+operacji dotyczących sal w kompleksie kinowym.
+
+- `createMovieRoom` przyjmuje pomocniczą klase `movieRoomDto`, poczym przekształca ją 
+na klase typu entity, a następnie przy użyciu repozytorium dodaje ją do bazy danych
+- `getMovieRoom` przyjmuje nazwe sali poczym poszukuje sali wg tej nazwy, a następnie mapuje ją na klase DTO
+- `getAllMovieRooms` zwraca liste wszystkich sal w formacie DTO
+- `editMovieRoom` przy użyciu id oraz klasy DTO determinuje czy została wykonana jakaś zmiana i jak tak to 
+zapisuje ją w bazie danych
+- `deleteMovieRoom` i `deleteMovieRooms` przyjmują odpowiednio id oraz liste id, poczym próbują usunąć 
+wszystkie odpowiadające im recordy z bazy
+
+```java
+@Service
+public class MovieRoomService {
+
+    private final MovieRoomRepository movieRoomRepository;
+
+    @Autowired
+    public MovieRoomService(MovieRoomRepository movieRoomRepository) {
+        this.movieRoomRepository = movieRoomRepository;
+    }
+
+    public MovieRoom save(MovieRoomDto movieRoomDto) {
+        MovieRoom movieRoom = new MovieRoom(movieRoomDto.movieRoomName(), movieRoomDto.maxSeats());
+        return movieRoomRepository.save(movieRoom);
+    }
+
+    public boolean createMovieRoom(MovieRoomDto movieRoomDto) {
+        if (movieRoomRepository.findByMovieRoomName(movieRoomDto.movieRoomName()).isPresent()) {
+            return false;
+        }
+        MovieRoom movieRoom =  new MovieRoom(
+                movieRoomDto.movieRoomName(),
+                movieRoomDto.maxSeats());
+
+        movieRoomRepository.save(movieRoom);
+        return true;
+    }
+
+    public Optional<MovieRoomDto> getMovieRoom(String movieRoomName) {
+        return movieRoomRepository.findByMovieRoomName(movieRoomName)
+                .map(MovieRoomDto::movieRoomtoMovieRoomDto);
+    }
+
+    public List<MovieRoomDto> getAllMovieRooms() {
+        return movieRoomRepository.findAll()
+                .stream().map(MovieRoomDto::movieRoomtoMovieRoomDto).collect(Collectors.toList());
+    }
+
+    public boolean editMovieRoom(Long id, MovieRoomDto movieRoomDto) {
+        Optional<MovieRoom> movieRoomWithTheName =
+                movieRoomRepository.findByMovieRoomName(movieRoomDto.movieRoomName());
+
+        if (movieRoomWithTheName.isPresent() &&
+                (movieRoomWithTheName.get().getMovieRoomName().equals(movieRoomDto.movieRoomName()) &&
+                    !Objects.equals(movieRoomWithTheName.get().getMovieRoomId(), id))) {
+            return false;
+        }
+
+        Optional<MovieRoom> optionalMovieRoom = movieRoomRepository.findById(id);
+        if(optionalMovieRoom.isPresent()) {
+
+            MovieRoom movieRoom = optionalMovieRoom.get();
+            movieRoom.setMovieRoomName(movieRoomDto.movieRoomName());
+            movieRoom.setMaxSeats(movieRoomDto.maxSeats());
+            return true;
+        }
+        return false;
+    }
+
+    public boolean deleteMovieRoom(Long id) {
+        Optional<MovieRoom> optionalMovieRoom = movieRoomRepository.findById(id);
+        if(optionalMovieRoom.isPresent()) {
+            MovieRoom movieRoom = optionalMovieRoom.get();
+            movieRoomRepository.delete(movieRoom);
+            return true;
+        }
+        return false;
+    }
+
+    public List<String> deleteMovieRooms(List<Long> ids) {
+        List<String> successfullyDeletedMovieRooms = new ArrayList<>();
+        for (Long id : ids) {
+            Optional<MovieRoom> optionalMovieRoom = movieRoomRepository.findById(id);
+            if (optionalMovieRoom.isPresent()) {
+                MovieRoom movieRoom = optionalMovieRoom.get();
+                movieRoomRepository.delete(movieRoom);
+                successfullyDeletedMovieRooms.add(movieRoom.getMovieRoomName());
+            }
+        }
+        return successfullyDeletedMovieRooms;
+    }
+}
+```
 
 #### Warstwa repozytorium
 
+Repozytorium zawiera dodatkową metode mającą na celu znajdowanie recordów
+(zawsze będzie maksymalnie jeden ze względu na unikalność kolumny `movieRoomName`)
+poprzez ich nazwę
+
 ```java
+@Repository
 public interface MovieRoomRepository extends JpaRepository<MovieRoom, Long> {
+
+    Optional<MovieRoom> findByMovieRoomName(String movieRoomName);
+
 }
 ```
+
 
 
 ## Opinion

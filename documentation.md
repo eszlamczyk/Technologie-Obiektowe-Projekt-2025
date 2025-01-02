@@ -1420,6 +1420,409 @@ public interface UserRepository extends JpaRepository<User, Long> {
 }
 ```
 
+# KontroleryREST
+
+Kontrolery REST używają technologii webowych aby wysyłać i obsługiwać requesty, które
+gui wysyła
+
+## Dodatkowe klasy DTO
+
+### AuthResponse
+
+```java
+public class AuthResponse {
+    private List<RoleDto> roles;
+
+    public AuthResponse(List<RoleDto> roles) {
+        this.roles = roles;
+    }
+
+    public List<RoleDto> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<RoleDto> roles) {
+        this.roles = roles;
+    }
+}
+```
+
+### LoginRequest
+
+```java
+public class LoginRequest {
+    private String email;
+    private String password;
+
+    public LoginRequest(String email, String password) {
+        this.email = email;
+        this.password = password;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+}
+```
+
+## AdminPanelController
+
+```java
+@RestController
+@RequestMapping("/api/admin-panel")
+public class AdminPanelController {
+
+    private final UserService userService;
+
+    public AdminPanelController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @GetMapping("/users")
+    public List<UserDto> getAllUsers() {
+        return userService.getUsers();
+    }
+
+    @DeleteMapping("/users/{id}")
+    public void deleteUser(@PathVariable Long id) {
+        userService.deleteUserById(id);
+    }
+}
+```
+
+## AuthController
+
+```java
+@RestController
+@RequestMapping("/api/auth")
+public class AuthController {
+
+    private final UserService userService;
+
+    private final RoleService roleService;
+
+    @Autowired
+    public AuthController(UserService userService, RoleService roleService) {
+        this.userService = userService;
+        this.roleService = roleService;
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+        boolean isAuthenticated = userService.authenticate(loginRequest.getEmail(), loginRequest.getPassword());
+        UserDto userDto = userService.findByEmail(loginRequest.getEmail()).get();
+
+        if (isAuthenticated) {
+            AuthResponse authResponse = new AuthResponse(roleService.getUserRoles(userDto.id()).stream().toList());
+            return ResponseEntity.ok(authResponse);
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
+        }
+    }
+}
+```
+
+## CategoryController
+
+```java
+@RestController
+@RequestMapping("api/categories")
+public class CategoryController {
+
+    private final CategoryService categoryService;
+
+    @Autowired
+    public CategoryController(CategoryService categoryService) {
+        this.categoryService = categoryService;
+    }
+
+    @GetMapping()
+    public ResponseEntity<List<CategoryDto>> getCategories() {
+        return ResponseEntity.ok().body(categoryService.getCategories());
+    }
+}
+```
+
+## MovieController
+
+```java
+@RestController
+@RequestMapping("api/movies")
+public class MovieController {
+
+    private final MovieService movieService;
+
+    @Autowired
+    public MovieController(MovieService movieService) {
+        this.movieService = movieService;
+    }
+
+    @GetMapping()
+    public ResponseEntity<List<MovieDto>> getMovies() {
+        return ResponseEntity.ok().body(movieService.getMovies());
+    }
+
+    @DeleteMapping("delete/{id}")
+    public ResponseEntity<String> deleteMovie(@PathVariable Long id) {
+        if (movieService.deleteMovie(id)) {
+            return ResponseEntity.ok().body("Successfully deleted the movie");
+        }
+        String message = String.format("Movie with given id (id = %d) doesn't exist", id);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(message);
+    }
+
+    @PutMapping("/create")
+    public ResponseEntity<String> createMovie(@RequestBody MovieWithCategoriesDto wrapperDto) {
+        Status createMovieStatus = movieService.createMovie(wrapperDto.movieDto(), wrapperDto.categories());
+
+        if (createMovieStatus.isSuccess()) {
+            return ResponseEntity.ok(createMovieStatus.message());
+        }
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(createMovieStatus.message());
+    }
+
+    @PutMapping("/edit/{id}")
+    public ResponseEntity<String> editMovie(@PathVariable Long id, @RequestBody MovieWithCategoriesDto wrapperDto) {
+        Status editMovieStatus = movieService.editMovie(id, wrapperDto.movieDto(), wrapperDto.categories());
+
+        if (editMovieStatus.isSuccess()) {
+            return ResponseEntity.ok(editMovieStatus.message());
+        }
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(editMovieStatus.message());
+    }
+
+    @GetMapping("/categories/{id}")
+    public ResponseEntity<List<CategoryDto>> editMovie(@PathVariable Long id) {
+        List<CategoryDto> categories = movieService.getMovieCategories(id);
+
+        return ResponseEntity.ok().body(categories);
+    }
+}
+```
+
+## MovieRoomController
+
+```java
+@RestController
+@RequestMapping("/api/movieRooms")
+public class MovieRoomController {
+
+    private final MovieRoomService movieRoomService;
+
+    @Autowired
+    public MovieRoomController(MovieRoomService movieRoomService) {
+        this.movieRoomService = movieRoomService;
+    }
+
+    @GetMapping
+    public List<MovieRoomDto> getAllMovieRooms() {
+        return movieRoomService.getAllMovieRooms();
+    }
+
+    @GetMapping("/movieRoom/{movieRoomName}")
+    public Optional<MovieRoomDto> getMovieRoom(@PathVariable String movieRoomName) {
+        return movieRoomService.getMovieRoom(movieRoomName);
+    }
+
+    @PutMapping("/{movieRoomID}")
+    public boolean updateMovieRoom(@PathVariable Long movieRoomID,
+                                   @RequestBody MovieRoomDto movieRoomDto) {
+        return movieRoomService.editMovieRoom(movieRoomID,movieRoomDto);
+    }
+
+    @PostMapping
+    public boolean addMovieRoom(@RequestBody MovieRoomDto movieRoomDto) {
+        return movieRoomService.createMovieRoom(movieRoomDto);
+    }
+
+    @DeleteMapping("delete/{movieRoomID}")
+    public boolean deleteMovieRoom(@PathVariable Long movieRoomID) {
+        return movieRoomService.deleteMovieRoom(movieRoomID);
+    }
+
+    @DeleteMapping
+    public List<String> deleteMovieRooms(@RequestBody List<Long> movieRoomIDs) {
+        return movieRoomService.deleteMovieRooms(movieRoomIDs);
+    }
+
+}
+```
+
+## RegistrationController
+
+```java
+@RestController
+@RequestMapping("/api/registration")
+public class RegistrationController {
+
+    private final UserService userService;
+
+    @Autowired
+    public RegistrationController(UserService userService){
+        this.userService = userService;
+    }
+
+
+    @PostMapping
+    public String register(@RequestBody UserDto userDto){
+        return userService.createUser(userDto).message();
+    }
+
+}
+```
+
+## RoleController
+
+```java
+@RestController
+@RequestMapping("/api/roles")
+public class RoleController {
+    UserService userService;
+    RoleService roleService;
+
+    @Autowired
+    public RoleController(UserService userService, RoleService roleService){
+        this.userService = userService;
+        this.roleService = roleService;
+    }
+
+    @GetMapping("/assigned/{userId}")
+    List<RoleDto> getUserRoles(@PathVariable Long userId){
+        Optional<UserDto> optionalUser = userService.findById(userId);
+        if (optionalUser.isEmpty()){
+            return List.of();
+        }
+        UserDto userDto = optionalUser.get();
+        return roleService.getUserRoles(userDto.id());
+    }
+
+    @GetMapping("/available/{userId}")
+    List<RoleDto> getAvailableRolesForUser(@PathVariable Long userId){
+        Optional<UserDto> optionalUser = userService.findById(userId);
+        if (optionalUser.isEmpty()){
+            return List.of();
+        }
+        UserDto userDto = optionalUser.get();
+        return roleService.getAvailableRoles(userDto.id());
+    }
+
+    @PostMapping("/update/{userId}")
+    public ResponseEntity<Void> updateRoles(
+            @PathVariable Long userId,
+            @RequestBody List<Long> roleIds
+    ) {
+        Optional<UserDto> optionalUser = userService.findById(userId);
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        UserDto userDto = optionalUser.get();
+        Set<Long> roleIdsSet = new HashSet<>(roleIds);
+        roleService.updateRoles(userDto.id(), roleIdsSet);
+        return ResponseEntity.ok().build();
+    }
+}
+```
+
+## ScreeningController
+
+```java
+@RestController
+@RequestMapping("/api/screenings")
+public class ScreeningController {
+
+    @Autowired
+    private ScreeningService screeningService;
+
+    @GetMapping
+    public ResponseEntity<List<ScreeningDto>> getAllScreenings() {
+        List<ScreeningDto> screenings = screeningService.getAllScreenings();
+        return ResponseEntity.ok(screenings);
+    }
+
+    @PutMapping
+    public ResponseEntity<ScreeningDto> createScreening(@RequestBody ScreeningDto screeningDto) {
+        ScreeningDto createdScreening = screeningService.saveScreening(screeningDto);
+        return ResponseEntity.ok(createdScreening);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ScreeningDto> getScreeningById(@PathVariable Long id) {
+        Optional<ScreeningDto> screening = screeningService.getScreeningById(id);
+        return screening.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ScreeningDto> updateScreening(@PathVariable Long id, @RequestBody ScreeningDto screeningDto) {
+        return ResponseEntity.ok(screeningService.updateScreening(id, screeningDto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteScreening(@PathVariable Long id) {
+        if (screeningService.deleteScreening(id)) {
+            return ResponseEntity.ok().body("Successfully deleted the screening");
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/by-date")
+    public ResponseEntity<List<ScreeningDto>> getScreeningsByDate(@RequestParam LocalDate date) {
+        List<ScreeningDto> screenings = screeningService.getScreeningsByDate(date);
+        return ResponseEntity.ok(screenings);
+    }
+
+    @GetMapping("/upcoming")
+    public ResponseEntity<List<ScreeningDto>> getUpcomingScreenings(@RequestParam LocalDateTime dateTime) {
+        List<ScreeningDto> screenings = screeningService.getUpcomingScreeningsAfter(dateTime);
+        return ResponseEntity.ok(screenings);
+    }
+}
+```
+
+## UserController
+
+```java
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+
+    private final UserService userService;
+
+    public UserController(UserService userService, RoleService roleService) {
+        this.userService = userService;
+    }
+
+    @PutMapping("/{userId}")
+    public ResponseEntity<String> updateUser(
+            @PathVariable Long userId,
+            @RequestBody UserDto userDto
+    ) {
+
+        Status editStatus = userService.editUser(userId, userDto);
+
+        if (editStatus.isSuccess()) {
+            return ResponseEntity.ok(editStatus.message());
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(editStatus.message());
+    }
+
+}
+```
 
 # GUI
 

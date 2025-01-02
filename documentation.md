@@ -92,12 +92,136 @@ public class Category {
 ```
 #### Klasy pomocnicze
 
+Dodatkowa klasa typu DTO
+```java
+public record CategoryDto (
+    Long id,
+    String categoryName
+) {
+    public CategoryDto(String categoryName) {
+        this(null, categoryName);
+    }
+
+    public static CategoryDto categoryToCategoryDto(Category category) {
+        if (category == null) {
+            return null;
+        }
+
+        return new CategoryDto(
+                category.getCategoryId(),
+                category.getCategoryName()
+        );
+    }
+}
+```
+
 #### Warstwa serwisowa
+
+Warstwa serwisowa implementuje następujące podstawowe funkcjonalności
+
+- `createCategory` przyjmuje obiekt DTO i jeżeli nie ma już kategorii z taką 
+nazwą to dodaje ją do bazy danych
+- `getCategoryByName` wyszukuje kategorie po jej nazwie,
+a następnie to co zostało znalezione konwertuje na obiekt DTO
+- `getCategoryIdsByName` robi to samo tylko zwraca ich ID zamiast całego obiektu
+- `editCategory` edytuje kategorie
+- `deleteCategory` i `deleteCategories` usuwa kategorie po id (lub liście je zawierających)
+
+```java
+@Service
+@Transactional
+public class CategoryService {
+
+    private final CategoryRepository categoryRepository;
+
+    @Autowired
+    public CategoryService(CategoryRepository categoryRepository) {
+        this.categoryRepository = categoryRepository;
+    }
+
+    public List<CategoryDto> getCategories() {
+        return categoryRepository.findAll().stream()
+                .map(CategoryDto::categoryToCategoryDto)
+                .toList();
+    }
+
+    public boolean createCategory(CategoryDto categoryDto) {
+        if (categoryRepository.findByCategoryName(categoryDto.categoryName()).isPresent()) {
+            return false;
+        }
+        Category category = new Category(categoryDto.categoryName());
+        categoryRepository.save(category);
+        return true;
+    }
+
+    public Optional<CategoryDto> getCategoryByName(String categoryName) {
+        return categoryRepository.findByCategoryName(categoryName)
+                .map(CategoryDto::categoryToCategoryDto);
+    }
+
+    public List<Long> getCategoryIdsByName(List<String> categoryNames) {
+        return categoryNames.stream()
+                .map(this::getCategoryByName)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .map(CategoryDto::id)
+                .toList();
+    }
+
+    public boolean editCategory(Long id, CategoryDto categoryDto) {
+
+        Optional<Category> categoryWithName = categoryRepository.findByCategoryName(categoryDto.categoryName());
+
+        if (categoryWithName.isPresent() &&
+                categoryDto.categoryName().equals(categoryWithName.get().getCategoryName()) &&
+                !Objects.equals(categoryWithName.get().getCategoryId(), id)) {
+            return false;
+        }
+
+        Optional<Category> optionalCategory = categoryRepository.findById(id);
+        if (optionalCategory.isPresent()) {
+            Category category = optionalCategory.get();
+            category.setCategoryName(categoryDto.categoryName());
+            categoryRepository.save(category);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean deleteCategory(Long id) {
+        Optional<Category> optionalCategory = categoryRepository.findById(id);
+        if (optionalCategory.isPresent()) {
+            Category category = optionalCategory.get();
+            categoryRepository.delete(category);
+            return true;
+        }
+        return false;
+    }
+
+    public List<String> deleteCategories(List<Long> ids) {
+        List<String> deletedCategories = new ArrayList<>();
+        for (Long id : ids) {
+            Optional<Category> optionalCategory = categoryRepository.findById(id);
+            if (optionalCategory.isPresent()) {
+                Category category = optionalCategory.get();
+                categoryRepository.delete(category);
+                deletedCategories.add(category.getCategoryName());
+            }
+        }
+        return deletedCategories;
+    }
+}
+```
 
 #### Warstwa repozytorium
 
+Warstwa repozytorium implementuje dodatkowo:
+- wyszukiwanie po nazwie kategorii
+
 ```java
 public interface CategoryRepository extends JpaRepository<Category, Long> {
+
+    Optional<Category> findByCategoryName(String categoryName);
 }
 ```
 

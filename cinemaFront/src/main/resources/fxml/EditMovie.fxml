@@ -1,60 +1,53 @@
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.control.PasswordField?>
-<?import javafx.scene.control.ListView?>
-<?import javafx.scene.shape.Rectangle?>
-<?import javafx.scene.image.ImageView?>
-<?import javafx.scene.control.TextArea?>
-<AnchorPane stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
-            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.admin.AdminEditMovieController"
-            fx:id="rootPane" prefHeight="800" prefWidth="800">
+<?xml version="1.0" encoding="UTF-8"?>
 
-    <Rectangle fx:id="backgroundRectangle" fill="Azure" stroke="#ffffff8b" strokeType="INSIDE"/>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+
+<AnchorPane fx:id="rootPane" prefHeight="800" prefWidth="800" stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.admin.AdminEditMovieController">
+
+    <Rectangle fx:id="backgroundRectangle" fill="Azure" stroke="#ffffff8b" strokeType="INSIDE" />
     <HBox alignment="CENTER" spacing="10">
-        <VBox spacing="10" style="-fx-padding: 24" alignment="CENTER" prefWidth="400">
+        <VBox alignment="CENTER" prefWidth="400" spacing="10" style="-fx-padding: 24">
             <Label fx:id="mainLabel" style="-fx-font-size: 24;" />
             <VBox spacing="4">
                 <TextField fx:id="titleField" promptText="Movie title" />
-                <TextArea fx:id="descriptionField" promptText="Description" prefHeight="100" wrapText="true"/>
+                <TextArea fx:id="descriptionField" prefHeight="100" promptText="Description" wrapText="true" />
                 <TextField fx:id="durationField" promptText="Duration" />
                 <TextField fx:id="releaseDateField" promptText="Release date" />
                 <HBox spacing="5">
                     <TextField fx:id="posterUrlField" promptText="Poster url address" />
-                    <Button text="Test" onAction="#handleTestPosterUrl"/>
+                    <Button onAction="#handleTestPosterUrl" text="Test" />
                 </HBox>
 
                 <VBox prefHeight="200">
                     <HBox>
                         <VBox>
-                            <Label text="Assigned categories" style="-fx-font-size: 16;" />
+                            <Label style="-fx-font-size: 16;" text="Assigned categories" />
                             <ListView fx:id="assignedCategoriesListView" />
                         </VBox>
                         <VBox>
-                            <Label text="Available categories" style="-fx-font-size: 16;" />
+                            <Label style="-fx-font-size: 16;" text="Available categories" />
                             <ListView fx:id="availableCategoriesListView" />
                         </VBox>
                     </HBox>
                     <HBox spacing="6">
-                        <Button fx:id="addCategoryButton" text="Add category" onAction="#handleAddCategory"/>
-                        <Button fx:id="removeCategoryButton" text="Remove category" onAction="#handleRemoveCategory"/>
+                        <Button fx:id="addCategoryButton" onAction="#handleAddCategory" text="Add category" />
+                        <Button fx:id="removeCategoryButton" onAction="#handleRemoveCategory" text="Remove category" />
                     </HBox>
                 </VBox>
-                <VBox prefHeight="80" style="-fx-padding: 15" alignment="CENTER">
-                    <Label fx:id="statusLabel" maxWidth="400" wrapText="true" textAlignment="CENTER"/>
+                <VBox alignment="CENTER" prefHeight="80" style="-fx-padding: 15">
+                    <Label fx:id="statusLabel" maxWidth="400" textAlignment="CENTER" wrapText="true" />
                 </VBox>
                 <HBox spacing="6">
-                    <Button fx:id="cancelButton" text="Cancel" onAction="#handleCancel"/>
-                    <Button fx:id="saveButton" text="Save" onAction="#handleSave"/>
+                    <Button fx:id="cancelButton" onAction="#handleCancel" text="Cancel" />
+                    <Button fx:id="saveButton" onAction="#handleSave" text="Save" />
                 </HBox>
             </VBox>
         </VBox>
         <VBox alignment="CENTER">
-            <ImageView fx:id="imageView" fitHeight="400" preserveRatio="true"/>
+            <ImageView fx:id="imageView" fitHeight="400" preserveRatio="true" />
         </VBox>
     </HBox>
 </AnchorPane>

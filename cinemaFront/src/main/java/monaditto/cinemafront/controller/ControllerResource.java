@@ -11,6 +11,8 @@ public enum ControllerResource {
     ADMIN_EDIT_USER,
     ADMIN_MOVIE,
     ADMIN_EDIT_MOVIE,
+    ADMIN_CATEGORY,
+    ADMIN_EDIT_CATEGORY,
     ADMIN_SCREENINGS,
     ADMIN_EDIT_SCREENING,
     USER_PANEL,
@@ -26,6 +28,8 @@ public enum ControllerResource {
             case ADMIN_EDIT_USER -> "fxml/EditUser.fxml";
             case ADMIN_MOVIE -> "fxml/AdminMovie.fxml";
             case ADMIN_EDIT_MOVIE -> "fxml/EditMovie.fxml";
+            case ADMIN_CATEGORY -> "fxml/AdminCategory.fxml";
+            case ADMIN_EDIT_CATEGORY -> "fxml/EditCategory.fxml";
             case ADMIN_SCREENINGS -> "fxml/AdminScreenings.fxml";
             case ADMIN_EDIT_SCREENING -> "fxml/EditScreening.fxml";
             case USER_PANEL -> "fxml/UserPanel.fxml";

@@ -11,14 +11,10 @@ import monaditto.cinemafront.clientapi.CategoryClientAPI;
 import monaditto.cinemafront.config.BackendConfig;
 import monaditto.cinemafront.controller.ControllerResource;
 import monaditto.cinemafront.databaseMapping.CategoryDto;
-import monaditto.cinemafront.databaseMapping.MovieDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.Optional;
 
 @Controller

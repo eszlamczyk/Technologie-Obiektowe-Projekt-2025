@@ -5,7 +5,6 @@
 <?import javafx.scene.control.Button?>
 
 <?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.shape.Rectangle?>
 <AnchorPane stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.admin.AdminPanelController"

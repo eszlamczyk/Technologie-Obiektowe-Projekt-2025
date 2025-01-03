@@ -3,11 +3,8 @@ package monaditto.cinemafront.clientapi;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import jdk.jfr.Category;
 import monaditto.cinemafront.config.BackendConfig;
 import monaditto.cinemafront.databaseMapping.CategoryDto;
-import monaditto.cinemafront.databaseMapping.MovieDto;
 import monaditto.cinemafront.request.RequestBuilder;
 import monaditto.cinemafront.response.ResponseResult;
 import org.springframework.stereotype.Component;
@@ -17,7 +14,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 @Component

@@ -33,9 +33,10 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         boolean isAuthenticated = userService.authenticate(loginRequest.getEmail(), loginRequest.getPassword());
-        UserDto userDto = userService.findByEmail(loginRequest.getEmail()).get();
+        Optional<UserDto> optionalUserDto = userService.findByEmail(loginRequest.getEmail());
 
         if (isAuthenticated) {
+            UserDto userDto = optionalUserDto.get();
             AuthResponse authResponse = new AuthResponse(roleService.getUserRoles(userDto.id()).stream().toList());
             return ResponseEntity.ok(authResponse);
         } else {

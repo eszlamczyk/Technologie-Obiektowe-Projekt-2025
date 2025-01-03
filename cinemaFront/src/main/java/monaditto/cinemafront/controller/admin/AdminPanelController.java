@@ -28,6 +28,9 @@ public class AdminPanelController {
     private Button screeningsButton;
 
     @FXML
+    public Button categoriesButton;
+
+    @FXML
     private Button signOutButton;
 
     @FXML
@@ -68,6 +71,15 @@ public class AdminPanelController {
     }
 
     @FXML
+    public void handleCategories(ActionEvent actionEvent) {
+        try {
+            stageInitializer.loadStage(ControllerResource.ADMIN_CATEGORY);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
     private void handleSignOut(ActionEvent event) {
         try {
             stageInitializer.loadStage(ControllerResource.LOGIN);
@@ -81,7 +93,7 @@ public class AdminPanelController {
         backgroundRectangle.widthProperty().bind(rootPane.widthProperty());
         backgroundRectangle.heightProperty().bind(rootPane.heightProperty());
 
-        List<Button> buttons = List.of(usersButton, moviesButton, screeningsButton, signOutButton);
+        List<Button> buttons = List.of(usersButton, moviesButton, screeningsButton, categoriesButton, signOutButton);
         buttons.forEach(this::initializeButtons);
     }
 
@@ -89,4 +101,6 @@ public class AdminPanelController {
         button.setOnMouseEntered(e -> button.setCursor(Cursor.HAND));
         button.setOnMouseExited(e -> button.setCursor(Cursor.DEFAULT));
     }
+
+
 }

@@ -18,6 +18,7 @@
             <Button fx:id="moviesButton" styleClass="adminPanelButton" text="Movies" onAction="#handleAdminMovies"/>
             <Button fx:id="screeningsButton" styleClass="adminPanelButton" text="Screenings" onAction="#handleScreenings"/>
             <Button fx:id="categoriesButton" styleClass="adminPanelButton" text="Categories" onAction="#handleCategories"/>
+            <Button fx:id="movieRoomsButton" styleClass="adminPanelButton" text="Movie Rooms" onAction="#handleMovieRooms"/>
             <Button fx:id="signOutButton" styleClass="adminPanelButton" text="Sign out" onAction="#handleSignOut"/>
             </VBox>
     </StackPane>

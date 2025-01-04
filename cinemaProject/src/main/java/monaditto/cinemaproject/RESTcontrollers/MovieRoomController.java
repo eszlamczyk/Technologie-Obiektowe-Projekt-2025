@@ -3,6 +3,8 @@ package monaditto.cinemaproject.RESTcontrollers;
 import monaditto.cinemaproject.movieRoom.MovieRoomDto;
 import monaditto.cinemaproject.movieRoom.MovieRoomService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,34 +22,40 @@ public class MovieRoomController {
     }
 
     @GetMapping
-    public List<MovieRoomDto> getAllMovieRooms() {
-        return movieRoomService.getAllMovieRooms();
+    public ResponseEntity<List<MovieRoomDto>> getAllMovieRooms() {
+        return ResponseEntity.ok().body(movieRoomService.getAllMovieRooms());
     }
 
     @GetMapping("/movieRoom/{movieRoomName}")
-    public Optional<MovieRoomDto> getMovieRoom(@PathVariable String movieRoomName) {
-        return movieRoomService.getMovieRoom(movieRoomName);
+    public ResponseEntity<MovieRoomDto> getMovieRoom(@PathVariable String movieRoomName) {
+        Optional<MovieRoomDto> optionalMovieRoomDto = movieRoomService.getMovieRoom(movieRoomName);
+        return optionalMovieRoomDto.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{movieRoomID}")
-    public boolean updateMovieRoom(@PathVariable Long movieRoomID,
+    public ResponseEntity<String> updateMovieRoom(@PathVariable Long movieRoomID,
                                      @RequestBody MovieRoomDto movieRoomDto) {
-        return movieRoomService.editMovieRoom(movieRoomID,movieRoomDto);
+        return switch(movieRoomService.editMovieRoom(movieRoomID,movieRoomDto)){
+            case SUCCESS -> ResponseEntity.ok("Room updated successfully");
+            case INCORRECT_ID -> ResponseEntity.status(HttpStatus.CONFLICT).body("Room name already taken");
+            case MOVIE_ROOM_NAME_TAKEN -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("Room ID not found");
+        };
     }
 
     @PostMapping
-    public boolean addMovieRoom(@RequestBody MovieRoomDto movieRoomDto) {
-        return movieRoomService.createMovieRoom(movieRoomDto);
+    public ResponseEntity<String> createMovieRoom(@RequestBody MovieRoomDto movieRoomDto) {
+        return switch(movieRoomService.createMovieRoom(movieRoomDto)){
+            case SUCCESS -> ResponseEntity.ok("Room updated successfully");
+            case INCORRECT_ID -> ResponseEntity.status(HttpStatus.CONFLICT).body("Room name already taken");
+            case MOVIE_ROOM_NAME_TAKEN -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("Room ID not found");
+        };
     }
 
-    @DeleteMapping("delete/{movieRoomID}")
-    public boolean deleteMovieRoom(@PathVariable Long movieRoomID) {
-        return movieRoomService.deleteMovieRoom(movieRoomID);
+    @DeleteMapping("/{movieRoomID}")
+    public ResponseEntity<String> deleteMovieRoom(@PathVariable Long movieRoomID) {
+        if(movieRoomService.deleteMovieRoom(movieRoomID)){
+            return ResponseEntity.ok("Successfully deleted");
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Category ID not found");
     }
-
-    @DeleteMapping
-    public List<String> deleteMovieRooms(@RequestBody List<Long> movieRoomIDs) {
-        return movieRoomService.deleteMovieRooms(movieRoomIDs);
-    }
-
 }

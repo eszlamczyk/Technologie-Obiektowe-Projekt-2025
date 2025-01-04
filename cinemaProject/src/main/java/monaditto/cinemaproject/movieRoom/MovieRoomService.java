@@ -24,16 +24,16 @@ public class MovieRoomService {
         return movieRoomRepository.save(movieRoom);
     }
 
-    public boolean createMovieRoom(MovieRoomDto movieRoomDto) {
+    public MovieRoomCreateStatus createMovieRoom(MovieRoomDto movieRoomDto) {
         if (movieRoomRepository.findByMovieRoomName(movieRoomDto.movieRoomName()).isPresent()) {
-            return false;
+            return MovieRoomCreateStatus.MOVIE_ROOM_NAME_TAKEN;
         }
         MovieRoom movieRoom =  new MovieRoom(
                 movieRoomDto.movieRoomName(),
                 movieRoomDto.maxSeats());
 
         movieRoomRepository.save(movieRoom);
-        return true;
+        return MovieRoomCreateStatus.SUCCESS;
     }
 
     public Optional<MovieRoomDto> getMovieRoom(String movieRoomName) {
@@ -46,14 +46,14 @@ public class MovieRoomService {
                 .stream().map(MovieRoomDto::movieRoomtoMovieRoomDto).collect(Collectors.toList());
     }
 
-    public boolean editMovieRoom(Long id, MovieRoomDto movieRoomDto) {
+    public MovieRoomCreateStatus editMovieRoom(Long id, MovieRoomDto movieRoomDto) {
         Optional<MovieRoom> movieRoomWithTheName =
                 movieRoomRepository.findByMovieRoomName(movieRoomDto.movieRoomName());
 
         if (movieRoomWithTheName.isPresent() &&
                 (movieRoomWithTheName.get().getMovieRoomName().equals(movieRoomDto.movieRoomName()) &&
                     !Objects.equals(movieRoomWithTheName.get().getMovieRoomId(), id))) {
-            return false;
+            return MovieRoomCreateStatus.MOVIE_ROOM_NAME_TAKEN;
         }
 
         Optional<MovieRoom> optionalMovieRoom = movieRoomRepository.findById(id);
@@ -62,9 +62,10 @@ public class MovieRoomService {
             MovieRoom movieRoom = optionalMovieRoom.get();
             movieRoom.setMovieRoomName(movieRoomDto.movieRoomName());
             movieRoom.setMaxSeats(movieRoomDto.maxSeats());
-            return true;
+            movieRoomRepository.save(movieRoom);
+            return MovieRoomCreateStatus.SUCCESS;
         }
-        return false;
+        return MovieRoomCreateStatus.INCORRECT_ID;
     }
 
     public boolean deleteMovieRoom(Long id) {
@@ -75,18 +76,5 @@ public class MovieRoomService {
             return true;
         }
         return false;
-    }
-
-    public List<String> deleteMovieRooms(List<Long> ids) {
-        List<String> successfullyDeletedMovieRooms = new ArrayList<>();
-        for (Long id : ids) {
-            Optional<MovieRoom> optionalMovieRoom = movieRoomRepository.findById(id);
-            if (optionalMovieRoom.isPresent()) {
-                MovieRoom movieRoom = optionalMovieRoom.get();
-                movieRoomRepository.delete(movieRoom);
-                successfullyDeletedMovieRooms.add(movieRoom.getMovieRoomName());
-            }
-        }
-        return successfullyDeletedMovieRooms;
     }
 }

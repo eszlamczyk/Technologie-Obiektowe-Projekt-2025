@@ -179,6 +179,8 @@ public class UserPurchasesController {
         protected void updateItem(PurchaseResponseDto purchase, boolean empty) {
             super.updateItem(purchase, empty);
 
+            titleLabel.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
+
             if (empty || purchase == null) {
                 setGraphic(null);
             } else {

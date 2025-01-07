@@ -20,7 +20,8 @@ public enum ControllerResource {
     USER_PANEL,
     USER_MOVIE,
     USER_SCREENINGS,
-    USER_BUY_TICKETS;
+    USER_BUY_TICKETS,
+    USER_PURCHASES;
 
     public Resource getResource() {
         String resourceUrl = switch(this) {
@@ -41,6 +42,7 @@ public enum ControllerResource {
             case USER_MOVIE -> "fxml/UserMovie.fxml";
             case USER_SCREENINGS -> "fxml/UserScreenings.fxml";
             case USER_BUY_TICKETS -> "fxml/UserBuyTickets.fxml";
+            case USER_PURCHASES -> "fxml/UserPurchases.fxml";
         };
 
         return new ClassPathResource(resourceUrl);

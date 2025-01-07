@@ -3,8 +3,10 @@ package monaditto.cinemafront.clientapi;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import monaditto.cinemafront.config.BackendConfig;
 import monaditto.cinemafront.databaseMapping.PurchaseDto;
+import monaditto.cinemafront.databaseMapping.PurchaseResponseDto;
 import monaditto.cinemafront.request.RequestBuilder;
 import monaditto.cinemafront.response.ResponseResult;
 import org.springframework.stereotype.Component;
@@ -22,11 +24,11 @@ public class PurchaseClientAPI {
     private final ObjectMapper objectMapper;
 
     public PurchaseClientAPI(BackendConfig backendConfig) {
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         endpointUrl = backendConfig.getBaseUrl() + "/api/purchases";
     }
 
-    private CompletableFuture<List<PurchaseDto>> sendLoadPurchasesRequest(HttpClient client, HttpRequest request) {
+    private CompletableFuture<List<PurchaseResponseDto>> sendLoadPurchasesRequest(HttpClient client, HttpRequest request) {
         return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(HttpResponse::body)
                 .thenApply(this::parsePurchaseList)
@@ -36,7 +38,13 @@ public class PurchaseClientAPI {
                 });
     }
 
-    private List<PurchaseDto> parsePurchaseList(String responseBody) {
+    public CompletableFuture<List<PurchaseResponseDto>> getPurchasesByUser(Long userId) {
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = RequestBuilder.buildRequestGET(endpointUrl + "/user/" + userId);
+        return sendLoadPurchasesRequest(client, request);
+    }
+
+    private List<PurchaseResponseDto> parsePurchaseList(String responseBody) {
         try {
             return objectMapper.readValue(responseBody, new TypeReference<>() {});
         } catch (JsonProcessingException e) {
@@ -55,6 +63,22 @@ public class PurchaseClientAPI {
 
         HttpRequest request = RequestBuilder.buildRequestPOST(endpointUrl, jsonString);
         return sendCreatePurchaseRequest(client, request);
+    }
+
+    public CompletableFuture<ResponseResult> confirmPurchase(Long purchaseId) {
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = RequestBuilder.buildRequestPOST(endpointUrl + "/" + purchaseId + "/confirm", "");
+        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(response -> new ResponseResult(response.statusCode(), response.body()))
+                .exceptionally(e -> new ResponseResult(500, "Error " + e.getMessage()));
+    }
+
+    public CompletableFuture<ResponseResult> cancelPurchase(Long purchaseId) {
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = RequestBuilder.buildRequestPOST(endpointUrl + "/" + purchaseId + "/cancel", "");
+        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(response -> new ResponseResult(response.statusCode(), response.body()))
+                .exceptionally(e -> new ResponseResult(500, "Error " + e.getMessage()));
     }
 
     private CompletableFuture<ResponseResult> sendCreatePurchaseRequest(HttpClient client, HttpRequest request) {

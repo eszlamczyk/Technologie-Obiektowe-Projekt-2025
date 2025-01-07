@@ -85,7 +85,7 @@ public class BuyTicketsController {
                         switch (result.statusCode()) {
                             case 200 -> {
                                 try {
-                                    stageInitializer.loadStage(ControllerResource.USER_SCREENINGS);
+                                    stageInitializer.loadStage(ControllerResource.USER_PURCHASES);
                                 } catch (IOException e) {
                                     showError("Error navigating to screenings page: " + e.getMessage());
                                 }

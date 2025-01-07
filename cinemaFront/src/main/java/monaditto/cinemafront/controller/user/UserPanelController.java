@@ -56,6 +56,15 @@ public class UserPanelController {
     }
 
     @FXML
+    private void handleUserPurchases(ActionEvent event) {
+        try {
+            stageInitializer.loadStage(ControllerResource.USER_PURCHASES);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
     private void handleSignOut(ActionEvent event) {
         try {
             stageInitializer.loadStage(ControllerResource.LOGIN);

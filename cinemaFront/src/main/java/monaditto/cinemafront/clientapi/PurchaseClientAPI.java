@@ -28,6 +28,13 @@ public class PurchaseClientAPI {
         endpointUrl = backendConfig.getBaseUrl() + "/api/purchases";
     }
 
+    public CompletableFuture<List<PurchaseResponseDto>> loadPurchases() {
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = RequestBuilder.buildRequestGET(endpointUrl);
+        return sendLoadPurchasesRequest(client, request);
+    }
+
+
     private CompletableFuture<List<PurchaseResponseDto>> sendLoadPurchasesRequest(HttpClient client, HttpRequest request) {
         return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(HttpResponse::body)
@@ -36,6 +43,12 @@ public class PurchaseClientAPI {
                     System.err.println("Error loading purchases: " + e.getMessage());
                     return new ArrayList<>();
                 });
+    }
+
+    public CompletableFuture<List<PurchaseResponseDto>> getPurchasesByScreening(Long screeningId) {
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = RequestBuilder.buildRequestGET(endpointUrl + "/screening/" + screeningId);
+        return sendLoadPurchasesRequest(client, request);
     }
 
     public CompletableFuture<List<PurchaseResponseDto>> getPurchasesByUser(Long userId) {

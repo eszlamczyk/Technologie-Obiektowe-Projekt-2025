@@ -92,6 +92,15 @@ public class AdminPanelController {
     }
 
     @FXML
+    public void handlePurchases(ActionEvent event) {
+        try {
+            stageInitializer.loadStage(ControllerResource.ADMIN_PURCHASES);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
     private void handleSignOut(ActionEvent event) {
         try {
             stageInitializer.loadStage(ControllerResource.LOGIN);

@@ -63,7 +63,7 @@ public class AdminBuyTicketsController {
                 }
             }
         };
-        userIdField.textProperty().addListener(listener);
+        //userIdField.textProperty().addListener(listener);
         numOfSeatsField.textProperty().addListener(listener);
         numOfSeatsField.setText("1");
     }

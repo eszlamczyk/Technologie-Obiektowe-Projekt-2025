@@ -188,7 +188,7 @@ public class AdminPurchasesController {
         private final Label titleLabel;
         private final Label detailsLabel;
         private final Label statusLabel;
-        private final Label userIdLabel;
+        private final Label userNameLabel;
         private final HBox buttonContainer;
         private final Button payButton;
         private final Button cancelButton;
@@ -213,8 +213,8 @@ public class AdminPurchasesController {
 
             statusLabel = new Label();
 
-            userIdLabel = new Label();
-            userIdLabel.setStyle("-fx-font-style: italic; -fx-text-fill: #666;");
+            userNameLabel = new Label();
+            userNameLabel.setStyle("-fx-font-style: italic; -fx-text-fill: #666;");
 
             buttonContainer = new HBox(10);
             buttonContainer.setAlignment(Pos.CENTER_RIGHT);
@@ -228,7 +228,7 @@ public class AdminPurchasesController {
                     "-fx-background-radius: 15;");
 
             buttonContainer.getChildren().addAll(cancelButton, payButton);
-            content.getChildren().addAll(titleLabel, detailsLabel, statusLabel, userIdLabel, buttonContainer);
+            content.getChildren().addAll(titleLabel, detailsLabel, statusLabel, userNameLabel, buttonContainer);
         }
 
         @Override
@@ -242,7 +242,7 @@ public class AdminPurchasesController {
             } else {
                 titleLabel.setText(String.format(purchase.movieTitle() + " - " + purchase.screeningTime()));
                 detailsLabel.setText(String.format("%d " + (purchase.boughtSeats() > 1 ? "seats" : "seat"), purchase.boughtSeats()));
-                userIdLabel.setText("User ID: " + purchase.userId());
+                userNameLabel.setText("User Name: " + purchase.userName());
                 statusLabel.setText("Status: " + purchase.status());
                 switch (purchase.status()) {
                     case UNPAID -> {

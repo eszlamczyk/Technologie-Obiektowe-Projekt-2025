@@ -56,7 +56,7 @@ public class UserScreeningsController {
     private MovieClientAPI movieClientAPI;
 
     @Autowired
-    private BuyTicketsController buyTicketsController;
+    private UserBuyTicketsController buyTicketsController;
 
     @FXML
     private ListView<ScreeningDto> screeningsListView;

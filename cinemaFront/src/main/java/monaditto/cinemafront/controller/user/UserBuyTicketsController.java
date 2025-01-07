@@ -18,7 +18,7 @@ import org.springframework.stereotype.Controller;
 import java.io.IOException;
 
 @Controller
-public class BuyTicketsController {
+public class UserBuyTicketsController {
 
     private StageInitializer stageInitializer;
 
@@ -41,7 +41,7 @@ public class BuyTicketsController {
     private TextField numOfSeatsField;
 
     @Autowired
-    public BuyTicketsController(StageInitializer stageInitializer, SessionContext sessionContext, PurchaseClientAPI purchaseClientAPI) {
+    public UserBuyTicketsController(StageInitializer stageInitializer, SessionContext sessionContext, PurchaseClientAPI purchaseClientAPI) {
         this.sessionContext = sessionContext;
         this.stageInitializer = stageInitializer;
         this.purchaseClientAPI = purchaseClientAPI;

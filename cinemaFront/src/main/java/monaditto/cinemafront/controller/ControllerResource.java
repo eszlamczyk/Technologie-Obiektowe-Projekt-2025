@@ -17,6 +17,7 @@ public enum ControllerResource {
     ADMIN_EDIT_SCREENING,
     ADMIN_MOVIE_ROOMS,
     ADMIN_EDIT_MOVIE_ROOM,
+    ADMIN_BUY_TICKETS,
     ADMIN_PURCHASES,
     USER_PANEL,
     USER_MOVIE,
@@ -38,6 +39,7 @@ public enum ControllerResource {
             case ADMIN_SCREENINGS -> "fxml/AdminScreenings.fxml";
             case ADMIN_EDIT_SCREENING -> "fxml/EditScreening.fxml";
             case ADMIN_MOVIE_ROOMS -> "fxml/AdminMovieRoom.fxml";
+            case ADMIN_BUY_TICKETS -> "fxml/AdminBuyTickets.fxml";
             case ADMIN_EDIT_MOVIE_ROOM -> "fxml/EditMovieRoom.fxml";
             case ADMIN_PURCHASES -> "fxml/AdminPurchases.fxml";
             case USER_PANEL -> "fxml/UserPanel.fxml";

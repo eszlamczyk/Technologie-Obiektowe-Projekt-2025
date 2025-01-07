@@ -4,7 +4,9 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.clientapi.PurchaseClientAPI;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Consumer;
 
 @Controller
 public class AdminPurchasesController {
@@ -61,7 +64,7 @@ public class AdminPurchasesController {
     }
 
     private void setupListView() {
-        purchaseListView.setCellFactory(listView -> new PurchaseListCell());
+        purchaseListView.setCellFactory(listView -> new PurchaseListCell(this::handlePayment, this::handleCancellation));
         purchaseListView.setPlaceholder(new Label("No purchases found"));
     }
 
@@ -79,6 +82,43 @@ public class AdminPurchasesController {
                     Platform.runLater(() -> {
                         showError("Error loading purchases: " + throwable.getMessage());
                     });
+                    return null;
+                });
+    }
+
+
+    private void handlePayment(Long purchaseId) {
+        purchaseClientAPI.confirmPurchase(purchaseId)
+                .thenAccept(result -> {
+                    Platform.runLater(() -> {
+                        if (result.statusCode() == 200) {
+                            loadAllPurchases();
+                        } else {
+                            showError("Failed to process payment: " + result.body());
+                        }
+                    });
+                })
+                .exceptionally(throwable -> {
+                    Platform.runLater(() ->
+                            showError("Error processing payment: " + throwable.getMessage()));
+                    return null;
+                });
+    }
+
+    private void handleCancellation(Long purchaseId) {
+        purchaseClientAPI.cancelPurchase(purchaseId)
+                .thenAccept(result -> {
+                    Platform.runLater(() -> {
+                        if (result.statusCode() == 200) {
+                            loadAllPurchases();
+                        } else {
+                            showError("Failed to cancel purchase: " + result.body());
+                        }
+                    });
+                })
+                .exceptionally(throwable -> {
+                    Platform.runLater(() ->
+                            showError("Error cancelling purchase: " + throwable.getMessage()));
                     return null;
                 });
     }
@@ -149,8 +189,17 @@ public class AdminPurchasesController {
         private final Label detailsLabel;
         private final Label statusLabel;
         private final Label userIdLabel;
+        private final HBox buttonContainer;
+        private final Button payButton;
+        private final Button cancelButton;
+        private final Consumer<Long> onPay;
+        private final Consumer<Long> onCancel;
 
-        public PurchaseListCell() {
+
+        public PurchaseListCell(Consumer<Long> onPay, Consumer<Long> onCancel) {
+            this.onPay = onPay;
+            this.onCancel = onCancel;
+
             content = new VBox(5);
             content.setPadding(new Insets(10));
             content.setStyle("-fx-background-color: white; -fx-border-color: #ddd; " +
@@ -167,7 +216,19 @@ public class AdminPurchasesController {
             userIdLabel = new Label();
             userIdLabel.setStyle("-fx-font-style: italic; -fx-text-fill: #666;");
 
-            content.getChildren().addAll(titleLabel, detailsLabel, statusLabel, userIdLabel);
+            buttonContainer = new HBox(10);
+            buttonContainer.setAlignment(Pos.CENTER_RIGHT);
+
+            payButton = new Button("Mark as paid");
+            payButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; " +
+                    "-fx-background-radius: 15;");
+
+            cancelButton = new Button("Cancel");
+            cancelButton.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; " +
+                    "-fx-background-radius: 15;");
+
+            buttonContainer.getChildren().addAll(cancelButton, payButton);
+            content.getChildren().addAll(titleLabel, detailsLabel, statusLabel, userIdLabel, buttonContainer);
         }
 
         @Override
@@ -179,17 +240,28 @@ public class AdminPurchasesController {
             } else {
                 titleLabel.setText(String.format(purchase.movieTitle() + " - " + purchase.screeningTime()));
                 detailsLabel.setText(String.format("%d " + (purchase.boughtSeats() > 1 ? "seats" : "seat"), purchase.boughtSeats()));
-                userIdLabel.setText(String.format("User ID: %d", purchase.userId()));
-
+                userIdLabel.setText("User ID: " + purchase.userId());
                 statusLabel.setText("Status: " + purchase.status());
                 switch (purchase.status()) {
-                    case UNPAID -> statusLabel.setStyle("-fx-text-fill: #f44336;"); // Red
-                    case PAID -> statusLabel.setStyle("-fx-text-fill: #4CAF50;"); // Green
-                    case CANCELLED -> statusLabel.setStyle("-fx-text-fill: #9e9e9e;"); // Grey
+                    case UNPAID -> {
+                        statusLabel.setStyle("-fx-text-fill: #f44336;");
+                        buttonContainer.setVisible(true);
+                        payButton.setOnAction(e -> onPay.accept(purchase.id()));
+                        cancelButton.setOnAction(e -> onCancel.accept(purchase.id()));
+                    }
+                    case PAID -> {
+                        statusLabel.setStyle("-fx-text-fill: #4CAF50;");
+                        buttonContainer.setVisible(false);
+                    }
+                    case CANCELLED -> {
+                        statusLabel.setStyle("-fx-text-fill: #9e9e9e;");
+                        buttonContainer.setVisible(false);
+                    }
                 }
 
                 setGraphic(content);
             }
         }
+
     }
 }

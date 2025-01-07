@@ -6,6 +6,7 @@ public record PurchaseResponseDto(
         Long id,
         Long userId,
         Long screeningId,
+        String userName,
         String movieTitle,
         LocalDateTime screeningTime,
         int boughtSeats,

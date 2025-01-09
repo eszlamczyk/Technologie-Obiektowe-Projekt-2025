@@ -1,5 +1,6 @@
 package monaditto.cinemaproject.RESTcontrollers;
 
+import jakarta.annotation.security.RolesAllowed;
 import monaditto.cinemaproject.role.RoleService;
 import monaditto.cinemaproject.status.Status;
 import monaditto.cinemaproject.user.CreateUserStatus;
@@ -19,6 +20,7 @@ public class UserController {
         this.userService = userService;
     }
 
+    @RolesAllowed({"ADMIN"})
     @PutMapping("/{userId}")
     public ResponseEntity<String> updateUser(
             @PathVariable Long userId,

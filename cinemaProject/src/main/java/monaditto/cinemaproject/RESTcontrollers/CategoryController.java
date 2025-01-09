@@ -1,11 +1,13 @@
 package monaditto.cinemaproject.RESTcontrollers;
 
+import jakarta.annotation.security.RolesAllowed;
 import monaditto.cinemaproject.category.CategoryCreateStatus;
 import monaditto.cinemaproject.category.CategoryDto;
 import monaditto.cinemaproject.category.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,6 +15,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("api/categories")
+@EnableGlobalMethodSecurity(jsr250Enabled = true)
 public class CategoryController {
 
     private final CategoryService categoryService;
@@ -27,12 +30,14 @@ public class CategoryController {
         return ResponseEntity.ok().body(categoryService.getCategories());
     }
 
+    @RolesAllowed({"ADMIN","CASHIER", "USER"})
     @GetMapping("/category/{categoryName}")
     public ResponseEntity<CategoryDto> getCategory(@PathVariable String categoryName) {
         Optional<CategoryDto> optionalCategoryDto = categoryService.getCategoryByName(categoryName);
         return optionalCategoryDto.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @RolesAllowed({"ADMIN","CASHIER", "USER"})
     @PutMapping("/{categoryID}")
     public ResponseEntity<String> updateCategory(@PathVariable Long categoryID,
                                                  @RequestBody CategoryDto categoryDTO) {
@@ -45,6 +50,7 @@ public class CategoryController {
         };
     }
 
+    @RolesAllowed({"ADMIN"})
     @PostMapping
     public ResponseEntity<String> createCategory(@RequestBody CategoryDto categoryDTO) {
         CategoryCreateStatus status = categoryService.createCategory(categoryDTO);
@@ -56,8 +62,9 @@ public class CategoryController {
         };
     }
 
+    @RolesAllowed({"ADMIN"})
     @DeleteMapping("/{categoryID}")
-    public ResponseEntity<String> deleteMovieRoom(@PathVariable Long categoryID) {
+    public ResponseEntity<String> deleteCategory(@PathVariable Long categoryID) {
         if (categoryService.deleteCategory(categoryID)){
             return ResponseEntity.ok("Successfully deleted");
         }

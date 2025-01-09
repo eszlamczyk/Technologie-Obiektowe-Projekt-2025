@@ -5,35 +5,46 @@ import java.net.http.HttpRequest;
 
 public class RequestBuilder {
 
+    private static String jwtToken = null;
+
+    // Method to set the JWT token
+    public static void setJwtToken(String token) {
+        jwtToken = token;
+    }
+
+    private static HttpRequest.Builder addHeaders(HttpRequest.Builder builder) {
+        builder.header("Content-Type", "application/json");
+        if (jwtToken != null && !jwtToken.isEmpty()) {
+            builder.header("Authorization", "Bearer " + jwtToken);
+        }
+        return builder;
+    }
+
     public static HttpRequest buildRequestGET(String url) {
-        return HttpRequest.newBuilder()
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
-                .header("Content-Type", "application/json")
-                .GET()
-                .build();
+                .GET();
+        return addHeaders(builder).build();
     }
 
     public static HttpRequest buildRequestPUT(String url, String jsonBody) {
-        return HttpRequest.newBuilder()
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
-                .header("Content-Type", "application/json")
-                .PUT(HttpRequest.BodyPublishers.ofString(jsonBody))
-                .build();
+                .PUT(HttpRequest.BodyPublishers.ofString(jsonBody));
+        return addHeaders(builder).build();
     }
 
     public static HttpRequest buildRequestDELETE(String url) {
-        return HttpRequest.newBuilder()
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
-                .header("Content-Type", "application/json")
-                .DELETE()
-                .build();
+                .DELETE();
+        return addHeaders(builder).build();
     }
 
-    public static HttpRequest buildRequestPOST(String url, String jsonBody){
-        return HttpRequest.newBuilder()
+    public static HttpRequest buildRequestPOST(String url, String jsonBody) {
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-                .build();
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody));
+        return addHeaders(builder).build();
     }
 }

@@ -1,5 +1,6 @@
 package monaditto.cinemaproject.RESTcontrollers;
 
+import jakarta.annotation.security.RolesAllowed;
 import monaditto.cinemaproject.movieRoom.MovieRoomDto;
 import monaditto.cinemaproject.movieRoom.MovieRoomService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,12 +27,14 @@ public class MovieRoomController {
         return ResponseEntity.ok().body(movieRoomService.getAllMovieRooms());
     }
 
+    @RolesAllowed({"ADMIN","CASHIER"})
     @GetMapping("/movieRoom/{movieRoomName}")
     public ResponseEntity<MovieRoomDto> getMovieRoom(@PathVariable String movieRoomName) {
         Optional<MovieRoomDto> optionalMovieRoomDto = movieRoomService.getMovieRoom(movieRoomName);
         return optionalMovieRoomDto.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @RolesAllowed({"ADMIN"})
     @PutMapping("/{movieRoomID}")
     public ResponseEntity<String> updateMovieRoom(@PathVariable Long movieRoomID,
                                      @RequestBody MovieRoomDto movieRoomDto) {
@@ -42,6 +45,7 @@ public class MovieRoomController {
         };
     }
 
+    @RolesAllowed({"ADMIN"})
     @PostMapping
     public ResponseEntity<String> createMovieRoom(@RequestBody MovieRoomDto movieRoomDto) {
         return switch(movieRoomService.createMovieRoom(movieRoomDto)){
@@ -51,6 +55,7 @@ public class MovieRoomController {
         };
     }
 
+    @RolesAllowed({"ADMIN"})
     @DeleteMapping("/{movieRoomID}")
     public ResponseEntity<String> deleteMovieRoom(@PathVariable Long movieRoomID) {
         if(movieRoomService.deleteMovieRoom(movieRoomID)){

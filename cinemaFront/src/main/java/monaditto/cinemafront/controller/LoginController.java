@@ -17,6 +17,7 @@ import monaditto.cinemafront.config.BackendConfig;
 import monaditto.cinemafront.controller.DTO.AuthResponse;
 import monaditto.cinemafront.controller.DTO.LoginRequest;
 import monaditto.cinemafront.databaseMapping.RoleDto;
+import monaditto.cinemafront.request.RequestBuilder;
 import monaditto.cinemafront.session.SessionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -77,28 +78,33 @@ public class LoginController {
             // Convert the loginRequest to JSON
             String requestBody = objectMapper.writeValueAsString(loginRequest);
 
-            // Create the HttpRequest to send to the backend
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(backendConfig.getBaseUrl() + "/api/auth/login"))
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-                    .build();
+
+            HttpRequest request =
+                    RequestBuilder.buildRequestPOST(backendConfig.getBaseUrl() + "/api/auth/login", requestBody);
+
+            System.out.println(request + requestBody);
+
 
             // Send the request asynchronously and handle the response
+
             client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                     .thenAccept(response -> {
                         if (response.statusCode() == 200) {
                             // Handle successful login (response body contains roles)
-                            AuthResponse authResponse = null;
+                            AuthResponse authResponse;
                             try {
                                 authResponse = objectMapper.readValue(response.body(), AuthResponse.class);
                             } catch (JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
 
-                            sessionContext.setUserId(authResponse.getUserId());
+                            sessionContext.setUserId(authResponse.userID());
+                            sessionContext.setJwtToken(authResponse.token());
 
-                            boolean isAdmin = authResponse.getRoles().stream()
+                            RequestBuilder.setJwtToken(authResponse.token());
+
+                            //todo: add cashier
+                            boolean isAdmin = authResponse.roles().stream()
                                     .anyMatch(roleDto -> roleDto.name().equals("admin"));
 
                             if (isAdmin) {

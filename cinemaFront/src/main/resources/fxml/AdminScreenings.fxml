@@ -27,7 +27,7 @@
                     <Button text="Add" styleClass="moviesButton" onAction="#handleAdd" />
                     <Button text="Edit" fx:id="editButton" styleClass="moviesButton" onAction="#handleEdit" />
                     <Button text="Delete" fx:id="deleteButton" styleClass="moviesButton" onAction="#handleDelete" />
-                    <Button text="Buy ticket!" fx:id="buyButton" styleClass="moviesButton" />
+                    <Button text="Buy ticket!" fx:id="buyButton" styleClass="moviesButton" onAction="#handleBuy" />
                 </HBox>
             </VBox>
             <Button text="Go Back" styleClass="moviesButton" onAction="#handleGoBack" />

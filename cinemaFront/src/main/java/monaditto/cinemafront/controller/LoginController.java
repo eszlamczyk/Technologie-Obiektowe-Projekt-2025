@@ -17,6 +17,7 @@ import monaditto.cinemafront.config.BackendConfig;
 import monaditto.cinemafront.controller.DTO.AuthResponse;
 import monaditto.cinemafront.controller.DTO.LoginRequest;
 import monaditto.cinemafront.databaseMapping.RoleDto;
+import monaditto.cinemafront.session.SessionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -30,6 +31,7 @@ import java.util.List;
 @Controller
 public class LoginController {
 
+    private final SessionContext sessionContext;
     @FXML
     private Button btnLogin;
 
@@ -55,9 +57,10 @@ public class LoginController {
     private final BackendConfig backendConfig;
 
     @Autowired
-    public LoginController(StageInitializer stageInitializer, BackendConfig backendConfig) {
+    public LoginController(StageInitializer stageInitializer, BackendConfig backendConfig, SessionContext sessionContext) {
         this.stageInitializer = stageInitializer;
         this.backendConfig = backendConfig;
+        this.sessionContext = sessionContext;
     }
 
     @FXML
@@ -92,6 +95,8 @@ public class LoginController {
                             } catch (JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
+
+                            sessionContext.setUserId(authResponse.getUserId());
 
                             boolean isAdmin = authResponse.getRoles().stream()
                                     .anyMatch(roleDto -> roleDto.name().equals("admin"));

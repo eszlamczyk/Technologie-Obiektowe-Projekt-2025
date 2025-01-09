@@ -1,5 +1,6 @@
 package monaditto.cinemaproject.movieRoom;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import monaditto.cinemaproject.screening.Screening;
 
@@ -17,13 +18,14 @@ public class MovieRoom {
     @Column(name = "movie_room_id")
     private Long id;
 
-    @Column(name = "movie_room_name", nullable = false)
+    @Column(name = "movie_room_name", nullable = false, unique = true)
     private String movieRoomName;
 
     @Column(name = "max_seats", nullable = false)
     private int maxSeats;
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
+    @JsonIgnore
     private Set<Screening> screenings = new HashSet<>();
 
     public MovieRoom() {}

@@ -1,12 +1,15 @@
 package monaditto.cinemaproject.user;
 
+import jakarta.transaction.Transactional;
 import monaditto.cinemaproject.crypto.PasswordHasher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
+@Transactional
 public class UserService {
 
     private final UserRepository userRepository;
@@ -26,8 +29,9 @@ public class UserService {
         this.userValidator = userValidator;
     }
 
-    public User findByEmail(String email){
-        return userRepository.findByEmail(email);
+    public Optional<UserDto> findByEmail(String email){
+        return userRepository.findByEmail(email)
+                .map(UserDto::userToUserDto);
     }
 
     public User save(User entity){
@@ -35,75 +39,57 @@ public class UserService {
     }
 
     public boolean authenticate(String email, String password){
-        User user = this.findByEmail(email);
-        if (user == null){
+        Optional<User> user = userRepository.findByEmail(email);
+        if (user.isEmpty()){
             return false;
         }else{
             String hashedPassword = passwordHasher.hashPassword(password);
-            return hashedPassword.equals(user.getPassword());
+            return hashedPassword.equals(user.get().getPassword());
         }
     }
 
-    public List<User> getUsers() {
-        return userRepository.findAll();
+    public List<UserDto> getUsers() {
+        return userRepository.findAll().stream()
+                .map(UserDto::userToUserDto)
+                .toList();
     }
 
-    public boolean editUser(UserDto oldUser, UserDto newUser) {
-        User existingUser = userRepository.findByEmail(oldUser.email());
+    public CreateUserStatus editUser(Long id, UserDto userDto) {
+        User existingUser = userRepository.findById(id)
+                .orElse(null);
         if (existingUser == null) {
-            return false;
-        }
-
-        existingUser.setFirstName(newUser.firstName());
-        existingUser.setLastName(newUser.lastName());
-
-        if (!userValidator.validateEmail(newUser.email)) {
-            return false;
-        }
-        existingUser.setEmail(newUser.email());
-
-        if (newUser.password() != null) {
-            if (!userValidator.validatePassword(newUser.password())) {
-                return false;
-            }
-            String hashedPassword = passwordHasher.hashPassword(newUser.password());
-            existingUser.setPassword(hashedPassword);
-        } else {
-            existingUser.setPassword(oldUser.password());
-        }
-
-        userRepository.save(existingUser);
-        return true;
-    }
-
-    public CreateUserStatus createUser(UserDto userDto) {
-        if (!userValidator.validateString(userDto.firstName)
-                || !userValidator.validateString(userDto.lastName)
-                || !userValidator.validateString(userDto.email)
-                || !userValidator.validateString(userDto.password)
-        ) {
             return CreateUserStatus.MISSING_DATA;
         }
 
-        System.out.println("to jest email: (" + userDto.email + ")");
-
-        User presentUser = userRepository.findByEmail(userDto.email);
-        if (presentUser != null) {
-            return CreateUserStatus.USER_ALREADY_EXISTS;
+        CreateUserStatus validationStatus = userValidator.validateEditUserDto(userDto);
+        if (validationStatus != CreateUserStatus.SUCCESS) {
+            return validationStatus;
         }
 
-        if (!userValidator.validateEmail(userDto.email)) {
-            return CreateUserStatus.INVALID_EMAIL;
-        }
-        if (!userValidator.validatePassword(userDto.password)) {
-            return CreateUserStatus.INVALID_PASSWORD;
+        existingUser.setFirstName(userDto.firstName());
+        existingUser.setLastName(userDto.lastName());
+        existingUser.setEmail(userDto.email());
+
+        if (userDto.password() != null) {
+            String hashedPassword = passwordHasher.hashPassword(userDto.password());
+            existingUser.setPassword(hashedPassword);
         }
 
-        String hashedPassword = passwordHasher.hashPassword(userDto.password);
+        userRepository.save(existingUser);
+        return CreateUserStatus.SUCCESS;
+    }
+
+    public CreateUserStatus createUser(UserDto userDto) {
+        CreateUserStatus validationStatus = userValidator.validateCreateUserDto(userDto);
+        if (validationStatus != CreateUserStatus.SUCCESS) {
+            return validationStatus;
+        }
+
+        String hashedPassword = passwordHasher.hashPassword(userDto.password());
         User user = new User(
-                userDto.firstName,
-                userDto.lastName,
-                userDto.email,
+                userDto.firstName(),
+                userDto.lastName(),
+                userDto.email(),
                 hashedPassword);
         try {
             save(user);
@@ -117,10 +103,18 @@ public class UserService {
         userRepository.delete(user);
     }
 
-    public record UserDto(
-            String email,
-            String firstName,
-            String lastName,
-            String password
-    ) {}
+    public void deleteUserById(Long id) {
+        userRepository.deleteById(id);
+    }
+
+    public Optional<UserDto> findById(Long userId) {
+        Optional<User> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isEmpty()) {
+            return Optional.empty();
+        }
+        User user = optionalUser.get();
+
+        UserDto userDto = UserDto.userToUserDto(user);
+        return Optional.of(userDto);
+    }
 }

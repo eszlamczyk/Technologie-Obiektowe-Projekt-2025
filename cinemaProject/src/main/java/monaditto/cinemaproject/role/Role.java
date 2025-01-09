@@ -1,5 +1,6 @@
 package monaditto.cinemaproject.role;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import monaditto.cinemaproject.user.User;
 
@@ -20,6 +21,7 @@ public class Role {
     @Column(nullable = false)
     private String name;
 
+    @JsonIgnore
     @ManyToMany(mappedBy = "roles")
     private Set<User> users = new HashSet<>();
 

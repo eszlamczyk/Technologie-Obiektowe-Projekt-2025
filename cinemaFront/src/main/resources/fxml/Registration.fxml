@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.shape.Rectangle?>
+
+
+
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.StackPane?>
+<AnchorPane fx:id="rootPane" stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.RegistrationController"
+            prefHeight="500" prefWidth="400">
+
+    <StackPane>
+    <Rectangle fx:id="backgroundRectangle" fill="CRIMSON" height="550.0" stroke="#ffffff8b" strokeType="INSIDE" width="600.0"/>
+    <VBox alignment="CENTER" spacing="20" style="-fx-padding: 20;">
+        <TextField fx:id="emailField" promptText="Email" prefWidth="250" maxWidth="250"/>
+        <PasswordField fx:id="passwordField" promptText="Password" prefWidth="250" maxWidth="250"/>
+        <TextField fx:id="firstNameField" promptText="First Name" prefWidth="250" maxWidth="250"/>
+        <TextField fx:id="lastNameField" promptText="Last Name" prefWidth="250" maxWidth="250"/>
+
+        <Label fx:id="statusLabel" wrapText="true" textAlignment="CENTER"
+               maxWidth="280" prefHeight="70" textFill="white"/>
+
+        <Button fx:id="registerButton" onAction="#register"
+                prefHeight="40" prefWidth="150" text="Register"/>
+
+
+        <Button fx:id="loginPageButton" onAction="#loadLoginPage"
+                prefHeight="40" prefWidth="300" text="Go back to the login page"/>
+    </VBox>
+    </StackPane>
+</AnchorPane>

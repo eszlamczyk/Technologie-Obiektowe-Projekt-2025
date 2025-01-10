@@ -41,8 +41,11 @@ public class ScreeningClientAPI {
 
     private final BackendConfig backendConfig;
 
-    public ScreeningClientAPI(BackendConfig backendConfig) {
+    private final HttpClient httpClient;
+
+    public ScreeningClientAPI(BackendConfig backendConfig, HttpClient httpClient) {
         this.backendConfig = backendConfig;
+        this.httpClient = httpClient;
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         initializeUrls();
@@ -57,10 +60,9 @@ public class ScreeningClientAPI {
     }
 
     public CompletableFuture<List<ScreeningDto>> loadScreenings() {
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestGET(endpointUrl);
 
-        return sendLoadScreeningsRequest(client, request);
+        return sendLoadScreeningsRequest(httpClient, request);
     }
 
     private CompletableFuture<List<ScreeningDto>> sendLoadScreeningsRequest(HttpClient client, HttpRequest request) {
@@ -82,13 +84,12 @@ public class ScreeningClientAPI {
     }
 
     public CompletableFuture<List<ScreeningDto>> loadUpcomingScreenings() {
-        HttpClient client = HttpClient.newHttpClient();
 
         String urlWithParam = getRequestWithDate();
 
         HttpRequest request = RequestBuilder.buildRequestGET(urlWithParam);
 
-        return sendLoadUpcomingScreeningsRequest(client, request);
+        return sendLoadUpcomingScreeningsRequest(httpClient, request);
     }
 
     private String getRequestWithDate() {
@@ -113,10 +114,9 @@ public class ScreeningClientAPI {
     }
 
     public int delete(ScreeningDto toDelete) {
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestDELETE(deleteUrl + "/" + toDelete.id());
 
-        return sendDeleteScreeningRequest(client, request);
+        return sendDeleteScreeningRequest(httpClient, request);
     }
 
     private int sendDeleteScreeningRequest(HttpClient client, HttpRequest request) {
@@ -140,10 +140,9 @@ public class ScreeningClientAPI {
     public CompletableFuture<ResponseResult> createScreening(ScreeningDto screeningDto) {
         String jsonBody = serializeWrapperDto(screeningDto);
 
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestPUT(createUrl, jsonBody);
 
-        return sendCreateScreeningRequest(client, request);
+        return sendCreateScreeningRequest(httpClient, request);
     }
 
     private CompletableFuture<ResponseResult> sendCreateScreeningRequest(HttpClient client, HttpRequest request) {
@@ -158,10 +157,9 @@ public class ScreeningClientAPI {
     public CompletableFuture<ResponseResult> editScreening(Long screeningId, ScreeningDto newScreeningDto) {
         String jsonBody = serializeWrapperDto(newScreeningDto);
 
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestPUT(editUrl + "/" + screeningId, jsonBody);
 
-        return sendEditScreeningRequest(client, request);
+        return sendEditScreeningRequest(httpClient, request);
     }
 
     private CompletableFuture<ResponseResult> sendEditScreeningRequest(HttpClient client, HttpRequest request) {

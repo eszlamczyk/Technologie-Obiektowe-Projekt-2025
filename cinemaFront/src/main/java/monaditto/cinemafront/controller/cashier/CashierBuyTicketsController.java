@@ -1,31 +1,31 @@
-package monaditto.cinemafront.controller.user;
+package monaditto.cinemafront.controller.cashier;
+
 
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.AnchorPane;
 import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.clientapi.PurchaseClientAPI;
 import monaditto.cinemafront.controller.FXMLResourceEnum;
 import monaditto.cinemafront.databaseMapping.PurchaseDto;
 import monaditto.cinemafront.databaseMapping.ReservationStatus;
 import monaditto.cinemafront.databaseMapping.ScreeningDto;
-
-import monaditto.cinemafront.session.SessionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
 
 @Controller
-public class UserBuyTicketsController {
+public class CashierBuyTicketsController {
 
-    private StageInitializer stageInitializer;
+    private final StageInitializer stageInitializer;
 
-    private SessionContext sessionContext;
-
-    private PurchaseClientAPI purchaseClientAPI;
+    private final PurchaseClientAPI purchaseClientAPI;
+    public AnchorPane rootPane;
 
     private ScreeningDto screeningDto;
 
@@ -39,18 +39,20 @@ public class UserBuyTicketsController {
     private Label errorLabel;
 
     @FXML
+    private TextField userIdField;
+
+    @FXML
     private TextField numOfSeatsField;
 
     @Autowired
-    public UserBuyTicketsController(StageInitializer stageInitializer, SessionContext sessionContext, PurchaseClientAPI purchaseClientAPI) {
-        this.sessionContext = sessionContext;
+    public CashierBuyTicketsController(StageInitializer stageInitializer, PurchaseClientAPI purchaseClientAPI) {
         this.stageInitializer = stageInitializer;
         this.purchaseClientAPI = purchaseClientAPI;
     }
 
     @FXML
     private void initialize() {
-        numOfSeatsField.textProperty().addListener((observable, oldValue, newValue) -> {
+        ChangeListener<String> listener = (observable, oldValue, newValue) -> {
             if (!newValue.matches("\\d*")) {
                 numOfSeatsField.setText(newValue.replaceAll("\\D", ""));
             } else if (!newValue.isEmpty()) {
@@ -63,7 +65,9 @@ public class UserBuyTicketsController {
                     numOfSeatsField.setText(oldValue);
                 }
             }
-        });
+        };
+        //userIdField.textProperty().addListener(listener);
+        numOfSeatsField.textProperty().addListener(listener);
         numOfSeatsField.setText("1");
     }
 
@@ -78,15 +82,16 @@ public class UserBuyTicketsController {
 
     @FXML
     public void handleBuy(ActionEvent event) {
+        Long userId = Long.valueOf(userIdField.getText());
         int numOfSeats = Integer.parseInt(numOfSeatsField.getText());
-        var purchaseDto = new PurchaseDto(1L, sessionContext.getUserId(), screeningDto.id(), numOfSeats, ReservationStatus.UNPAID);
+        var purchaseDto = new PurchaseDto(1L, userId, screeningDto.id(), numOfSeats, ReservationStatus.UNPAID);
         purchaseClientAPI.createPurchase(purchaseDto)
                 .thenAccept(result -> {
                     Platform.runLater(() -> {
                         switch (result.statusCode()) {
                             case 200 -> {
                                 try {
-                                    stageInitializer.loadStage(FXMLResourceEnum.USER_PURCHASES);
+                                    stageInitializer.loadStage(FXMLResourceEnum.CASHIER_PURCHASES);
                                 } catch (IOException e) {
                                     showError("Error navigating to screenings page: " + e.getMessage());
                                 }
@@ -114,9 +119,10 @@ public class UserBuyTicketsController {
     @FXML
     public void handleCancel(ActionEvent event) {
         try {
-            stageInitializer.loadStage(FXMLResourceEnum.USER_SCREENINGS);
+            stageInitializer.loadStage(FXMLResourceEnum.CASHIER_SCREENINGS);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 }
+

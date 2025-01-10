@@ -1,4 +1,4 @@
-package monaditto.cinemafront.controller.admin;
+package monaditto.cinemafront.controller.cashier;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 @Controller
-public class AdminPurchasesController {
+public class CashierPurchasesController {
     private final StageInitializer stageInitializer;
     private final PurchaseClientAPI purchaseClientAPI;
 
@@ -37,7 +37,7 @@ public class AdminPurchasesController {
     private Button clearFiltersButton;
 
     @Autowired
-    public AdminPurchasesController(StageInitializer stageInitializer,
+    public CashierPurchasesController(StageInitializer stageInitializer,
                                     PurchaseClientAPI purchaseClientAPI) {
         this.stageInitializer = stageInitializer;
         this.purchaseClientAPI = purchaseClientAPI;
@@ -177,7 +177,7 @@ public class AdminPurchasesController {
     @FXML
     public void handleBack(ActionEvent event) {
         try {
-            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_PANEL);
+            stageInitializer.loadStage(FXMLResourceEnum.CASHIER_PANEL);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -267,3 +267,4 @@ public class AdminPurchasesController {
 
     }
 }
+

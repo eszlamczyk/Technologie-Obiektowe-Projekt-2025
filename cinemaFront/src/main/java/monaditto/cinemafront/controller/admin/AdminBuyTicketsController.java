@@ -8,7 +8,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.clientapi.PurchaseClientAPI;
-import monaditto.cinemafront.controller.ControllerResource;
+import monaditto.cinemafront.controller.FXMLResourceEnum;
 import monaditto.cinemafront.databaseMapping.PurchaseDto;
 import monaditto.cinemafront.databaseMapping.ReservationStatus;
 import monaditto.cinemafront.databaseMapping.ScreeningDto;
@@ -88,7 +88,7 @@ public class AdminBuyTicketsController {
                         switch (result.statusCode()) {
                             case 200 -> {
                                 try {
-                                    stageInitializer.loadStage(ControllerResource.ADMIN_PURCHASES);
+                                    stageInitializer.loadStage(FXMLResourceEnum.ADMIN_PURCHASES);
                                 } catch (IOException e) {
                                     showError("Error navigating to screenings page: " + e.getMessage());
                                 }
@@ -116,7 +116,7 @@ public class AdminBuyTicketsController {
     @FXML
     public void handleCancel(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_SCREENINGS);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_SCREENINGS);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

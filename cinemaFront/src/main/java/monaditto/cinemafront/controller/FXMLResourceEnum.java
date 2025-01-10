@@ -3,7 +3,7 @@ package monaditto.cinemafront.controller;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
-public enum ControllerResource {
+public enum FXMLResourceEnum {
     LOGIN,
     REGISTRATION,
     ADMIN_PANEL,
@@ -23,7 +23,12 @@ public enum ControllerResource {
     USER_MOVIE,
     USER_SCREENINGS,
     USER_BUY_TICKETS,
-    USER_PURCHASES;
+    USER_PURCHASES,
+    CASHIER_PANEL,
+    CASHIER_MOVIE,
+    CASHIER_SCREENINGS,
+    CASHIER_PURCHASES,
+    CASHIER_BUY_TICKETS;
 
     public Resource getResource() {
         String resourceUrl = switch(this) {
@@ -47,6 +52,11 @@ public enum ControllerResource {
             case USER_SCREENINGS -> "fxml/UserScreenings.fxml";
             case USER_BUY_TICKETS -> "fxml/UserBuyTickets.fxml";
             case USER_PURCHASES -> "fxml/UserPurchases.fxml";
+            case CASHIER_PANEL -> "fxml/CashierPanel.fxml";
+            case CASHIER_MOVIE -> "fxml/CashierMovie.fxml";
+            case CASHIER_SCREENINGS ->  "fxml/CashierScreenings.fxml";
+            case CASHIER_PURCHASES -> "fxml/CashierPurchases.fxml";
+            case CASHIER_BUY_TICKETS -> "fxml/CashierBuyTickets.fxml";
         };
 
         return new ClassPathResource(resourceUrl);

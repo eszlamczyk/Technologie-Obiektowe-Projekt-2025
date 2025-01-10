@@ -15,7 +15,7 @@ import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.clientapi.MovieClientAPI;
 import monaditto.cinemafront.clientapi.ScreeningClientAPI;
 import monaditto.cinemafront.config.BackendConfig;
-import monaditto.cinemafront.controller.ControllerResource;
+import monaditto.cinemafront.controller.FXMLResourceEnum;
 import monaditto.cinemafront.databaseMapping.MovieDto;
 import monaditto.cinemafront.databaseMapping.ScreeningDto;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -245,7 +245,7 @@ public class AdminEditScreeningController {
     @FXML
     private void handleCancel(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_SCREENINGS);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_SCREENINGS);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -1,11 +1,8 @@
 package monaditto.cinemafront.controller.admin;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -15,7 +12,8 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
-import monaditto.cinemafront.controller.ControllerResource;
+import monaditto.cinemafront.clientapi.UserClientAPI;
+import monaditto.cinemafront.controller.FXMLResourceEnum;
 import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.config.BackendConfig;
 import monaditto.cinemafront.databaseMapping.UserDto;
@@ -26,7 +24,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.List;
 
 @Controller
 public class AdminUsersController {
@@ -34,7 +31,11 @@ public class AdminUsersController {
     private final StageInitializer stageInitializer;
     private final BackendConfig backendConfig;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final HttpClient httpClient;
+
+    private final UserClientAPI userClientApi;
+
+    private ObservableList<UserDto> userDtoObservableList;
 
     @FXML
     private ListView<UserDto> usersListView;
@@ -45,13 +46,19 @@ public class AdminUsersController {
     @FXML
     private Button editButton;
 
-    public AdminUsersController(StageInitializer stageInitializer, BackendConfig backendConfig) {
+
+    public AdminUsersController(StageInitializer stageInitializer, BackendConfig backendConfig, HttpClient httpClient, UserClientAPI userClientApi) {
         this.stageInitializer = stageInitializer;
         this.backendConfig = backendConfig;
+        this.httpClient = httpClient;
+        this.userClientApi = userClientApi;
     }
 
     @FXML
     private void initialize() {
+        userDtoObservableList = FXCollections.observableArrayList();
+        usersListView.setItems(userDtoObservableList);
+
         usersListView.setCellFactory(list -> new ListCell<>() {
             @Override
             protected void updateItem(UserDto userDto, boolean empty) {
@@ -60,10 +67,12 @@ public class AdminUsersController {
                     setText(null);
                     setGraphic(null);
                 } else {
-                    setText(userDto.firstName() + " " + userDto.lastName());
+                    setText(userDto.firstName() + " " + userDto.lastName() + " (" + userDto.email()+")");
                 }
             }
         });
+
+
         loadUsers();
 
         deleteButton.disableProperty().bind(Bindings.isEmpty(usersListView.getSelectionModel().getSelectedItems()));
@@ -74,13 +83,13 @@ public class AdminUsersController {
     private void handleDelete(ActionEvent event) {
         UserDto userDto = usersListView.getSelectionModel().getSelectedItem();
         if (userDto != null) {
-            HttpClient client = HttpClient.newHttpClient();
+
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(backendConfig.getBaseUrl() + "/api/admin-panel/users/" + userDto.id()))
                     .DELETE()
                     .build();
 
-            client.sendAsync(request, HttpResponse.BodyHandlers.discarding())
+            httpClient.sendAsync(request, HttpResponse.BodyHandlers.discarding())
                     .thenRun(this::loadUsers)
                     .exceptionally(e -> {
                         System.err.println("Error deleting user: " + e.getMessage());
@@ -114,38 +123,16 @@ public class AdminUsersController {
     @FXML
     private void handleGoBack(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_PANEL);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_PANEL);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     private void loadUsers() {
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(backendConfig.getBaseUrl() + "/api/admin-panel/users"))
-                .GET()
-                .build();
-
-        client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenApply(HttpResponse::body)
-                .thenApply(this::parseUsers)
-                .thenAccept(usersDto -> {
-                    if (usersDto != null) {
-                        Platform.runLater(() -> usersListView.setItems(FXCollections.observableList(usersDto)));
-                    }
-                })
-                .exceptionally(e -> {
-                    System.err.println("Error loading users: " + e.getMessage());
-                    return null;
-                });
+        userClientApi.loadUsers()
+                        .thenAccept(userDtoObservableList::addAll);
     }
 
-    private List<UserDto> parseUsers(String responseBody) {
-        try {
-            return objectMapper.readValue(responseBody, new TypeReference<>() {});
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Error deserializing roles from JSON", e);
-        }
-    }
+
 }

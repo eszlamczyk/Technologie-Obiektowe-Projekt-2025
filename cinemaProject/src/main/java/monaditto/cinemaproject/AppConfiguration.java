@@ -1,15 +1,11 @@
 package monaditto.cinemaproject;
 
-import monaditto.cinemaproject.category.Category;
 import monaditto.cinemaproject.category.CategoryDto;
-import monaditto.cinemaproject.category.CategoryRepository;
 import monaditto.cinemaproject.category.CategoryService;
 import monaditto.cinemaproject.crypto.PasswordHasher;
 import monaditto.cinemaproject.movie.CreateMovieStatus;
 import monaditto.cinemaproject.movie.MovieDto;
-import monaditto.cinemaproject.movie.MovieRepository;
 import monaditto.cinemaproject.movie.MovieService;
-import monaditto.cinemaproject.movieRoom.MovieRoom;
 import monaditto.cinemaproject.movieRoom.MovieRoomDto;
 import monaditto.cinemaproject.movieRoom.MovieRoomService;
 import monaditto.cinemaproject.role.Role;
@@ -28,7 +24,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Configuration
 public class AppConfiguration {
@@ -62,9 +57,13 @@ public class AppConfiguration {
 
         Role admin = new Role("admin");
         Role user = new Role("user");
+        Role cashier = new Role("cashier");
 
         User administrator = new User("admin", "admin", "admin@admin.admin",
                 passwordHasher.hashPassword("admin"));
+
+        User cashman = new User("cashier", "", "cashier@cashier.cashier",
+                passwordHasher.hashPassword("cashier"));
 
         List<User> users = new ArrayList<>();
 
@@ -111,9 +110,11 @@ public class AppConfiguration {
                 passwordHasher.hashPassword("Marta+891")));
 
         userService.save(administrator);
+        userService.save(cashman);
 
         roleRepository.save(admin);
         roleRepository.save(user);
+        roleRepository.save(cashier);
 
         for (User basic_user : users) {
             userService.save(basic_user);
@@ -122,6 +123,9 @@ public class AppConfiguration {
 
         roleService.addRoleToUser(administrator.getId(), user.getId());
         roleService.addRoleToUser(administrator.getId(), admin.getId());
+
+        roleService.addRoleToUser(cashman.getId(), user.getId());
+        roleService.addRoleToUser(cashman.getId(), cashier.getId());
 
     }
 

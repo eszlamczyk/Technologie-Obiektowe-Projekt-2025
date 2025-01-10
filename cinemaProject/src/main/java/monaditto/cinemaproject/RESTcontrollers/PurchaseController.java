@@ -1,5 +1,6 @@
 package monaditto.cinemaproject.RESTcontrollers;
 
+import jakarta.annotation.security.RolesAllowed;
 import monaditto.cinemaproject.purchase.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,6 +29,7 @@ public class PurchaseController {
         return ResponseEntity.ok(purchases);
     }
 
+    @RolesAllowed({"ADMIN","CASHIER"})
     @GetMapping("/{id}")
     public ResponseEntity<PurchaseResponseDto> getPurchaseById(@PathVariable Long id) {
         Purchase purchase = purchaseService.findById(id);
@@ -35,6 +37,7 @@ public class PurchaseController {
                 : ResponseEntity.notFound().build();
     }
 
+    @RolesAllowed({"ADMIN","CASHIER"})
     @PostMapping
     public ResponseEntity<PurchaseResponseDto> createPurchase(@RequestBody PurchaseDto purchaseDto) {
         try {
@@ -48,6 +51,7 @@ public class PurchaseController {
         }
     }
 
+    @RolesAllowed({"ADMIN","CASHIER"})
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePurchase(@PathVariable Long id) {
         try {
@@ -58,6 +62,7 @@ public class PurchaseController {
         }
     }
 
+    @RolesAllowed({"ADMIN","CASHIER", "USER"})
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<PurchaseResponseDto>> getPurchasesByUser(@PathVariable Long userId) {
         List<PurchaseResponseDto> purchases = purchaseService.findByUser(userId)
@@ -67,6 +72,7 @@ public class PurchaseController {
         return ResponseEntity.ok(purchases);
     }
 
+    @RolesAllowed({"ADMIN","CASHIER", "USER"})
     @GetMapping("/screening/{screeningId}")
     public ResponseEntity<List<PurchaseResponseDto>> getPurchasesByScreening(@PathVariable Long screeningId) {
         List<PurchaseResponseDto> purchases = purchaseService.findByScreening(screeningId)
@@ -76,6 +82,7 @@ public class PurchaseController {
         return ResponseEntity.ok(purchases);
     }
 
+    @RolesAllowed({"ADMIN","CASHIER", "USER"})
     @GetMapping("/status/{status}")
     public ResponseEntity<List<PurchaseResponseDto>> getPurchasesByStatus(
             @PathVariable ReservationStatus status) {
@@ -86,6 +93,7 @@ public class PurchaseController {
         return ResponseEntity.ok(purchases);
     }
 
+    @RolesAllowed({"ADMIN","CASHIER", "USER"})
     @PostMapping("/{id}/confirm")
     public ResponseEntity<PurchaseResponseDto> confirmPurchase(@PathVariable Long id) {
         try {
@@ -100,6 +108,7 @@ public class PurchaseController {
         }
     }
 
+    @RolesAllowed({"ADMIN","CASHIER", "USER"})
     @PostMapping("/{id}/cancel")
     public ResponseEntity<PurchaseResponseDto> cancelPurchase(@PathVariable Long id) {
         try {

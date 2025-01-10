@@ -1,12 +1,8 @@
-package monaditto.cinemafront.controller.user;
+package monaditto.cinemafront.controller.cashier;
 
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
@@ -21,7 +17,7 @@ import org.springframework.stereotype.Controller;
 import java.io.IOException;
 
 @Controller
-public class UserMoviesController {
+public class CashierMoviesController {
 
     private final StageInitializer stageInitializer;
 
@@ -34,15 +30,12 @@ public class UserMoviesController {
     private ListView<MovieDto> moviesListView;
 
     @FXML
-    private Button rateButton;
-
-    @FXML
     private Rectangle backgroundRectangle;
 
     @FXML
     private AnchorPane rootPane;
 
-    public UserMoviesController(StageInitializer stageInitializer) {
+    public CashierMoviesController(StageInitializer stageInitializer) {
         this.stageInitializer = stageInitializer;
     }
 
@@ -50,7 +43,6 @@ public class UserMoviesController {
     private void initialize() {
         initializeMovieListView();
         initializeResponsiveness();
-        initializeButtons();
         loadMovies();
     }
 
@@ -83,19 +75,10 @@ public class UserMoviesController {
                 .thenAccept(movieDtoList::addAll);
     }
 
-    private void initializeButtons() {
-        BooleanBinding isSingleCellSelected = Bindings.createBooleanBinding(
-                () -> moviesListView.getSelectionModel().getSelectedItems().size() != 1,
-                moviesListView.getSelectionModel().getSelectedItems()
-        );
-
-        rateButton.disableProperty().bind(isSingleCellSelected);
-    }
-
     @FXML
-    private void handleGoBack(ActionEvent event) {
+    private void handleGoBack() {
         try {
-            stageInitializer.loadStage(FXMLResourceEnum.USER_PANEL);
+            stageInitializer.loadStage(FXMLResourceEnum.CASHIER_PANEL);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

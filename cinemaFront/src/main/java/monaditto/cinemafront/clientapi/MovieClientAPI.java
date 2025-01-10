@@ -40,9 +40,12 @@ public class MovieClientAPI {
 
     private final BackendConfig backendConfig;
 
-    public MovieClientAPI(BackendConfig backendConfig, CategoryClientAPI categoryClientAPI) {
+    private final HttpClient httpClient;
+
+    public MovieClientAPI(BackendConfig backendConfig, CategoryClientAPI categoryClientAPI, HttpClient httpClient) {
         this.backendConfig = backendConfig;
         this.categoryClientAPI = categoryClientAPI;
+        this.httpClient = httpClient;
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         initializeUrls();
@@ -61,10 +64,9 @@ public class MovieClientAPI {
         MovieWithCategoriesDto wrapperDto = new MovieWithCategoriesDto(movieDto, categories);
         String jsonBody = serializeWrapperDto(wrapperDto);
 
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestPUT(createUrl, jsonBody);
 
-        return sendCreateMovieRequest(client, request);
+        return sendCreateMovieRequest(httpClient, request);
     }
 
     private CompletableFuture<ResponseResult> sendCreateMovieRequest(HttpClient client, HttpRequest request) {
@@ -80,10 +82,9 @@ public class MovieClientAPI {
         MovieWithCategoriesDto wrapperDto = new MovieWithCategoriesDto(newMovieDto, categories);
         String jsonBody = serializeWrapperDto(wrapperDto);
 
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestPUT(editUrl + "/" + movieId, jsonBody);
 
-        return sendEditMovieRequest(client, request);
+        return sendEditMovieRequest(httpClient, request);
     }
 
     private CompletableFuture<ResponseResult> sendEditMovieRequest(HttpClient client, HttpRequest request) {
@@ -96,10 +97,9 @@ public class MovieClientAPI {
     }
 
     public CompletableFuture<List<CategoryDto>> getMovieCategories(MovieDto movieDto) {
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestGET(categoriesUrl + "/" + movieDto.id());
 
-        return sendGetMovieCategoriesRequest(client, request);
+        return sendGetMovieCategoriesRequest(httpClient, request);
     }
 
     private CompletableFuture<List<CategoryDto>> sendGetMovieCategoriesRequest(HttpClient client, HttpRequest request) {
@@ -113,10 +113,9 @@ public class MovieClientAPI {
     }
 
     public CompletableFuture<List<MovieDto>> loadMovies() {
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestGET(endpointUrl);
 
-        return sendLoadMoviesRequest(client, request);
+        return sendLoadMoviesRequest(httpClient, request);
     }
 
     private CompletableFuture<List<MovieDto>> sendLoadMoviesRequest(HttpClient client, HttpRequest request) {
@@ -146,10 +145,9 @@ public class MovieClientAPI {
     }
 
     public int delete(MovieDto movieDto) {
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestDELETE(deleteUrl + "/" + movieDto.id());
 
-        return sendDeleteMovieRequest(client, request);
+        return sendDeleteMovieRequest(httpClient, request);
     }
 
     private int sendDeleteMovieRequest(HttpClient client, HttpRequest request) {

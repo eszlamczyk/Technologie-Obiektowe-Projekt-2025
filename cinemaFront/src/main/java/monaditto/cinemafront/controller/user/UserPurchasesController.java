@@ -10,11 +10,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.clientapi.PurchaseClientAPI;
-import monaditto.cinemafront.controller.ControllerResource;
-import monaditto.cinemafront.databaseMapping.PurchaseDto;
+import monaditto.cinemafront.controller.FXMLResourceEnum;
 import monaditto.cinemafront.databaseMapping.PurchaseResponseDto;
-import monaditto.cinemafront.databaseMapping.ReservationStatus;
-import monaditto.cinemafront.databaseMapping.ScreeningDto;
 import monaditto.cinemafront.session.SessionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -112,7 +109,7 @@ public class UserPurchasesController {
     @FXML
     private void handleBack(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.USER_PANEL);
+            stageInitializer.loadStage(FXMLResourceEnum.USER_PANEL);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -126,7 +123,7 @@ public class UserPurchasesController {
     @FXML
     public void handleCancel(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.USER_SCREENINGS);
+            stageInitializer.loadStage(FXMLResourceEnum.USER_SCREENINGS);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

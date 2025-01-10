@@ -52,9 +52,13 @@ public class RegistrationController {
     private final StageInitializer stageInitializer;
     private final BackendConfig backendConfig;
 
-    public RegistrationController(StageInitializer stageInitializer, BackendConfig backendConfig) {
+    private final HttpClient httpClient;
+
+    public RegistrationController(StageInitializer stageInitializer, BackendConfig backendConfig, HttpClient httpClient) {
         this.stageInitializer = stageInitializer;
         this.backendConfig = backendConfig;
+
+        this.httpClient = httpClient;
     }
 
     @FXML
@@ -71,14 +75,13 @@ public class RegistrationController {
 
         String registrationUrl = backendConfig.getBaseUrl() + "/api/registration";
 
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(registrationUrl))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(jsonRequest, StandardCharsets.UTF_8))
                 .build();
 
-        client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+        httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(HttpResponse::body)
                 .thenAccept(response -> {
                     Platform.runLater(() -> statusLabel.setText(response));
@@ -93,7 +96,7 @@ public class RegistrationController {
     @FXML
     public void loadLoginPage() {
         try {
-            stageInitializer.loadStage(ControllerResource.LOGIN);
+            stageInitializer.loadStage(FXMLResourceEnum.LOGIN);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

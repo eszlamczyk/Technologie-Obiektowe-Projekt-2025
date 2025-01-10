@@ -12,7 +12,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.shape.Rectangle;
 import monaditto.cinemafront.StageInitializer;
-import monaditto.cinemafront.controller.ControllerResource;
+import monaditto.cinemafront.controller.FXMLResourceEnum;
 import monaditto.cinemafront.clientapi.MovieClientAPI;
 import monaditto.cinemafront.databaseMapping.MovieDto;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -95,7 +95,7 @@ public class UserMoviesController {
     @FXML
     private void handleGoBack(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.USER_PANEL);
+            stageInitializer.loadStage(FXMLResourceEnum.USER_PANEL);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

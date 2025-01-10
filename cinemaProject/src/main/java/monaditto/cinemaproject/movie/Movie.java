@@ -64,6 +64,10 @@ public class Movie {
         this.releaseDate = releaseDate;
     }
 
+    public Movie(Long id) {
+        this.id = id;
+    }
+
     public Long getId() {
         return id;
     }

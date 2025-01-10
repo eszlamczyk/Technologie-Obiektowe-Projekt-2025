@@ -24,7 +24,7 @@
             <VBox spacing="10" prefWidth="600" prefHeight="300" alignment="CENTER">
                 <ListView fx:id="screeningsListView" maxWidth="600"/>
                 <HBox spacing="10" alignment="CENTER">
-                    <Button text="Buy ticket!" fx:id="buyButton" styleClass="moviesButton" />
+                    <Button text="Buy tickets!" fx:id="buyButton" styleClass="moviesButton" onAction="#handleBuyTickets" />
                 </HBox>
             </VBox>
             <Button text="Go Back" styleClass="moviesButton" onAction="#handleGoBack" />

@@ -37,7 +37,7 @@ public class AuthController {
 
         if (isAuthenticated) {
             UserDto userDto = optionalUserDto.get();
-            AuthResponse authResponse = new AuthResponse(roleService.getUserRoles(userDto.id()).stream().toList());
+            AuthResponse authResponse = new AuthResponse(userDto.id(), roleService.getUserRoles(userDto.id()).stream().toList());
             return ResponseEntity.ok(authResponse);
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");

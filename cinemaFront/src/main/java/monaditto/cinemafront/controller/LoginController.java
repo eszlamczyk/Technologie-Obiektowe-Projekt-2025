@@ -1,6 +1,5 @@
 package monaditto.cinemafront.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -13,26 +12,16 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.shape.Rectangle;
 import monaditto.cinemafront.StageInitializer;
-import monaditto.cinemafront.config.BackendConfig;
-import monaditto.cinemafront.controller.DTO.AuthResponse;
-import monaditto.cinemafront.controller.DTO.LoginRequest;
-import monaditto.cinemafront.databaseMapping.RoleDto;
-import monaditto.cinemafront.request.RequestBuilder;
-import monaditto.cinemafront.session.SessionContext;
+import monaditto.cinemafront.clientapi.LoginClientAPI;
+import monaditto.cinemafront.controller.handler.LoginHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.List;
 
 @Controller
 public class LoginController {
 
-    private final SessionContext sessionContext;
     @FXML
     private Button btnLogin;
 
@@ -53,95 +42,26 @@ public class LoginController {
 
     private final StageInitializer stageInitializer;
 
-    // Create an ObjectMapper for JSON processing
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final BackendConfig backendConfig;
 
+
+    private final LoginClientAPI loginClientAPI;
     @Autowired
-    public LoginController(StageInitializer stageInitializer, BackendConfig backendConfig, SessionContext sessionContext) {
+    public LoginController(StageInitializer stageInitializer, LoginClientAPI loginClientAPI) {
         this.stageInitializer = stageInitializer;
-        this.backendConfig = backendConfig;
-        this.sessionContext = sessionContext;
+        this.loginClientAPI = loginClientAPI;
     }
 
     @FXML
     private void login(ActionEvent event) {
-        // Prepare login request payload
-        LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setEmail(getEmail());
-        loginRequest.setPassword(getPassword());
-
-        try {
-            // Create a HttpClient
-            HttpClient client = HttpClient.newHttpClient();
-
-            // Convert the loginRequest to JSON
-            String requestBody = objectMapper.writeValueAsString(loginRequest);
-
-
-            HttpRequest request =
-                    RequestBuilder.buildRequestPOST(backendConfig.getBaseUrl() + "/api/auth/login", requestBody);
-
-            System.out.println(request + requestBody);
-
-
-            // Send the request asynchronously and handle the response
-
-            client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                    .thenAccept(response -> {
-                        if (response.statusCode() == 200) {
-                            // Handle successful login (response body contains roles)
-                            AuthResponse authResponse;
-                            try {
-                                authResponse = objectMapper.readValue(response.body(), AuthResponse.class);
-                            } catch (JsonProcessingException e) {
-                                throw new RuntimeException(e);
-                            }
-
-                            sessionContext.setUserId(authResponse.userID());
-                            sessionContext.setJwtToken(authResponse.token());
-
-                            RequestBuilder.setJwtToken(authResponse.token());
-
-                            //todo: add cashier
-                            boolean isAdmin = authResponse.roles().stream()
-                                    .anyMatch(roleDto -> roleDto.name().equals("admin"));
-
-                            if (isAdmin) {
-                                Platform.runLater(() -> {
-                                    try {
-                                        stageInitializer.loadStage(ControllerResource.ADMIN_PANEL);
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                });
-                            } else {
-                                Platform.runLater(() -> {
-                                    try {
-                                        stageInitializer.loadStage(ControllerResource.USER_PANEL);
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                });
-                            }
-                        } else {
-                            // Handle login failure
-                            Platform.runLater(() -> lblLogin.setText("Login Failed: " + response.body()));
-                        }
-                    })
-                    .exceptionally(e -> {
-                        Platform.runLater(() -> lblLogin.setText("Error: " + e.getMessage()));
-                        return null;
-                    });
-        } catch (Exception e) {
-            Platform.runLater(() -> lblLogin.setText("Error: " + e.getMessage()));
-        }
+        LoginHandler loginHandler = new LoginHandler(loginClientAPI, objectMapper, stageInitializer, lblLogin);
+        loginHandler.handleLogin(getEmail(),getPassword());
     }
 
     @FXML
     private void loadRegisterPage(MouseEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.REGISTRATION);
+            stageInitializer.loadStage(FXMLResourceEnum.REGISTRATION);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

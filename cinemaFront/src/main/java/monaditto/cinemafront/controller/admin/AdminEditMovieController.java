@@ -15,7 +15,7 @@ import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.clientapi.CategoryClientAPI;
 import monaditto.cinemafront.clientapi.MovieClientAPI;
 import monaditto.cinemafront.config.BackendConfig;
-import monaditto.cinemafront.controller.ControllerResource;
+import monaditto.cinemafront.controller.FXMLResourceEnum;
 import monaditto.cinemafront.databaseMapping.CategoryDto;
 import monaditto.cinemafront.databaseMapping.MovieDto;
 import monaditto.cinemafront.request.PosterDownloader;
@@ -296,7 +296,7 @@ public class AdminEditMovieController {
     @FXML
     private void handleCancel(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_MOVIE);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_MOVIE);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -6,7 +6,7 @@ import javafx.scene.Cursor;
 import javafx.scene.control.Button;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.shape.Rectangle;
-import monaditto.cinemafront.controller.ControllerResource;
+import monaditto.cinemafront.controller.FXMLResourceEnum;
 import monaditto.cinemafront.StageInitializer;
 import org.springframework.stereotype.Controller;
 
@@ -50,7 +50,7 @@ public class AdminPanelController {
     @FXML
     private void handleAdminUsers(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_USER);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_USER);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -59,7 +59,7 @@ public class AdminPanelController {
     @FXML
     private void handleAdminMovies(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_MOVIE);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_MOVIE);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -68,7 +68,7 @@ public class AdminPanelController {
     @FXML
     private void handleScreenings(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_SCREENINGS);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_SCREENINGS);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -77,7 +77,7 @@ public class AdminPanelController {
     @FXML
     public void handleCategories(ActionEvent actionEvent) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_CATEGORY);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_CATEGORY);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -85,7 +85,7 @@ public class AdminPanelController {
     @FXML
     public void handleMovieRooms(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_MOVIE_ROOMS);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_MOVIE_ROOMS);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -94,7 +94,7 @@ public class AdminPanelController {
     @FXML
     public void handlePurchases(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_PURCHASES);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_PURCHASES);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -103,7 +103,7 @@ public class AdminPanelController {
     @FXML
     private void handleSignOut(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.LOGIN);
+            stageInitializer.loadStage(FXMLResourceEnum.LOGIN);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

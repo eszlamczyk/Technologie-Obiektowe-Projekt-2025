@@ -9,7 +9,7 @@ import javafx.scene.control.TextField;
 import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.clientapi.CategoryClientAPI;
 import monaditto.cinemafront.config.BackendConfig;
-import monaditto.cinemafront.controller.ControllerResource;
+import monaditto.cinemafront.controller.FXMLResourceEnum;
 import monaditto.cinemafront.databaseMapping.CategoryDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -119,7 +119,7 @@ public class AdminEditCategoryController {
     @FXML
     private void handleCancel(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_CATEGORY);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_CATEGORY);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

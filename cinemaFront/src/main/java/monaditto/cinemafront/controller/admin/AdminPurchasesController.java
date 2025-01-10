@@ -10,7 +10,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.clientapi.PurchaseClientAPI;
-import monaditto.cinemafront.controller.ControllerResource;
+import monaditto.cinemafront.controller.FXMLResourceEnum;
 import monaditto.cinemafront.databaseMapping.PurchaseResponseDto;
 import monaditto.cinemafront.databaseMapping.ReservationStatus;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -177,7 +177,7 @@ public class AdminPurchasesController {
     @FXML
     public void handleBack(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_PANEL);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_PANEL);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

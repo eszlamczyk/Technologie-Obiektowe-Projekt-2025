@@ -32,6 +32,8 @@ public class MovieClientAPI {
 
     private String categoriesUrl;
 
+    private String comingSoonUrl;
+
     private String baseUrl;
 
     private final ObjectMapper objectMapper;
@@ -58,6 +60,7 @@ public class MovieClientAPI {
         createUrl = endpointUrl + "/create";
         editUrl = endpointUrl + "/edit";
         categoriesUrl = endpointUrl + "/categories";
+        comingSoonUrl = endpointUrl + "/coming-soon";
     }
 
     public CompletableFuture<ResponseResult> createMovie(MovieDto movieDto, List<CategoryDto> categories) {
@@ -109,6 +112,22 @@ public class MovieClientAPI {
                 .exceptionally(e -> {
                     System.err.println("Error loading the movies: " + e.getMessage());
                     return List.of();
+                });
+    }
+
+    public CompletableFuture<List<MovieDto>> loadComingSoonMovies() {
+        HttpRequest request = RequestBuilder.buildRequestGET(comingSoonUrl);
+
+        return sendLoadComingSoonMoviesRequest(httpClient, request);
+    }
+
+    private CompletableFuture<List<MovieDto>> sendLoadComingSoonMoviesRequest(HttpClient client, HttpRequest request) {
+        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(HttpResponse::body)
+                .thenApply(this::parseMovieList)
+                .exceptionally(e -> {
+                    System.err.println("Error loading the movies: " + e.getMessage());
+                    return new ArrayList<>();
                 });
     }
 

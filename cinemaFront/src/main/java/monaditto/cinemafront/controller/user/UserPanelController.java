@@ -19,6 +19,9 @@ public class UserPanelController {
     private final StageInitializer stageInitializer;
 
     @FXML
+    private Button recommendedMoviesButton;
+
+    @FXML
     private Button moviesButton;
 
     @FXML
@@ -35,6 +38,15 @@ public class UserPanelController {
 
     public UserPanelController(StageInitializer stageInitializer) {
         this.stageInitializer = stageInitializer;
+    }
+
+    @FXML
+    private void handleUserRecommendations(ActionEvent event) {
+        try {
+            stageInitializer.loadStage(FXMLResourceEnum.USER_RECOMMENDATIONS);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @FXML

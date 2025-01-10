@@ -31,6 +31,12 @@ public class MovieController {
         return ResponseEntity.ok().body(movieService.getMovies());
     }
 
+    @RolesAllowed({"ADMIN","CASHIER", "USER"})
+    @GetMapping("/coming-soon")
+    public ResponseEntity<List<MovieDto>> getComingSoonMovies() {
+        return ResponseEntity.ok().body(movieService.getComingSoonMovies());
+    }
+
     @RolesAllowed({"ADMIN"})
     @DeleteMapping("delete/{id}")
     public ResponseEntity<String> deleteMovie(@PathVariable Long id) {
@@ -67,7 +73,7 @@ public class MovieController {
 
     @RolesAllowed({"ADMIN","CASHIER", "USER"})
     @GetMapping("/categories/{id}")
-    public ResponseEntity<List<CategoryDto>> editMovie(@PathVariable Long id) {
+    public ResponseEntity<List<CategoryDto>> getMovieCategories(@PathVariable Long id) {
         List<CategoryDto> categories = movieService.getMovieCategories(id);
 
         return ResponseEntity.ok().body(categories);

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +39,13 @@ public class MovieService {
     public List<MovieDto> getMovies() {
         return movieRepository.findAll().stream()
                 .map(MovieDto::movieToMovieDto)
+                .toList();
+    }
+
+    public List<MovieDto> getComingSoonMovies() {
+        return movieRepository.findComingSoonMovies(LocalDate.now()).stream()
+                .map(MovieDto::movieToMovieDto)
+                .limit(5)
                 .toList();
     }
 

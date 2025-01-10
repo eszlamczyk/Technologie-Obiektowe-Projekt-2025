@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import monaditto.cinemafront.config.BackendConfig;
 import monaditto.cinemafront.databaseMapping.CategoryDto;
+import monaditto.cinemafront.databaseMapping.MovieRoomDto;
 import monaditto.cinemafront.request.RequestBuilder;
 import monaditto.cinemafront.response.ResponseResult;
 import org.springframework.stereotype.Component;
@@ -15,21 +16,20 @@ import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 @Component
-public class CategoryClientAPI {
-
-    private String endpointUrl;
+public class MovieRoomClientAPI {
 
     private String baseUrl;
 
-    private String getCategoryUrl;
+    private String endpointUrl;
 
     private final BackendConfig backendConfig;
 
     private final ObjectMapper objectMapper;
 
-    public CategoryClientAPI(BackendConfig backendConfig) {
+    public MovieRoomClientAPI(BackendConfig backendConfig) {
         this.backendConfig = backendConfig;
         objectMapper = new ObjectMapper();
         initializeUrls();
@@ -37,18 +37,17 @@ public class CategoryClientAPI {
 
     private void initializeUrls() {
         baseUrl = backendConfig.getBaseUrl();
-        endpointUrl = baseUrl + "/api/categories";
-        getCategoryUrl = endpointUrl + "/category";
+        endpointUrl = baseUrl + "/api/movieRooms";
     }
 
-    public CompletableFuture<List<CategoryDto>> loadCategories() {
+    public CompletableFuture<List<MovieRoomDto>> loadMovieRooms() {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestGET(endpointUrl);
 
-        return sendLoadCategoriesRequest(client, request);
+        return sendLoadMovieRoomsRequest(client, request);
     }
 
-    private CompletableFuture<List<CategoryDto>> sendLoadCategoriesRequest(HttpClient client, HttpRequest request) {
+    private CompletableFuture<List<MovieRoomDto>> sendLoadMovieRoomsRequest(HttpClient client, HttpRequest request) {
         return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(HttpResponse::body)
                 .thenApply(this::parseCategoryList)
@@ -58,7 +57,7 @@ public class CategoryClientAPI {
                 });
     }
 
-    public List<CategoryDto> parseCategoryList(String responseBody) {
+    public List<MovieRoomDto> parseCategoryList(String responseBody) {
         try {
             return objectMapper.readValue(responseBody, new TypeReference<>() {});
         } catch (JsonProcessingException e) {
@@ -66,49 +65,8 @@ public class CategoryClientAPI {
         }
     }
 
-    public CompletableFuture<ResponseResult> createCategory(CategoryDto categoryDto){
-        HttpClient client = HttpClient.newHttpClient();
 
-        String jsonString;
-        try {
-            jsonString = objectMapper.writeValueAsString(categoryDto);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
-        HttpRequest request = RequestBuilder.buildRequestPOST(endpointUrl,jsonString);
-
-        return sendCreateCategoryRequest(client,request);
-    }
-
-    private CompletableFuture<ResponseResult> sendCreateCategoryRequest(HttpClient client, HttpRequest request) {
-        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenApply(response -> new ResponseResult(response.statusCode(), response.body()))
-                .exceptionally(e -> new ResponseResult(500, "Error " + e.getMessage()));
-    }
-
-    public CompletableFuture<ResponseResult> editCategory(Long categoryId, CategoryDto newCategoryDto){
-        HttpClient client = HttpClient.newHttpClient();
-
-        String jsonString;
-        try {
-            jsonString = objectMapper.writeValueAsString(newCategoryDto);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
-        HttpRequest request = RequestBuilder.buildRequestPUT(endpointUrl + "/" + categoryId ,jsonString);
-
-        return sendEditMovieRequest(client,request);
-    }
-
-    private CompletableFuture<ResponseResult> sendEditMovieRequest(HttpClient client, HttpRequest request){
-        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenApply(response -> new ResponseResult(response.statusCode(),response.body()))
-                .exceptionally(e -> new ResponseResult(500, "Error" + e.getMessage()));
-    }
-
-    public CompletableFuture<ResponseResult> deleteOneCategory(Long categoryId){
+    public CompletableFuture<ResponseResult> delete(Long categoryId){
         HttpClient client = HttpClient.newHttpClient();
 
         HttpRequest request = RequestBuilder.buildRequestDELETE(this.endpointUrl + "/" + categoryId);
@@ -122,4 +80,45 @@ public class CategoryClientAPI {
                 .exceptionally(e -> new ResponseResult(500, "Error" + e.getMessage()));
     }
 
+    public CompletableFuture<ResponseResult> createMovieRoom(MovieRoomDto movieRoomDto){
+        HttpClient client = HttpClient.newHttpClient();
+
+        String jsonString;
+        try {
+            jsonString = objectMapper.writeValueAsString(movieRoomDto);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        HttpRequest request = RequestBuilder.buildRequestPOST(endpointUrl,jsonString);
+
+        return sendCreateMovieRoomRequest(client,request);
+    }
+
+    public CompletableFuture<ResponseResult> editMovieRoom(Long movieRoomId, MovieRoomDto newMovieRoomDto){
+        HttpClient client = HttpClient.newHttpClient();
+
+        String jsonString;
+        try {
+            jsonString = objectMapper.writeValueAsString(newMovieRoomDto);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        HttpRequest request = RequestBuilder.buildRequestPUT(endpointUrl + "/" + movieRoomId ,jsonString);
+
+        return sendEditMovieRequest(client,request);
+    }
+
+    private CompletableFuture<ResponseResult> sendEditMovieRequest(HttpClient client, HttpRequest request){
+        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(response -> new ResponseResult(response.statusCode(),response.body()))
+                .exceptionally(e -> new ResponseResult(500, "Error" + e.getMessage()));
+    }
+
+    private CompletableFuture<ResponseResult> sendCreateMovieRoomRequest(HttpClient client, HttpRequest request) {
+        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(response -> new ResponseResult(response.statusCode(), response.body()))
+                .exceptionally(e -> new ResponseResult(500, "Error " + e.getMessage()));
+    }
 }

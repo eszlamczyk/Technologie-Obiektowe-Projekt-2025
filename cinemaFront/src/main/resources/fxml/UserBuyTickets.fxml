@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.text.Font?>
+<?import javafx.geometry.Insets?>
+<AnchorPane fx:id="rootPane" prefHeight="800" prefWidth="800" stylesheets="@../styles/Styles.css"
+            xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="monaditto.cinemafront.controller.user.UserBuyTicketsController">
+    <VBox spacing="20">
+        <padding>
+            <Insets top="24" right="24" bottom="24" left="24"/>
+        </padding>
+        <VBox spacing="10">
+            <Label text="Buy tickets">
+                <font>
+                    <Font size="32.0"/>
+                </font>
+            </Label>
+            <Label fx:id="movieNameLabel">
+                <font>
+                    <Font size="24.0"/>
+                </font>
+            </Label>
+            <Label fx:id="movieTimeLabel">
+                <font>
+                    <Font size="24.0"/>
+                </font>
+            </Label>
+        </VBox>
+        <Label fx:id="errorLabel" />
+        <VBox>
+            <Label text="Number of seats"/>
+            <TextField fx:id="numOfSeatsField"/>
+        </VBox>
+        <HBox spacing="10">
+            <Button text="Cancel" onAction="#handleCancel" />
+            <Button text="Buy" onAction="#handleBuy" />
+        </HBox>
+    </VBox>
+</AnchorPane>

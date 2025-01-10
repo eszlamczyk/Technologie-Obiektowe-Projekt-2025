@@ -10,5 +10,5 @@ public record PurchaseDto(
 
         int boughtSeats,
 
-        String reservationStatus
+        ReservationStatus reservationStatus
 ) {}

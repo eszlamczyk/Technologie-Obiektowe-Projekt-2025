@@ -16,6 +16,7 @@
             <Label text="Siema siema user here?" styleClass="adminPanelLabel"/>
             <Button fx:id="moviesButton" styleClass="adminPanelButton" text="Movies" onAction="#handleUserMovies"/>
             <Button fx:id="screeningsButton" styleClass="adminPanelButton" text="Screenings" onAction="#handleUserScreenings"/>
+            <Button fx:id="purchasesButton" styleClass="adminPanelButton" text="Purchases" onAction="#handleUserPurchases"/>
             <Button fx:id="signOutButton" styleClass="adminPanelButton" text="Sign out" onAction="#handleSignOut"/>
         </VBox>
     </StackPane>

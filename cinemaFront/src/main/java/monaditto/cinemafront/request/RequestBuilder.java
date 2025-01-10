@@ -28,4 +28,12 @@ public class RequestBuilder {
                 .DELETE()
                 .build();
     }
+
+    public static HttpRequest buildRequestPOST(String url, String jsonBody){
+        return HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                .build();
+    }
 }

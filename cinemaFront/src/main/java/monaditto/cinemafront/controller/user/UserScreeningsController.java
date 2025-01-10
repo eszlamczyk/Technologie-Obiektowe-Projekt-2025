@@ -55,6 +55,9 @@ public class UserScreeningsController {
     @Autowired
     private MovieClientAPI movieClientAPI;
 
+    @Autowired
+    private UserBuyTicketsController buyTicketsController;
+
     @FXML
     private ListView<ScreeningDto> screeningsListView;
 
@@ -214,6 +217,17 @@ public class UserScreeningsController {
     private void handleDate_plus_4(ActionEvent event) {
         LocalDate targetDate = LocalDate.now().plusDays(4);
         setScreeningsOn(targetDate);
+    }
+
+    @FXML
+    private void handleBuyTickets(ActionEvent event) {
+        try {
+            stageInitializer.loadStage(ControllerResource.USER_BUY_TICKETS);
+            buyTicketsController.setScreeningDto(screeningsListView.getSelectionModel().getSelectedItem());
+            buyTicketsController.setMovieName(movieMap.get(screeningsListView.getSelectionModel().getSelectedItem().movieId()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void setScreeningsOn(LocalDate targetDate) {

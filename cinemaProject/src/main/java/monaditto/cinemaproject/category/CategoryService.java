@@ -26,13 +26,13 @@ public class CategoryService {
                 .toList();
     }
 
-    public boolean createCategory(CategoryDto categoryDto) {
+    public CategoryCreateStatus createCategory(CategoryDto categoryDto) {
         if (categoryRepository.findByCategoryName(categoryDto.categoryName()).isPresent()) {
-            return false;
+            return CategoryCreateStatus.CATEGORY_NAME_TAKEN;
         }
         Category category = new Category(categoryDto.categoryName());
         categoryRepository.save(category);
-        return true;
+        return CategoryCreateStatus.SUCCESS;
     }
 
     public Optional<CategoryDto> getCategoryByName(String categoryName) {
@@ -49,14 +49,14 @@ public class CategoryService {
                 .toList();
     }
 
-    public boolean editCategory(Long id, CategoryDto categoryDto) {
+    public CategoryCreateStatus editCategory(Long id, CategoryDto categoryDto) {
 
         Optional<Category> categoryWithName = categoryRepository.findByCategoryName(categoryDto.categoryName());
 
         if (categoryWithName.isPresent() &&
                 categoryDto.categoryName().equals(categoryWithName.get().getCategoryName()) &&
                 !Objects.equals(categoryWithName.get().getCategoryId(), id)) {
-            return false;
+            return CategoryCreateStatus.CATEGORY_NAME_TAKEN;
         }
 
         Optional<Category> optionalCategory = categoryRepository.findById(id);
@@ -64,9 +64,9 @@ public class CategoryService {
             Category category = optionalCategory.get();
             category.setCategoryName(categoryDto.categoryName());
             categoryRepository.save(category);
-            return true;
+            return CategoryCreateStatus.SUCCESS;
         }
-        return false;
+        return CategoryCreateStatus.INCORRECT_ID;
     }
 
     public boolean deleteCategory(Long id) {
@@ -77,18 +77,5 @@ public class CategoryService {
             return true;
         }
         return false;
-    }
-
-    public List<String> deleteCategories(List<Long> ids) {
-        List<String> deletedCategories = new ArrayList<>();
-        for (Long id : ids) {
-            Optional<Category> optionalCategory = categoryRepository.findById(id);
-            if (optionalCategory.isPresent()) {
-                Category category = optionalCategory.get();
-                categoryRepository.delete(category);
-                deletedCategories.add(category.getCategoryName());
-            }
-        }
-        return deletedCategories;
     }
 }

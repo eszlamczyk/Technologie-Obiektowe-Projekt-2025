@@ -23,15 +23,17 @@ public class PurchaseClientAPI {
     private String endpointUrl;
     private final ObjectMapper objectMapper;
 
-    public PurchaseClientAPI(BackendConfig backendConfig) {
+    private final HttpClient httpClient;
+
+    public PurchaseClientAPI(BackendConfig backendConfig, HttpClient httpClient) {
+        this.httpClient = httpClient;
         this.objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         endpointUrl = backendConfig.getBaseUrl() + "/api/purchases";
     }
 
     public CompletableFuture<List<PurchaseResponseDto>> loadPurchases() {
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestGET(endpointUrl);
-        return sendLoadPurchasesRequest(client, request);
+        return sendLoadPurchasesRequest(httpClient, request);
     }
 
 
@@ -46,15 +48,13 @@ public class PurchaseClientAPI {
     }
 
     public CompletableFuture<List<PurchaseResponseDto>> getPurchasesByScreening(Long screeningId) {
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestGET(endpointUrl + "/screening/" + screeningId);
-        return sendLoadPurchasesRequest(client, request);
+        return sendLoadPurchasesRequest(httpClient, request);
     }
 
     public CompletableFuture<List<PurchaseResponseDto>> getPurchasesByUser(Long userId) {
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestGET(endpointUrl + "/user/" + userId);
-        return sendLoadPurchasesRequest(client, request);
+        return sendLoadPurchasesRequest(httpClient, request);
     }
 
     private List<PurchaseResponseDto> parsePurchaseList(String responseBody) {
@@ -66,7 +66,6 @@ public class PurchaseClientAPI {
     }
 
     public CompletableFuture<ResponseResult> createPurchase(PurchaseDto purchaseDto) {
-        HttpClient client = HttpClient.newHttpClient();
         String jsonString;
         try {
             jsonString = objectMapper.writeValueAsString(purchaseDto);
@@ -75,21 +74,20 @@ public class PurchaseClientAPI {
         }
 
         HttpRequest request = RequestBuilder.buildRequestPOST(endpointUrl, jsonString);
-        return sendCreatePurchaseRequest(client, request);
+        return sendCreatePurchaseRequest(httpClient, request);
     }
 
     public CompletableFuture<ResponseResult> confirmPurchase(Long purchaseId) {
-        HttpClient client = HttpClient.newHttpClient();
+
         HttpRequest request = RequestBuilder.buildRequestPOST(endpointUrl + "/" + purchaseId + "/confirm", "");
-        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(response -> new ResponseResult(response.statusCode(), response.body()))
                 .exceptionally(e -> new ResponseResult(500, "Error " + e.getMessage()));
     }
 
     public CompletableFuture<ResponseResult> cancelPurchase(Long purchaseId) {
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestPOST(endpointUrl + "/" + purchaseId + "/cancel", "");
-        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(response -> new ResponseResult(response.statusCode(), response.body()))
                 .exceptionally(e -> new ResponseResult(500, "Error " + e.getMessage()));
     }

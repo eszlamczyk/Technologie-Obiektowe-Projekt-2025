@@ -4,10 +4,12 @@ import monaditto.cinemaproject.category.Category;
 import monaditto.cinemaproject.category.CategoryDto;
 import monaditto.cinemaproject.category.CategoryRepository;
 import monaditto.cinemaproject.category.CategoryService;
+import monaditto.cinemaproject.search.Trie;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -24,21 +26,44 @@ public class MovieService {
 
     private final MovieValidator movieValidator;
 
+    private final Trie trie;
+
     @Autowired
     public MovieService(MovieRepository movieRepository,
                         CategoryRepository categoryRepository,
                         MovieValidator movieValidator,
-                        CategoryService categoryService) {
+                        CategoryService categoryService,
+                        Trie trie) {
         this.movieRepository = movieRepository;
         this.categoryRepository = categoryRepository;
         this.movieValidator = movieValidator;
         this.categoryService = categoryService;
+        this.trie = trie;
+
+        buildTrie();
+    }
+
+    private void buildTrie() {
+        movieRepository.findAll().stream()
+                .map(MovieDto::movieToMovieDto)
+                .forEach(trie::insert);
     }
 
     public List<MovieDto> getMovies() {
         return movieRepository.findAll().stream()
                 .map(MovieDto::movieToMovieDto)
                 .toList();
+    }
+
+    public List<MovieDto> getComingSoonMovies() {
+        return movieRepository.findComingSoonMovies(LocalDate.now()).stream()
+                .map(MovieDto::movieToMovieDto)
+                .limit(5)
+                .toList();
+    }
+
+    public List<MovieDto> searchMovies(String query) {
+        return trie.search(query);
     }
 
     public Optional<MovieDto> getMovieById(Long id) {
@@ -71,7 +96,11 @@ public class MovieService {
 
         List<Long> categoryIds = getCategoriesIds(categories);
 
-        return setCategories(movie.getId(), categoryIds);
+        CreateMovieStatus createMovieStatus = setCategories(movie.getId(), categoryIds);
+        if (createMovieStatus.isSuccess()) {
+            trie.insert(MovieDto.movieToMovieDto(movie));
+        }
+        return createMovieStatus;
     }
 
     public CreateMovieStatus createMovieByNames(MovieDto movieDto, List<String> categoryNames) {
@@ -85,7 +114,11 @@ public class MovieService {
 
         List<Long> categoryIds = categoryService.getCategoryIdsByName(categoryNames);
 
-        return setCategories(movie.getId(), categoryIds);
+        CreateMovieStatus createMovieStatus = setCategories(movie.getId(), categoryIds);
+        if (createMovieStatus.isSuccess()) {
+            trie.insert(MovieDto.movieToMovieDto(movie));
+        }
+        return createMovieStatus;
     }
 
     public CreateMovieStatus editMovie(Long movieId, MovieDto newMovieDto, List<CategoryDto> categories) {
@@ -99,6 +132,7 @@ public class MovieService {
             return CreateMovieStatus.MOVIE_DOESNT_EXIST;
         }
         Movie movie = optionalMovie.get();
+        MovieDto oldMovieDto = MovieDto.movieToMovieDto(movie);
 
         updateMovie(movie, newMovieDto);
 
@@ -109,6 +143,9 @@ public class MovieService {
         }
 
         movieRepository.save(movie);
+        trie.remove(oldMovieDto);
+        trie.insert(MovieDto.movieToMovieDto(movie));
+
         return CreateMovieStatus.SUCCESS;
     }
 
@@ -119,6 +156,7 @@ public class MovieService {
         }
 
         movieRepository.delete(movie.get());
+        trie.remove(MovieDto.movieToMovieDto(movie.get()));
         return true;
     }
 

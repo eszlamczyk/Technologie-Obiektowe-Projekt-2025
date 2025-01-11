@@ -1,0 +1,33 @@
+<?import javafx.scene.layout.AnchorPane?>
+
+<?import javafx.scene.control.ListView?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.Region?>
+<AnchorPane stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.user.UserRecommendationsController"
+            fx:id="rootPane" prefHeight="800" prefWidth="800">
+
+        <ScrollPane fx:id="scrollPane" prefHeight="800" prefWidth="800" vbarPolicy="NEVER" hbarPolicy="NEVER">
+            <HBox fx:id="mainHBox" alignment="CENTER" style="-fx-background-color: #97f3c8;">
+                <VBox prefWidth="800" spacing="20" alignment="CENTER" style="-fx-background-color: #97f3c8;">
+                    <Region prefHeight="20" />
+                    <Button text="Go Back" styleClass="moviesButton" onAction="#handleGoBack" />
+                    <Label text="COMING SOON" styleClass="moviesLabel"/>
+                    <ListView fx:id="comingSoonMoviesListView" prefHeight="200" maxWidth="600"/>
+                    <Label text="YOU MAY ALSO LIKE" styleClass="moviesLabel"/>
+                    <ListView fx:id="recommendedMoviesListView" prefHeight="200" maxWidth="600"/>
+                    <Label text="HIGHEST RATED" styleClass="moviesLabel"/>
+                    <ListView fx:id="highestRatedMoviesListView" prefHeight="200" maxWidth="600"/>
+                    <Button text="Go Back" styleClass="moviesButton" onAction="#handleGoBack" />
+                    <Region prefHeight="20" />
+                </VBox>
+            </HBox>
+        </ScrollPane>
+</AnchorPane>

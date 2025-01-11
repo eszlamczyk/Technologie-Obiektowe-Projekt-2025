@@ -29,6 +29,13 @@ public class RequestBuilder {
         return addHeaders(builder).build();
     }
 
+    public static HttpRequest buildRequestGET(String url, String jsonBody) {
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .GET();
+        return addHeaders(builder).build();
+    }
+
     public static HttpRequest buildRequestPUT(String url, String jsonBody) {
         HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(url))

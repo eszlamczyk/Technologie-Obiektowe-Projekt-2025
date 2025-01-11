@@ -37,6 +37,12 @@ public class MovieController {
         return ResponseEntity.ok().body(movieService.getComingSoonMovies());
     }
 
+    @RolesAllowed({"ADMIN","CASHIER", "USER"})
+    @PutMapping("/search")
+    public ResponseEntity<List<MovieDto>> searchMovies(@RequestBody String query) {
+        return ResponseEntity.ok().body(movieService.searchMovies(query));
+    }
+
     @RolesAllowed({"ADMIN"})
     @DeleteMapping("delete/{id}")
     public ResponseEntity<String> deleteMovie(@PathVariable Long id) {

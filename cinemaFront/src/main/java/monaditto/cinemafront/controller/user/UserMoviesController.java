@@ -1,5 +1,6 @@
 package monaditto.cinemafront.controller.user;
 
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
@@ -9,6 +10,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.shape.Rectangle;
 import monaditto.cinemafront.StageInitializer;
@@ -19,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
+import java.util.List;
 
 @Controller
 public class UserMoviesController {
@@ -32,6 +35,12 @@ public class UserMoviesController {
 
     @FXML
     private ListView<MovieDto> moviesListView;
+
+    @FXML
+    private TextField searchBar;
+
+    @FXML
+    private Button searchButton;
 
     @FXML
     private Button rateButton;
@@ -51,7 +60,7 @@ public class UserMoviesController {
         initializeMovieListView();
         initializeResponsiveness();
         initializeButtons();
-        loadMovies();
+//        loadMovies();
     }
 
     private void initializeMovieListView() {
@@ -90,6 +99,25 @@ public class UserMoviesController {
         );
 
         rateButton.disableProperty().bind(isSingleCellSelected);
+    }
+
+    @FXML
+    private void handleSearch(ActionEvent event) {
+        String query = searchBar.getText();
+        if (query.isBlank()) {
+            return;
+        }
+
+        movieClientAPI.searchMovies(query)
+                .thenAccept(this::updateMovieList);
+//        loadMovies();
+    }
+
+    private void updateMovieList(List<MovieDto> foundMovieDtoList) {
+        Platform.runLater(() -> {
+            movieDtoList.clear();
+            movieDtoList.addAll(foundMovieDtoList);
+        });
     }
 
     @FXML

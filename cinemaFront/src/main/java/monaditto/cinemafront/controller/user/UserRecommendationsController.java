@@ -31,9 +31,9 @@ public class UserRecommendationsController {
 
     private final StageInitializer stageInitializer;
 
-    private MovieClientAPI movieClientAPI;
+    private final MovieClientAPI movieClientAPI;
 
-    private MovieCellCreator movieCellCreator;
+    private final MovieCellCreator movieCellCreator;
 
     private ObservableList<MovieDto> comingSoonMovieDtoList;
 
@@ -55,9 +55,6 @@ public class UserRecommendationsController {
 
     @FXML
     private HBox mainHBox;
-
-//    @FXML
-//    private Rectangle backgroundRectangle;
 
     @FXML
     private AnchorPane rootPane;
@@ -97,7 +94,6 @@ public class UserRecommendationsController {
                     setText(null);
                     setGraphic(null);
                 } else {
-//                    setText(movieDto.title() + " (" + movieDto.releaseDate().getYear() + ")");
                     HBox hBox = movieCellCreator.createMovieCell(movieDto);
                     setGraphic(hBox);
                 }
@@ -106,9 +102,6 @@ public class UserRecommendationsController {
     }
 
     private void initializeResponsiveness() {
-//        backgroundRectangle.widthProperty().bind(rootPane.widthProperty());
-//        backgroundRectangle.heightProperty().bind(rootPane.heightProperty());
-
         scrollPane.prefHeightProperty().bind(rootPane.heightProperty());
         scrollPane.prefWidthProperty().bind(rootPane.widthProperty());
 

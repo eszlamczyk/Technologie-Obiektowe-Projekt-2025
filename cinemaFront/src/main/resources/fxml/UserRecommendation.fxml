@@ -14,7 +14,6 @@
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.user.UserRecommendationsController"
             fx:id="rootPane" prefHeight="800" prefWidth="800">
 
-<!--        <Rectangle fx:id="backgroundRectangle" fill="CADETBLUE" stroke="#ffffff8b" strokeType="INSIDE" width="800" height="600"/>-->
         <ScrollPane fx:id="scrollPane" prefHeight="800" prefWidth="800" vbarPolicy="NEVER" hbarPolicy="NEVER">
             <HBox fx:id="mainHBox" alignment="CENTER" style="-fx-background-color: #97f3c8;">
                 <VBox prefWidth="800" spacing="20" alignment="CENTER" style="-fx-background-color: #97f3c8;">

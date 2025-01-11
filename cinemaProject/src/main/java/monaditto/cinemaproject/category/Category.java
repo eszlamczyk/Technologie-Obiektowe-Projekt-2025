@@ -1,5 +1,6 @@
 package monaditto.cinemaproject.category;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import monaditto.cinemaproject.movie.Movie;
 
@@ -21,6 +22,7 @@ public class Category {
     private String categoryName;
 
     @ManyToMany(mappedBy = "categories")
+    @JsonBackReference
     private Set<Movie> movies = new HashSet<>();
 
     public Category() {}

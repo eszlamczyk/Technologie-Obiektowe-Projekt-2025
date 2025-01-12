@@ -172,8 +172,7 @@ public class AppConfiguration {
                 poster,
                 LocalDate.parse("10-03-2025", formatter));
         categories = List.of("action", "superhero");
-        movieStatus = movieService.createMovieByNames(movie, categories);
-        System.out.println(movieStatus.message());
+        movieService.createMovieByNames(movie, categories);
 
         poster = "https://resizing.flixster.com/EA3t3rwi2u28B-nLQJ5Pt" +
                 "gBKtWo=/206x305/v2/https://resizing.flixster.com/NFhs" +
@@ -186,8 +185,7 @@ public class AppConfiguration {
                 poster,
                 LocalDate.parse("30-10-2025", formatter));
         categories = List.of("horror");
-        movieStatus = movieService.createMovieByNames(movie, categories);
-        System.out.println(movieStatus.message());
+        movieService.createMovieByNames(movie, categories);
 
         poster = "https://resizing.flixster.com/kwqhf2szJcqRBEwGq0FfyrtC34" +
                 "A=/206x305/v2/https://resizing.flixste" +
@@ -199,8 +197,7 @@ public class AppConfiguration {
                 poster,
                 LocalDate.parse("20-12-2026", formatter));
         categories = List.of("science fiction");
-        movieStatus = movieService.createMovieByNames(movie, categories);
-        System.out.println(movieStatus.message());
+        movieService.createMovieByNames(movie, categories);
 
         poster = "https://resizing.flixster.com/B32ekw6FEC" +
                 "d-_6F4QVkWeU0mVeQ=/206x305/v2/https://resizing.flixster.com/" +
@@ -213,8 +210,7 @@ public class AppConfiguration {
                 poster,
                 LocalDate.parse("15-06-2025", formatter));
         categories = List.of("horror");
-        movieStatus = movieService.createMovieByNames(movie, categories);
-        System.out.println(movieStatus.message());
+        movieService.createMovieByNames(movie, categories);
 
         poster = "https://resizing.flixster.com/AUJnbD4V-pCLZHyCFpE6dkaP" +
                 "FUo=/206x305/v2/https://resizing.flixster.com/1mMlAgisc-Owh3W-" +
@@ -227,8 +223,7 @@ public class AppConfiguration {
                 poster,
                 LocalDate.parse("01-11-2025", formatter));
         categories = List.of("drama", "science fiction");
-        movieStatus = movieService.createMovieByNames(movie, categories);
-        System.out.println(movieStatus.message());
+        movieService.createMovieByNames(movie, categories);
 
         poster = "https://resizing.flixster.com/gyU7YSbC0HT-wo9tB" +
                 "LkE8n7JDS8=/206x305/v2/https://resizing.flixster.co" +
@@ -241,8 +236,7 @@ public class AppConfiguration {
                 poster,
                 LocalDate.parse("18-09-2025", formatter));
         categories = List.of("thriller");
-        movieStatus = movieService.createMovieByNames(movie, categories);
-        System.out.println(movieStatus.message());
+        movieService.createMovieByNames(movie, categories);
     }
 
     private static void initReleasedMovies(MovieService movieService, DateTimeFormatter formatter) {
@@ -256,8 +250,7 @@ public class AppConfiguration {
                 poster,
                 LocalDate.parse("06-10-2017", formatter));
         List<String> categories = List.of("science fiction", "drama");
-        CreateMovieStatus movieStatus = movieService.createMovieByNames(movie, categories);
-        System.out.println(movieStatus.message());
+        movieService.createMovieByNames(movie, categories);
 
         poster = "https://resizing.flixster.com/MmthunuWaOp36uHIu8b53wT-y20=/206x305" +
                 "/v2/https://resizing.flixster.com/hsDkcEPJ4iMDkn7z-MdA4S635eA=/ems.cHJkLWVtcy1" +
@@ -269,8 +262,7 @@ public class AppConfiguration {
                 poster,
                 LocalDate.parse("12-06-1981", formatter));
         categories = List.of("action");
-        movieStatus = movieService.createMovieByNames(movie, categories);
-        System.out.println(movieStatus.message());
+        movieService.createMovieByNames(movie, categories);
 
         poster = "https://resizing.flixster.com/3pxO4cKBL9QjNOkV42mTU4USCMc=/20" +
                 "6x305/v2/https://resizing.flixster.com/-XZAfHZM39UwaGJIFWK" +
@@ -282,8 +274,7 @@ public class AppConfiguration {
                 poster,
                 LocalDate.parse("02-05-2008", formatter));
         categories = List.of("action", "science fiction", "superhero");
-        movieStatus = movieService.createMovieByNames(movie, categories);
-        System.out.println(movieStatus.message());
+        movieService.createMovieByNames(movie, categories);
 
         poster = "https://resizing.flixster.com/y2qtkJifbvzjXPsZfz8NhB2fWU0=/20" +
                 "6x305/v2/https://resizing.flixster.com/-XZAfHZM39UwaGJ" +
@@ -295,8 +286,7 @@ public class AppConfiguration {
                 poster,
                 LocalDate.parse("07-05-2010", formatter));
         categories = List.of("action", "science fiction", "superhero");
-        movieStatus = movieService.createMovieByNames(movie, categories);
-        System.out.println(movieStatus.message());
+        movieService.createMovieByNames(movie, categories);
 
         poster = "https://resizing.flixster.com/52N-5S_PaNdR1zQAzoXk48koaT8=/206" +
                 "x305/v2/https://resizing.flixster.com/-XZAfHZM39UwaG" +
@@ -308,8 +298,7 @@ public class AppConfiguration {
                 poster,
                 LocalDate.parse("03-05-2013", formatter));
         categories = List.of("action", "science fiction", "superhero");
-        movieStatus = movieService.createMovieByNames(movie, categories);
-        System.out.println(movieStatus.message());
+        movieService.createMovieByNames(movie, categories);
 
         poster = "https://resizing.flixster.com/05F90XUPmyteSngOV7qj5Zd5H" +
                 "fI=/206x305/v2/https://resizing.flixster.com/-X" +
@@ -321,8 +310,7 @@ public class AppConfiguration {
                 poster,
                 LocalDate.parse("10-12-1999", formatter));
         categories = List.of("drama", "fantasy");
-        movieStatus = movieService.createMovieByNames(movie, categories);
-        System.out.println(movieStatus.message());
+        movieService.createMovieByNames(movie, categories);
 
         poster = "https://resizing.flixster.com/P7kZnOhXFWo35sqfWZnik" +
                 "szbJEI=/206x305/v2/https://resizing.flixster.com/qrwaHhY7" +
@@ -335,8 +323,7 @@ public class AppConfiguration {
                 poster,
                 LocalDate.parse("09-12-2016", formatter));
         categories = List.of("drama", "romance", "musical");
-        movieStatus = movieService.createMovieByNames(movie, categories);
-        System.out.println(movieStatus.message());
+        movieService.createMovieByNames(movie, categories);
 
         poster = "https://resizing.flixster.com/fkcMkD7Ic18KDN" +
                 "C73TOy6xMzA5k=/206x305/v2/https://resizing.flixster." +
@@ -349,8 +336,7 @@ public class AppConfiguration {
                 poster,
                 LocalDate.parse("26-09-2014", formatter));
         categories = List.of("action", "thriller");
-        movieStatus = movieService.createMovieByNames(movie, categories);
-        System.out.println(movieStatus.message());
+        movieService.createMovieByNames(movie, categories);
 
         poster = "https://resizing.flixster.com/iBPi8jYYfJ" +
                 "gouPuxoKHMcg6vme4=/206x305/v2/https://res" +
@@ -363,8 +349,7 @@ public class AppConfiguration {
                 poster,
                 LocalDate.parse("03-05-2002", formatter));
         categories = List.of("action", "superhero");
-        movieStatus = movieService.createMovieByNames(movie, categories);
-        System.out.println(movieStatus.message());
+        movieService.createMovieByNames(movie, categories);
 
         poster = "https://resizing.flixster.com/Rxyp_L2" +
                 "fOqiEItaXust7ITlebpw=/206x305/v2/https://" +
@@ -377,8 +362,7 @@ public class AppConfiguration {
                 poster,
                 LocalDate.parse("26-10-1984", formatter));
         categories = List.of("action", "science fiction");
-        movieStatus = movieService.createMovieByNames(movie, categories);
-        System.out.println(movieStatus.message());
+        movieService.createMovieByNames(movie, categories);
 
         poster = "https://resizing.flixster.com/5R4bkJZC-W" +
                 "_K-YjmIMKAXCbts5Y=/206x305/v2/https://resizing.fl" +
@@ -390,8 +374,7 @@ public class AppConfiguration {
                 poster,
                 LocalDate.parse("25-05-1979", formatter));
         categories = List.of("horror", "science fiction");
-        movieStatus = movieService.createMovieByNames(movie, categories);
-        System.out.println(movieStatus.message());
+        movieService.createMovieByNames(movie, categories);
 
         poster = "https://resizing.flixster.com/kO9s-jGsOi3" +
                 "YXyHkzVlmO9Z5lzI=/206x305/v2/https://resizing.flixste" +
@@ -405,8 +388,7 @@ public class AppConfiguration {
                 poster,
                 LocalDate.parse("31-03-1999", formatter));
         categories = List.of("action", "science fiction");
-        movieStatus = movieService.createMovieByNames(movie, categories);
-        System.out.println(movieStatus.message());
+        movieService.createMovieByNames(movie, categories);
 
         poster = "https://resizing.flixster.com/hMuSkvrLphf1WjBG2pmI_R" +
                 "udPBU=/206x305/v2/https://resizing.flixster.com/3fd" +
@@ -419,8 +401,7 @@ public class AppConfiguration {
                 poster,
                 LocalDate.parse("16-09-2011", formatter));
         categories = List.of("action", "drama");
-        movieStatus = movieService.createMovieByNames(movie, categories);
-        System.out.println(movieStatus.message());
+        movieService.createMovieByNames(movie, categories);
     }
 
     private static void initMovieRooms(MovieRoomService movieRoomService) {
@@ -436,14 +417,20 @@ public class AppConfiguration {
 
         screeningDtos.add(new ScreeningDto((Long) null, 1L, 1L, LocalDateTime.now().plusDays(0), 20.00));
         screeningDtos.add(new ScreeningDto((Long) null, 2L, 2L, LocalDateTime.now().plusMinutes(50), 25.00));
-        screeningDtos.add(new ScreeningDto((Long) null, 2L, 3L, LocalDateTime.now().plusDays(1), 30.00));
-        screeningDtos.add(new ScreeningDto((Long) null, 2L, 4L, LocalDateTime.now().plusDays(1), 15.00));
-        screeningDtos.add(new ScreeningDto((Long) null, 1L, 1L, LocalDateTime.now().plusDays(2), 20.00));
-        screeningDtos.add(new ScreeningDto((Long) null, 1L, 2L, LocalDateTime.now().plusDays(2), 35.00));
         screeningDtos.add(new ScreeningDto((Long) null, 2L, 1L, LocalDateTime.now().plusDays(3), 20.00));
         screeningDtos.add(new ScreeningDto((Long) null, 1L, 2L, LocalDateTime.now().plusDays(3), 35.00));
         screeningDtos.add(new ScreeningDto((Long) null, 1L, 1L, LocalDateTime.now().plusDays(4), 20.00));
         screeningDtos.add(new ScreeningDto((Long) null, 2L, 2L, LocalDateTime.now().plusDays(4), 35.00));
+
+        screeningDtos.add(new ScreeningDto((Long) null, 3L, 2L, LocalDateTime.now().plusDays(1), 28.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 3L, 2L, LocalDateTime.now().plusDays(2), 28.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 4L, 1L, LocalDateTime.now().plusDays(2), 20.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 4L, 2L, LocalDateTime.now().plusDays(1).plusMinutes(300), 30.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 6L, 1L, LocalDateTime.now().plusMinutes(300), 40.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 6L, 3L, LocalDateTime.now().plusDays(1), 40.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 9L, 4L, LocalDateTime.now().plusDays(0), 40.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 10L, 4L, LocalDateTime.now().plusDays(1), 40.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 11L, 4L, LocalDateTime.now().plusDays(2), 40.00));
 
         for (ScreeningDto screeningDto : screeningDtos) {
             screeningService.saveScreening(screeningDto);

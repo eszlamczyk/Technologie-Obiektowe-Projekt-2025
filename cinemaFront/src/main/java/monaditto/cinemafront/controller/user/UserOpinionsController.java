@@ -16,7 +16,6 @@ import monaditto.cinemafront.clientapi.OpinionClientAPI;
 import monaditto.cinemafront.controller.FXMLResourceEnum;
 import monaditto.cinemafront.databaseMapping.MovieDto;
 import monaditto.cinemafront.databaseMapping.OpinionDto;
-import monaditto.cinemafront.databaseMapping.ScreeningDto;
 import monaditto.cinemafront.session.SessionContext;
 import org.springframework.stereotype.Controller;
 
@@ -41,18 +40,18 @@ public class UserOpinionsController {
     private final OpinionClientAPI opinionClientAPI;
     private final SessionContext sessionContext;
     private final StageInitializer stageInitializer;
-    private final RateMovieController rateMovieController;
+    private final UserRateMovieController userRateMovieController;
     private final MovieClientAPI movieClientAPI;
 
     public UserOpinionsController(OpinionClientAPI opinionClientAPI,
                                   SessionContext sessionContext,
                                   StageInitializer stageInitializer,
-                                  RateMovieController rateMovieController,
+                                  UserRateMovieController userRateMovieController,
                                   MovieClientAPI movieClientAPI) {
         this.opinionClientAPI = opinionClientAPI;
         this.sessionContext = sessionContext;
         this.stageInitializer = stageInitializer;
-        this.rateMovieController = rateMovieController;
+        this.userRateMovieController = userRateMovieController;
         this.movieClientAPI = movieClientAPI;
     }
 
@@ -157,7 +156,7 @@ public class UserOpinionsController {
         try {
             OpinionDto toEdit = opinionsListView.getSelectionModel().getSelectedItem();
             stageInitializer.loadStage(FXMLResourceEnum.RATE_PANEL);
-            rateMovieController.setOpinionDto(toEdit, movieMap.get(toEdit.movieId()));
+            userRateMovieController.setOpinionDto(toEdit, movieMap.get(toEdit.movieId()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

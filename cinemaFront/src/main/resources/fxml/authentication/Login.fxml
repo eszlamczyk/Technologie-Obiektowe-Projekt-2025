@@ -15,7 +15,7 @@
 <?import javafx.scene.text.TextFlow?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
-<AnchorPane fx:id="rootPane" stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
+<AnchorPane fx:id="rootPane" stylesheets="@../../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.LoginController"
             prefHeight="500" prefWidth="400">
     <opaqueInsets>

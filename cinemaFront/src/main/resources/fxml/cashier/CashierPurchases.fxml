@@ -4,9 +4,9 @@
 <?import javafx.scene.layout.*?>
 
 <?import javafx.geometry.Insets?>
-<AnchorPane fx:id="rootPane" prefHeight="800" prefWidth="800" stylesheets="@../styles/Styles.css"
+<AnchorPane fx:id="rootPane" prefHeight="800" prefWidth="800" stylesheets="@../../styles/Styles.css"
             xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="monaditto.cinemafront.controller.admin.AdminPurchasesController">
+            fx:controller="monaditto.cinemafront.controller.cashier.CashierPurchasesController">
     <VBox spacing="10">
         <padding>
             <Insets top="20" right="20" bottom="20" left="20"/>

@@ -10,13 +10,15 @@
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.HBox?>
 <AnchorPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="monaditto.cinemafront.controller.user.RateMovieController"
-            fx:id="rootPane" prefHeight="600" prefWidth="400">
+            fx:controller="monaditto.cinemafront.controller.user.UserRateMovieController"
+            fx:id="rootPane" prefHeight="800" prefWidth="600">
     <StackPane>
-    <Rectangle fx:id="backgroundRectangle" fill="CADETBLUE" stroke="#ffffff8b" strokeType="INSIDE"/>
-        <VBox alignment="CENTER" spacing="15" prefWidth="400" prefHeight="600" style="-fx-background-color: #ffffff;">
+        <Rectangle fx:id="backgroundRectangle" fill="WHITE" stroke="#ffffff8b" strokeType="INSIDE"/>
+        <HBox prefHeight="800" prefWidth="600" alignment="CENTER">
+            <VBox alignment="CENTER" spacing="15" prefWidth="500" prefHeight="600" style="-fx-background-color: #ffffff;">
             <Label fx:id="movieTitleLabel" styleClass="moviesLabel" text="Movie Title"/>
             <ImageView fx:id="moviePosterImageView" fitWidth="250" fitHeight="350"/>
             <Label text="Your Rating:"/>
@@ -25,10 +27,11 @@
             <Label text="Your Opinion:"/>
             <TextArea fx:id="commentTextArea" promptText="Write your opinion here..." prefWidth="300" prefHeight="100" wrapText="true"/>
 
-            <Label fx:id="statusLabel" text="" visible="false" style="-fx-text-fill: green;"/>
+            <Label fx:id="statusLabel" visible="false" style="-fx-text-fill: green;"/>
 
             <Button text="Submit Rating" styleClass="moviesButton" fx:id="submitButton" onAction="#handleSubmitRating"/>
             <Button text="Cancel" styleClass="moviesButton" onAction="#handleCancel"/>
         </VBox>
+        </HBox>
     </StackPane>
 </AnchorPane>

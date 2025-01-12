@@ -102,7 +102,7 @@ public class AdminUsersController {
     private void handleEdit(ActionEvent event) {
         var newStage = new Stage();
 
-        var loader = new FXMLLoader(getClass().getResource("/fxml/EditUser.fxml"));
+        var loader = new FXMLLoader(getClass().getResource("/fxml/edit/EditUser.fxml"));
         loader.setControllerFactory(stageInitializer.getContext()::getBean);
         AnchorPane newRoot = null;
         try {

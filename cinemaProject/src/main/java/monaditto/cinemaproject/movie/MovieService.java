@@ -86,9 +86,7 @@ public class MovieService {
 
     public List<MovieWithAverageRatingDto> getRecommendedMovies(Long userId) {
         Long categoryId = purchaseService.getMostPurchasedCategoryIdForUser(userId);
-        System.out.println("jestem tu");
         if (categoryId == 0) {
-            System.out.println("dupa");
             return new ArrayList<>();
         }
 
@@ -106,8 +104,6 @@ public class MovieService {
 
             recommendations.addAll(randomRecommendations);
         }
-
-        System.out.println("jestem tam");
 
         return recommendations.stream().limit(7).collect(Collectors.toList());
     }

@@ -5,9 +5,9 @@
 
 <?import javafx.scene.text.Font?>
 <?import javafx.geometry.Insets?>
-<AnchorPane fx:id="rootPane" prefHeight="800" prefWidth="800" stylesheets="@../styles/Styles.css"
+<AnchorPane fx:id="rootPane" prefHeight="800" prefWidth="800" stylesheets="@../../styles/Styles.css"
             xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="monaditto.cinemafront.controller.cashier.CashierBuyTicketsController">
+            fx:controller="monaditto.cinemafront.controller.admin.AdminBuyTicketsController">
     <VBox spacing="20">
         <padding>
             <Insets top="24" right="24" bottom="24" left="24"/>

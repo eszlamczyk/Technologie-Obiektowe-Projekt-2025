@@ -11,12 +11,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.shape.Rectangle;
-import javafx.stage.Stage;
 import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.clientapi.OpinionClientAPI;
 import monaditto.cinemafront.controller.FXMLResourceEnum;
 import monaditto.cinemafront.databaseMapping.MovieDto;
-import monaditto.cinemafront.clientapi.MovieClientAPI;
 import monaditto.cinemafront.databaseMapping.OpinionDto;
 import monaditto.cinemafront.response.ResponseResult;
 import monaditto.cinemafront.session.SessionContext;
@@ -24,10 +22,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
-import java.net.http.HttpResponse;
 
 @Controller
-public class RateMovieController {
+public class UserRateMovieController {
 
     @FXML
     private Label movieTitleLabel;
@@ -64,9 +61,9 @@ public class RateMovieController {
     private final OpinionClientAPI opinionClientAPI;
 
     @Autowired
-    public RateMovieController(OpinionClientAPI opinionClientAPI,
-                               StageInitializer stageInitializer,
-                               SessionContext sessionContext) {
+    public UserRateMovieController(OpinionClientAPI opinionClientAPI,
+                                   StageInitializer stageInitializer,
+                                   SessionContext sessionContext) {
         this.opinionClientAPI = opinionClientAPI;
         this.stageInitializer = stageInitializer;
         this.sessionContext = sessionContext;

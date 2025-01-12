@@ -141,6 +141,9 @@ public class AppConfiguration {
             categories.add(new CategoryDto("drama"));
             categories.add(new CategoryDto("animation"));
             categories.add(new CategoryDto("comedy"));
+            categories.add(new CategoryDto("musical"));
+            categories.add(new CategoryDto("superhero"));
+            categories.add(new CategoryDto("horror"));
 
             categories.forEach(categoryService::createCategory);
         }
@@ -149,6 +152,100 @@ public class AppConfiguration {
     private static void initMovies(MovieService movieService) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
+        initReleasedMovies(movieService, formatter);
+        initUnreleasedMovies(movieService, formatter);
+    }
+
+    private static void initUnreleasedMovies(MovieService movieService, DateTimeFormatter formatter) {
+        String poster;
+        CreateMovieStatus movieStatus;
+        List<String> categories;
+        MovieDto movie;
+        poster = "https://resizing.flixster.com/v7sXlfcjF1Nz014" +
+                "beCSWOjGStaY=/206x305/v2/https://resizing.flixster.com/aULUdD5s" +
+                "WVEoBKq8rsjqDX2T7zY=/ems.cHJkLWVtcy1hc3NldHMvdHZzZXJpZXMvYTc1N2" +
+                "FhYTgtMGU0MC00YTdkLTgxMGEtZmM1MGE5NWNmMjIwLmpwZw==";
+        movie = new MovieDto(
+                "Daredevil: Born Again",
+                "Powrót Daredevila w nowej serii.",
+                120,
+                poster,
+                LocalDate.parse("10-03-2025", formatter));
+        categories = List.of("action", "superhero");
+        movieStatus = movieService.createMovieByNames(movie, categories);
+        System.out.println(movieStatus.message());
+
+        poster = "https://resizing.flixster.com/EA3t3rwi2u28B-nLQJ5Pt" +
+                "gBKtWo=/206x305/v2/https://resizing.flixster.com/NFhs" +
+                "s816If2YlSBDd2154Z6-KHw=/ems.cHJkLWVtcy1hc3NldHMvbW9" +
+                "2aWVzL2UyNTU5YzhjLTI4ODktNDg2Yy1hMmM0LWY0ZDM0Y2FkNjA3Yy5qcGc=";
+        movie = new MovieDto(
+                "Five Nights at Freddy's 2",
+                "Kontynuacja horroru o żyjących animatronikach.",
+                105,
+                poster,
+                LocalDate.parse("30-10-2025", formatter));
+        categories = List.of("horror");
+        movieStatus = movieService.createMovieByNames(movie, categories);
+        System.out.println(movieStatus.message());
+
+        poster = "https://resizing.flixster.com/kwqhf2szJcqRBEwGq0FfyrtC34" +
+                "A=/206x305/v2/https://resizing.flixste" +
+                "r.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p22289267_v_v8_aa.jpg";
+        movie = new MovieDto(
+                "Avatar 3",
+                "James Cameron powraca do świata Pandory.",
+                190,
+                poster,
+                LocalDate.parse("20-12-2026", formatter));
+        categories = List.of("science fiction");
+        movieStatus = movieService.createMovieByNames(movie, categories);
+        System.out.println(movieStatus.message());
+
+        poster = "https://resizing.flixster.com/B32ekw6FEC" +
+                "d-_6F4QVkWeU0mVeQ=/206x305/v2/https://resizing.flixster.com/" +
+                "6Ok6M-MwRvEmKWazVr_BdcNzAs0=/ems.cHJkLWVtcy1" +
+                "hc3NldHMvbW92aWVzLzY3MTViMjUwLTQyZjAtNDZjZC04NmI0LWYzNTc4ZmUwMzU3Mi5qcGc=";
+        movie = new MovieDto(
+                "Wolf Man",
+                "Horror o wilkołaku.",
+                110,
+                poster,
+                LocalDate.parse("15-06-2025", formatter));
+        categories = List.of("horror");
+        movieStatus = movieService.createMovieByNames(movie, categories);
+        System.out.println(movieStatus.message());
+
+        poster = "https://resizing.flixster.com/AUJnbD4V-pCLZHyCFpE6dkaP" +
+                "FUo=/206x305/v2/https://resizing.flixster.com/1mMlAgisc-Owh3W-" +
+                "YPyT7032D4c=/ems.cHJkLWVtcy1hc3NldHMvbW92aWVzLzg5NjRjM" +
+                "DE2LWFmY2EtNGE1ZC1iMDE1LTJjMWZmZWZkODhjZC5qcGc=";
+        movie = new MovieDto(
+                "Wish You Were Here",
+                "Dramat o podróżach w czasie.",
+                120,
+                poster,
+                LocalDate.parse("01-11-2025", formatter));
+        categories = List.of("drama", "science fiction");
+        movieStatus = movieService.createMovieByNames(movie, categories);
+        System.out.println(movieStatus.message());
+
+        poster = "https://resizing.flixster.com/gyU7YSbC0HT-wo9tB" +
+                "LkE8n7JDS8=/206x305/v2/https://resizing.flixster.co" +
+                "m/CY5tFqNlNhJJ3f126TgA9OOwchk=/ems.cHJkLWVtcy1h" +
+                "c3NldHMvbW92aWVzLzllNjlhNTUzLWQ0YjAtNGVhYy1hYzgzLTEwZjI3NzU1OGYyMC5qcGc=";
+        movie = new MovieDto(
+                "Presence",
+                "Thriller psychologiczny.",
+                115,
+                poster,
+                LocalDate.parse("18-09-2025", formatter));
+        categories = List.of("thriller");
+        movieStatus = movieService.createMovieByNames(movie, categories);
+        System.out.println(movieStatus.message());
+    }
+
+    private static void initReleasedMovies(MovieService movieService, DateTimeFormatter formatter) {
         String poster = "https://resizing.flixster.com/e0yEXMKWcKU8_JJ4i3vu45poKbI" +
                 "=/206x305/v2/https://resizing.flixster.com/73VCeyfsM8UDQ0o7IjUIcXr7jd8=/e" +
                 "ms.cHJkLWVtcy1hc3NldHMvbW92aWVzL2RlNzI0MGQyLTQ2ZTktNGMyYi05N2VmLTFjMDhiY2VlMDQ2Ni53ZWJw";
@@ -172,6 +269,156 @@ public class AppConfiguration {
                 poster,
                 LocalDate.parse("12-06-1981", formatter));
         categories = List.of("action");
+        movieStatus = movieService.createMovieByNames(movie, categories);
+        System.out.println(movieStatus.message());
+
+        poster = "https://resizing.flixster.com/3pxO4cKBL9QjNOkV42mTU4USCMc=/20" +
+                "6x305/v2/https://resizing.flixster.com/-XZAfHZM39UwaGJIFWK" +
+                "AE8fS0ak=/v3/t/assets/p170620_p_v13_ae.jpg";
+        movie = new MovieDto(
+                "Iron Man",
+                "Pierwszy film Iron Mana, początek MCU.",
+                126,
+                poster,
+                LocalDate.parse("02-05-2008", formatter));
+        categories = List.of("action", "science fiction", "superhero");
+        movieStatus = movieService.createMovieByNames(movie, categories);
+        System.out.println(movieStatus.message());
+
+        poster = "https://resizing.flixster.com/y2qtkJifbvzjXPsZfz8NhB2fWU0=/20" +
+                "6x305/v2/https://resizing.flixster.com/-XZAfHZM39UwaGJ" +
+                "IFWKAE8fS0ak=/v3/t/assets/p3546118_p_v10_af.jpg";
+        movie = new MovieDto(
+                "Iron Man 2",
+                "Kontynuacja historii Tony'ego Starka.",
+                124,
+                poster,
+                LocalDate.parse("07-05-2010", formatter));
+        categories = List.of("action", "science fiction", "superhero");
+        movieStatus = movieService.createMovieByNames(movie, categories);
+        System.out.println(movieStatus.message());
+
+        poster = "https://resizing.flixster.com/52N-5S_PaNdR1zQAzoXk48koaT8=/206" +
+                "x305/v2/https://resizing.flixster.com/-XZAfHZM39UwaG" +
+                "JIFWKAE8fS0ak=/v3/t/assets/p9259486_p_v13_aa.jpg";
+        movie = new MovieDto(
+                "Iron Man 3",
+                "Tony Stark mierzy się z Mandarynem.",
+                130,
+                poster,
+                LocalDate.parse("03-05-2013", formatter));
+        categories = List.of("action", "science fiction", "superhero");
+        movieStatus = movieService.createMovieByNames(movie, categories);
+        System.out.println(movieStatus.message());
+
+        poster = "https://resizing.flixster.com/05F90XUPmyteSngOV7qj5Zd5H" +
+                "fI=/206x305/v2/https://resizing.flixster.com/-X" +
+                "ZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p24429_p_v12_bf.jpg";
+        movie = new MovieDto(
+                "Green Mile",
+                "Poruszający dramat o więźniu z nadprzyrodzonymi zdolnościami.",
+                189,
+                poster,
+                LocalDate.parse("10-12-1999", formatter));
+        categories = List.of("drama", "fantasy");
+        movieStatus = movieService.createMovieByNames(movie, categories);
+        System.out.println(movieStatus.message());
+
+        poster = "https://resizing.flixster.com/P7kZnOhXFWo35sqfWZnik" +
+                "szbJEI=/206x305/v2/https://resizing.flixster.com/qrwaHhY7" +
+                "g8sv_HP3fH-zXwyFtME=/ems.cHJkLWVtcy1hc3NldHMvbW92aWV" +
+                "zL2U1ZDIyYTgzLWQxYjctNGY2MC1iNDRiLTYwZTBmOGEwOWM5Mi53ZWJw";
+        movie = new MovieDto(
+                "La La Land",
+                "Muzyczna opowieść o miłości i marzeniach.",
+                128,
+                poster,
+                LocalDate.parse("09-12-2016", formatter));
+        categories = List.of("drama", "romance", "musical");
+        movieStatus = movieService.createMovieByNames(movie, categories);
+        System.out.println(movieStatus.message());
+
+        poster = "https://resizing.flixster.com/fkcMkD7Ic18KDN" +
+                "C73TOy6xMzA5k=/206x305/v2/https://resizing.flixster." +
+                "com/U5O8tO6OHlLma7h-_hUbXeoioF0=/ems.cHJkLW" +
+                "Vtcy1hc3NldHMvbW92aWVzL2E4YjU3NGQwLWY3NWQtNDk4Ni05MWMzLTlkYjY2NDZkYzVhYi5qcGc=";
+        movie = new MovieDto(
+                "Equalizer",
+                "Denzel Washington jako mściciel wymierzający sprawiedliwość.",
+                132,
+                poster,
+                LocalDate.parse("26-09-2014", formatter));
+        categories = List.of("action", "thriller");
+        movieStatus = movieService.createMovieByNames(movie, categories);
+        System.out.println(movieStatus.message());
+
+        poster = "https://resizing.flixster.com/iBPi8jYYfJ" +
+                "gouPuxoKHMcg6vme4=/206x305/v2/https://res" +
+                "izing.flixster.com/-XZAfHZM39UwaGJIFWKAE8fS" +
+                "0ak=/v3/t/assets/p29821_p_v13_ai.jpg";
+        movie = new MovieDto(
+                "Spider-Man",
+                "Peter Parker zostaje Spider-Manem.",
+                121,
+                poster,
+                LocalDate.parse("03-05-2002", formatter));
+        categories = List.of("action", "superhero");
+        movieStatus = movieService.createMovieByNames(movie, categories);
+        System.out.println(movieStatus.message());
+
+        poster = "https://resizing.flixster.com/Rxyp_L2" +
+                "fOqiEItaXust7ITlebpw=/206x305/v2/https://" +
+                "resizing.flixster.com/-XZAfHZM39UwaGJIFWKA" +
+                "E8fS0ak=/v3/t/assets/p7764_p_v8_au.jpg";
+        movie = new MovieDto(
+                "Terminator",
+                "Maszyna z przyszłości poluje na Sarah Connor.",
+                107,
+                poster,
+                LocalDate.parse("26-10-1984", formatter));
+        categories = List.of("action", "science fiction");
+        movieStatus = movieService.createMovieByNames(movie, categories);
+        System.out.println(movieStatus.message());
+
+        poster = "https://resizing.flixster.com/5R4bkJZC-W" +
+                "_K-YjmIMKAXCbts5Y=/206x305/v2/https://resizing.fl" +
+                "ixster.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p2571_p_v8_aw.jpg";
+        movie = new MovieDto(
+                "Alien",
+                "Kosmiczny horror Ridleya Scotta.",
+                117,
+                poster,
+                LocalDate.parse("25-05-1979", formatter));
+        categories = List.of("horror", "science fiction");
+        movieStatus = movieService.createMovieByNames(movie, categories);
+        System.out.println(movieStatus.message());
+
+        poster = "https://resizing.flixster.com/kO9s-jGsOi3" +
+                "YXyHkzVlmO9Z5lzI=/206x305/v2/https://resizing.flixste" +
+                "r.com/hTz9Ap43sCkvDiFvCkjmb1IWkUg=/em" +
+                "s.cHJkLWVtcy1hc3NldHMvbW92aWVzL2EwMGEwNmQxLTE1MGYtNGQ" +
+                "wYS04ZDhlLWQ0MzYwOTQ5M2JlMC5qcGc=";
+        movie = new MovieDto(
+                "Matrix",
+                "Neo odkrywa prawdę o rzeczywistości.",
+                136,
+                poster,
+                LocalDate.parse("31-03-1999", formatter));
+        categories = List.of("action", "science fiction");
+        movieStatus = movieService.createMovieByNames(movie, categories);
+        System.out.println(movieStatus.message());
+
+        poster = "https://resizing.flixster.com/hMuSkvrLphf1WjBG2pmI_R" +
+                "udPBU=/206x305/v2/https://resizing.flixster.com/3fd" +
+                "fZluLLRSURw2fbYgsfqKaWtw=/ems.cHJkLWVtcy1hc3NldHMvb" +
+                "W92aWVzLzE0ZWFjM2Y1LTYzNTYtNGIwNS1iNGU2LTk0NTA2MGQ3NjY3NC53ZWJw";
+        movie = new MovieDto(
+                "Drive",
+                "Stylowy thriller z Ryanem Goslingiem.",
+                100,
+                poster,
+                LocalDate.parse("16-09-2011", formatter));
+        categories = List.of("action", "drama");
         movieStatus = movieService.createMovieByNames(movie, categories);
         System.out.println(movieStatus.message());
     }

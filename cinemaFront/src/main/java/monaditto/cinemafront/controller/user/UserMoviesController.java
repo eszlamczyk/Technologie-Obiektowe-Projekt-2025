@@ -30,7 +30,7 @@ public class UserMoviesController {
 
     private ObservableList<MovieDto> movieDtoList;
 
-    private final RateMovieController rateMovieController;
+    private final UserRateMovieController userRateMovieController;
 
     @Autowired
     private MovieClientAPI movieClientAPI;
@@ -54,9 +54,9 @@ public class UserMoviesController {
     private AnchorPane rootPane;
 
     public UserMoviesController(StageInitializer stageInitializer,
-                                RateMovieController rateMovieController) {
+                                UserRateMovieController userRateMovieController) {
         this.stageInitializer = stageInitializer;
-        this.rateMovieController = rateMovieController;
+        this.userRateMovieController = userRateMovieController;
     }
 
     @FXML
@@ -137,7 +137,7 @@ public class UserMoviesController {
         try {
             MovieDto movieDto = moviesListView.getSelectionModel().getSelectedItem();
             stageInitializer.loadStage(FXMLResourceEnum.RATE_PANEL);
-            rateMovieController.setMovie(movieDto);
+            userRateMovieController.setMovie(movieDto);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

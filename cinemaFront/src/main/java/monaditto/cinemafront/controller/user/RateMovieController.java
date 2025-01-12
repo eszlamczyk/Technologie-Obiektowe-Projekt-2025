@@ -1,5 +1,6 @@
 package monaditto.cinemafront.controller.user;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -17,11 +18,13 @@ import monaditto.cinemafront.controller.FXMLResourceEnum;
 import monaditto.cinemafront.databaseMapping.MovieDto;
 import monaditto.cinemafront.clientapi.MovieClientAPI;
 import monaditto.cinemafront.databaseMapping.OpinionDto;
+import monaditto.cinemafront.response.ResponseResult;
 import monaditto.cinemafront.session.SessionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
+import java.net.http.HttpResponse;
 
 @Controller
 public class RateMovieController {
@@ -54,6 +57,8 @@ public class RateMovieController {
 
     private MovieDto movie;
 
+    private OpinionDto opinion;
+
     private final StageInitializer stageInitializer;
 
     private final OpinionClientAPI opinionClientAPI;
@@ -85,46 +90,89 @@ public class RateMovieController {
 
     @FXML
     private void handleSubmitRating(ActionEvent event) {
+        if (opinion == null) {
+            createOpinion();
+        } else {
+            editOpinion();
+        }
+    }
+
+    private void editOpinion() {
+        OpinionDto opinionDto = createOpinionDto();
+        opinionClientAPI.editOpinion(opinionDto)
+                .thenAccept(response -> handleResponse(response, "Opinion Edited successfully!", "Failed to Edit opinion"))
+                .exceptionally(this::handleException);
+    }
+
+    private void createOpinion() {
+        OpinionDto opinionDto = createOpinionDto();
+        opinionClientAPI.addOpinion(opinionDto)
+                .thenAccept(response -> handleResponse(response, "Opinion submitted successfully!", "Failed to submit opinion"))
+                .exceptionally(this::handleException);
+    }
+
+    private OpinionDto createOpinionDto() {
         double rating = ratingSlider.getValue();
         String comment = commentTextArea.getText();
 
-        System.out.println("--------------------------------------------------------------------------------------");
-        System.out.println(sessionContext.getUserId());
-
-        OpinionDto opinionDto = new OpinionDto(
+        return new OpinionDto(
                 sessionContext.getUserId(),
                 movie.id(),
                 rating,
                 comment
         );
-
-        opinionClientAPI.addOpinion(opinionDto)
-                .thenAccept(response -> {
-                    statusLabel.setText("Opinion submitted successfully!");
-                    statusLabel.setStyle("-fx-text-fill: green;");
-                    statusLabel.setVisible(true);
-                })
-                .exceptionally(ex -> {
-                    statusLabel.setText("Failed to submit opinion: " + ex.getMessage());
-                    statusLabel.setStyle("-fx-text-fill: red;");
-                    statusLabel.setVisible(true);
-                    return null;
-                });
-
-        submitButton.setDisable(true);
     }
+
+    private void handleResponse(ResponseResult response, String successMessage, String failureMessage) {
+        Platform.runLater(() -> {
+            if (response.statusCode() == 200) {
+                statusLabel.setText(successMessage);
+                statusLabel.setStyle("-fx-text-fill: green;");
+                submitButton.setDisable(true);
+            } else {
+                statusLabel.setText(failureMessage + ": " + response.body());
+                statusLabel.setStyle("-fx-text-fill: red;");
+                submitButton.setDisable(false);
+            }
+            statusLabel.setVisible(true);
+        });
+    }
+
+    private Void handleException(Throwable ex) {
+        Platform.runLater(() -> {
+            statusLabel.setText("Error: " + ex.getMessage());
+            statusLabel.setStyle("-fx-text-fill: red;");
+            statusLabel.setVisible(true);
+            submitButton.setDisable(false);
+        });
+        return null;
+    }
+
+
 
     @FXML
     private void handleCancel(ActionEvent event) {
         try {
-            stageInitializer.loadStage(FXMLResourceEnum.USER_MOVIE);
+            if (opinion == null) {
+                stageInitializer.loadStage(FXMLResourceEnum.USER_MOVIE);
+            } else {
+                opinion = null;
+                stageInitializer.loadStage(FXMLResourceEnum.USER_OPINIONS);
+            }
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void closeWindow() {
-        Stage stage = (Stage) movieTitleLabel.getScene().getWindow();
-        stage.close();
+    public void setOpinionDto(OpinionDto opinionDto, MovieDto movie) {
+        setMovie(movie);
+        this.opinion = opinionDto;
+        loadEditOpinion();
+    }
+
+    private void loadEditOpinion() {
+        ratingSlider.setValue(opinion.rating());
+        commentTextArea.setText(opinion.comment());
     }
 }

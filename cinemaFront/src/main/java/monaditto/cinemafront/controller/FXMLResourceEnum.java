@@ -30,7 +30,8 @@ public enum FXMLResourceEnum {
     CASHIER_SCREENINGS,
     CASHIER_PURCHASES,
     CASHIER_BUY_TICKETS,
-    RATE_PANEL;
+    RATE_PANEL,
+    USER_OPINIONS;
 
     public Resource getResource() {
         String resourceUrl = switch(this) {
@@ -61,6 +62,7 @@ public enum FXMLResourceEnum {
             case CASHIER_PURCHASES -> "fxml/CashierPurchases.fxml";
             case CASHIER_BUY_TICKETS -> "fxml/CashierBuyTickets.fxml";
             case RATE_PANEL -> "fxml/RatePanel.fxml";
+            case USER_OPINIONS -> "fxml/UserOpinions.fxml";
         };
 
         return new ClassPathResource(resourceUrl);

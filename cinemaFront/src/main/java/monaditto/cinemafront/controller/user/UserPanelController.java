@@ -86,6 +86,15 @@ public class UserPanelController {
     }
 
     @FXML
+    private void handleOpinions(ActionEvent event) {
+        try {
+            stageInitializer.loadStage(FXMLResourceEnum.USER_OPINIONS);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
     private void initialize() {
         backgroundRectangle.widthProperty().bind(rootPane.widthProperty());
         backgroundRectangle.heightProperty().bind(rootPane.heightProperty());

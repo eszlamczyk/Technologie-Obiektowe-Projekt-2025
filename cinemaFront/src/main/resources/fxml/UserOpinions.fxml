@@ -1,0 +1,33 @@
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+
+
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Button?>
+<AnchorPane stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.user.UserOpinionsController"
+            fx:id="rootPane" prefHeight="800" prefWidth="800">
+
+    <StackPane>
+        <Rectangle fx:id="backgroundRectangle" fill="AQUAMARINE" stroke="#ffffff8b" strokeType="INSIDE"/>
+
+        <VBox spacing="20" alignment="TOP_CENTER">
+            <Label text="Your Opinions" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
+
+            <ListView fx:id="opinionsListView" prefHeight="600.0" prefWidth="600.0"/>
+
+            <HBox spacing="10" alignment="CENTER">
+                <Button fx:id="goBack" text="Go Back" onAction="#handleGoBack" />
+                <Button fx:id="editButton" text="Edit Opinion" onAction="#handleEditOpinion" />
+                <Button fx:id="deleteButton" text="Delete Opinion" onAction="#handleDeleteOpinion" />
+            </HBox>
+
+        </VBox>
+
+    </StackPane>
+
+</AnchorPane>

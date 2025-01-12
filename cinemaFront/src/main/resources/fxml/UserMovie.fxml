@@ -1,7 +1,6 @@
 <?import javafx.scene.layout.AnchorPane?>
 
 <?import javafx.scene.control.ListView?>
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.HBox?>
@@ -23,7 +22,7 @@
                 </HBox>
                 <ListView fx:id="moviesListView" maxWidth="600"/>
                 <HBox spacing="10" alignment="CENTER">
-                    <Button text="Rate" fx:id="rateButton" styleClass="moviesButton" />
+                    <Button text="Rate" fx:id="rateButton" styleClass="moviesButton" onAction="#handleRate" />
                 </HBox>
             </VBox>
             <Button text="Go Back" styleClass="moviesButton" onAction="#handleGoBack" />

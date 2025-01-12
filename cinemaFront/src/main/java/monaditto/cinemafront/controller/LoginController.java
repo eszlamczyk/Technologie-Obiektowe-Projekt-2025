@@ -14,6 +14,7 @@ import javafx.scene.shape.Rectangle;
 import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.clientapi.LoginClientAPI;
 import monaditto.cinemafront.controller.handler.LoginHandler;
+import monaditto.cinemafront.session.SessionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -44,17 +45,19 @@ public class LoginController {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    private final SessionContext sessionContext;
 
     private final LoginClientAPI loginClientAPI;
     @Autowired
-    public LoginController(StageInitializer stageInitializer, LoginClientAPI loginClientAPI) {
+    public LoginController(StageInitializer stageInitializer, LoginClientAPI loginClientAPI, SessionContext sessionContext) {
         this.stageInitializer = stageInitializer;
         this.loginClientAPI = loginClientAPI;
+        this.sessionContext = sessionContext;
     }
 
     @FXML
     private void login(ActionEvent event) {
-        LoginHandler loginHandler = new LoginHandler(loginClientAPI, objectMapper, stageInitializer, lblLogin);
+        LoginHandler loginHandler = new LoginHandler(loginClientAPI, objectMapper, stageInitializer, lblLogin, sessionContext);
         loginHandler.handleLogin(getEmail(),getPassword());
     }
 

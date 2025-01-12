@@ -10,6 +10,7 @@ import monaditto.cinemafront.controller.FXMLResourceEnum;
 import monaditto.cinemafront.controller.DTO.AuthResponse;
 import monaditto.cinemafront.databaseMapping.RoleDto;
 import monaditto.cinemafront.request.RequestBuilder;
+import monaditto.cinemafront.session.SessionContext;
 
 import java.io.IOException;
 import java.net.http.HttpResponse;
@@ -22,6 +23,7 @@ public class LoginHandler {
     private final ObjectMapper objectMapper;
     private final StageInitializer stageInitializer;
     private final Label lblLogin;
+    private final SessionContext sessionContext;
 
     private static final List<String> ROLE_PRIORITY = List.of("user", "cashier", "admin");
 
@@ -32,11 +34,12 @@ public class LoginHandler {
     );
 
     public LoginHandler(LoginClientAPI loginClientAPI, ObjectMapper objectMapper,
-                        StageInitializer stageInitializer, Label lblLogin) {
+                        StageInitializer stageInitializer, Label lblLogin, SessionContext sessionContext) {
         this.loginClientAPI = loginClientAPI;
         this.objectMapper = objectMapper;
         this.stageInitializer = stageInitializer;
         this.lblLogin = lblLogin;
+        this.sessionContext = sessionContext;
     }
 
     public void handleLogin(String email, String password) {
@@ -47,7 +50,14 @@ public class LoginHandler {
 
     private void handleLoginResponse(HttpResponse<String> response) {
         if (response.statusCode() == 200) {
-            processSuccessfulLogin(response);
+            try{
+                AuthResponse authResponse = objectMapper.readValue(response.body(), AuthResponse.class);
+                sessionContext.setUserId(authResponse.userID());
+                processSuccessfulLogin(response);
+            } catch (JsonProcessingException e) {
+                updateLoginLabel("Error parsing response: " + e.getMessage());
+            }
+
         } else {
             updateLoginLabel("Login Failed: " + response.body());
         }

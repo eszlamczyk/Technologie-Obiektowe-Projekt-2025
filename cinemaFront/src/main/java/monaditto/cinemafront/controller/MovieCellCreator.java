@@ -6,6 +6,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import monaditto.cinemafront.databaseMapping.MovieDto;
+import monaditto.cinemafront.databaseMapping.MovieWithAverageRatingDto;
 import monaditto.cinemafront.request.PosterDownloader;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +28,21 @@ public class MovieCellCreator {
         VBox vBox = getDescription(movieDto);
 
         hBox.getChildren().addAll(imageView, vBox);
+        return hBox;
+    }
+
+
+    public HBox createMovieCell(MovieWithAverageRatingDto movieWithAverageRatingDto) {
+        HBox hBox = new HBox(10);
+        hBox.setStyle("-fx-padding: 10;");
+
+        ImageView imageView = getImageView(movieWithAverageRatingDto.movieDto());
+
+        VBox vBox = getDescription(movieWithAverageRatingDto.movieDto());
+
+        Label label = new Label("Average rating = " + movieWithAverageRatingDto.averageRating().toString());
+
+        hBox.getChildren().addAll(imageView, vBox, label);
         return hBox;
     }
 

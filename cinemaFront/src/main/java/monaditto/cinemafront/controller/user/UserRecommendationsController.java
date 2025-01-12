@@ -20,6 +20,7 @@ import monaditto.cinemafront.clientapi.MovieClientAPI;
 import monaditto.cinemafront.controller.FXMLResourceEnum;
 import monaditto.cinemafront.controller.MovieCellCreator;
 import monaditto.cinemafront.databaseMapping.MovieDto;
+import monaditto.cinemafront.databaseMapping.MovieWithAverageRatingDto;
 import monaditto.cinemafront.request.PosterDownloader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -40,15 +41,18 @@ public class UserRecommendationsController {
     @FXML
     private ListView<MovieDto> comingSoonMoviesListView;
 
-    private ObservableList<MovieDto> recommendedMovieDtoList;
+    private ObservableList<MovieWithAverageRatingDto> recommendedMovieDtoList;
 
     @FXML
-    private ListView<MovieDto> recommendedMoviesListView;
+    private ListView<MovieWithAverageRatingDto> recommendedMoviesListView;
 
-    private ObservableList<MovieDto> highestRatedMovieDtoList;
+    private ObservableList<MovieWithAverageRatingDto> highestRatedMovieDtoList;
 
     @FXML
-    private ListView<MovieDto> highestRatedMoviesListView;
+    private ListView<MovieWithAverageRatingDto> highestRatedMoviesListView;
+
+    @FXML
+    private Label recommendedMoviesEmptyLabel;
 
     @FXML
     private ScrollPane scrollPane;
@@ -78,9 +82,9 @@ public class UserRecommendationsController {
         comingSoonMovieDtoList = FXCollections.observableArrayList();
         initializeMovieListView(comingSoonMovieDtoList, comingSoonMoviesListView);
         recommendedMovieDtoList = FXCollections.observableArrayList();
-        initializeMovieListView(recommendedMovieDtoList, recommendedMoviesListView);
+        initializeMovieWithRatingsListView(recommendedMovieDtoList, recommendedMoviesListView);
         highestRatedMovieDtoList = FXCollections.observableArrayList();
-        initializeMovieListView(highestRatedMovieDtoList, highestRatedMoviesListView);
+        initializeMovieWithRatingsListView(highestRatedMovieDtoList, highestRatedMoviesListView);
     }
 
     private void initializeMovieListView(ObservableList<MovieDto> movieDtoList, ListView<MovieDto> moviesListView) {
@@ -101,6 +105,26 @@ public class UserRecommendationsController {
         });
     }
 
+
+    private void initializeMovieWithRatingsListView(ObservableList<MovieWithAverageRatingDto> movieDtoList,
+                                                    ListView<MovieWithAverageRatingDto> moviesListView) {
+        moviesListView.setItems(movieDtoList);
+
+        moviesListView.setCellFactory(list -> new ListCell<>() {
+            @Override
+            protected void updateItem(MovieWithAverageRatingDto movieWithAverageRatingDto, boolean empty) {
+                super.updateItem(movieWithAverageRatingDto, empty);
+                if (empty || movieWithAverageRatingDto == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    HBox hBox = movieCellCreator.createMovieCell(movieWithAverageRatingDto);
+                    setGraphic(hBox);
+                }
+            }
+        });
+    }
+
     private void initializeResponsiveness() {
         scrollPane.prefHeightProperty().bind(rootPane.heightProperty());
         scrollPane.prefWidthProperty().bind(rootPane.widthProperty());
@@ -113,13 +137,24 @@ public class UserRecommendationsController {
                 .thenAccept(comingSoonMovieDtoList::addAll)
                 .thenRun(() -> comingSoonMoviesListView.setPrefHeight(130 * comingSoonMovieDtoList.size()));
 
-        movieClientAPI.loadMovies()
+        movieClientAPI.loadRecommendedMovies(2L)
                 .thenAccept(recommendedMovieDtoList::addAll)
-                .thenRun(() -> recommendedMoviesListView.setPrefHeight(130 * recommendedMovieDtoList.size()));
+                .thenRun(this::updateRecommendedMoviesView);
 
-        movieClientAPI.loadMovies()
+        movieClientAPI.loadTopRatedMovies()
                 .thenAccept(highestRatedMovieDtoList::addAll)
                 .thenRun(() -> highestRatedMoviesListView.setPrefHeight(130 * highestRatedMovieDtoList.size()));
+    }
+
+    private void updateRecommendedMoviesView() {
+        if (recommendedMovieDtoList.isEmpty()) {
+            recommendedMoviesEmptyLabel.setVisible(true);
+            recommendedMoviesListView.setVisible(false);
+        } else {
+            recommendedMoviesEmptyLabel.setVisible(false);
+            recommendedMoviesListView.setVisible(true);
+            recommendedMoviesListView.setPrefHeight(130 * recommendedMovieDtoList.size());
+        }
     }
 
     private void initializeButtons() {

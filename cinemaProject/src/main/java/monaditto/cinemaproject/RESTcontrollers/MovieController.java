@@ -2,10 +2,7 @@ package monaditto.cinemaproject.RESTcontrollers;
 
 import jakarta.annotation.security.RolesAllowed;
 import monaditto.cinemaproject.category.CategoryDto;
-import monaditto.cinemaproject.movie.CreateMovieStatus;
-import monaditto.cinemaproject.movie.MovieDto;
-import monaditto.cinemaproject.movie.MovieService;
-import monaditto.cinemaproject.movie.MovieWithCategoriesDto;
+import monaditto.cinemaproject.movie.*;
 import monaditto.cinemaproject.status.Status;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -35,6 +32,19 @@ public class MovieController {
     @GetMapping("/coming-soon")
     public ResponseEntity<List<MovieDto>> getComingSoonMovies() {
         return ResponseEntity.ok().body(movieService.getComingSoonMovies());
+    }
+
+
+    @RolesAllowed({"USER"})
+    @GetMapping("/recommended/{id}")
+    public ResponseEntity<List<MovieWithAverageRatingDto>> getRecommendedMovies(@PathVariable("id") Long id) {
+        return ResponseEntity.ok().body(movieService.getRecommendedMovies(id));
+    }
+
+    @RolesAllowed({"USER"})
+    @GetMapping("/top-rated")
+    public ResponseEntity<List<MovieWithAverageRatingDto>> getTopRatedMovies() {
+        return ResponseEntity.ok().body(movieService.getTopRatedMovies());
     }
 
     @RolesAllowed({"ADMIN","CASHIER", "USER"})

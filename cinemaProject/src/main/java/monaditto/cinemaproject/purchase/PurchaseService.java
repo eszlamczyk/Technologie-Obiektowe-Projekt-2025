@@ -1,5 +1,6 @@
 package monaditto.cinemaproject.purchase;
 
+import monaditto.cinemaproject.category.CategoryRepository;
 import monaditto.cinemaproject.screening.Screening;
 import monaditto.cinemaproject.screening.ScreeningRepository;
 import monaditto.cinemaproject.user.UserRepository;
@@ -24,6 +25,9 @@ public class PurchaseService {
     @Autowired
     private ScreeningRepository screeningRepository;
 
+    @Autowired
+    private CategoryRepository categoryRepository;
+
     public List<Purchase> findAll() {
         return purchaseRepository.findAll();
     }
@@ -42,6 +46,16 @@ public class PurchaseService {
 
     public List<Purchase> findByStatus(ReservationStatus status) {
         return purchaseRepository.findByReservationStatus(status);
+    }
+
+    public Long getMostPurchasedCategoryIdForUser(Long userId) {
+        List<Object[]> result = categoryRepository.findMostPurchasedCategoryByUserId(userId);
+
+        if (result.isEmpty()) {
+            return 0L;
+        }
+
+        return (Long) result.get(0)[0];
     }
 
     public Purchase create(PurchaseDto purchaseDto) {

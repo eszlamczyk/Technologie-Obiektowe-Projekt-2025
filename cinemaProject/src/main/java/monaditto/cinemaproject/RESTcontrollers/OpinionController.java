@@ -36,9 +36,15 @@ public class OpinionController {
     }
 
     @RolesAllowed({"ADMIN","CASHIER", "USER"})
-    @GetMapping("/{movieId}")
-    public ResponseEntity<List<OpinionDto>> getOpinionsFor(@PathVariable Long movieId) {
-        return ResponseEntity.ok(opinionService.getOpinionsFor(movieId));
+    @GetMapping("/movie/{movieId}")
+    public ResponseEntity<List<OpinionDto>> getOpinionsForMovie(@PathVariable Long movieId) {
+        return ResponseEntity.ok(opinionService.getOpinionsForMovie(movieId));
+    }
+
+    @RolesAllowed({"ADMIN","CASHIER", "USER"})
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<OpinionDto>> getOpinionsForUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(opinionService.getOpinionsForUser(userId));
     }
 
     @RolesAllowed({"ADMIN","CASHIER", "USER"})

@@ -50,7 +50,7 @@ public class OpinionService {
         return new OpinionId(new User(userId), new Movie(movieId));
     }
 
-    public List<OpinionDto> getOpinionsFor(Long movieId) {
+    public List<OpinionDto> getOpinionsForMovie(Long movieId) {
         List<Opinion> opinions = opinionRepository.findByMovieId(movieId);
         return opinions.stream().map(OpinionDto::opinionToOpinionDto).toList();
     }
@@ -73,5 +73,10 @@ public class OpinionService {
 
         OpinionId opinionId = getOpinionId(userId, movieId);
         opinionRepository.deleteById(opinionId);
+    }
+
+    public List<OpinionDto> getOpinionsForUser(Long userId) {
+        List<Opinion> opinions = opinionRepository.findByUserId(userId);
+        return opinions.stream().map(OpinionDto::opinionToOpinionDto).toList();
     }
 }

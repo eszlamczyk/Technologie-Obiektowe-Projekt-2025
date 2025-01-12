@@ -22,6 +22,10 @@
                     <Label text="COMING SOON" styleClass="moviesLabel"/>
                     <ListView fx:id="comingSoonMoviesListView" prefHeight="200" maxWidth="600"/>
                     <Label text="YOU MAY ALSO LIKE" styleClass="moviesLabel"/>
+                    <Label fx:id="recommendedMoviesEmptyLabel"
+                           text="Watch your first movie to receive your recommendations"
+                           style="-fx-font-size: 14px;"
+                           visible="false"/>
                     <ListView fx:id="recommendedMoviesListView" prefHeight="200" maxWidth="600"/>
                     <Label text="HIGHEST RATED" styleClass="moviesLabel"/>
                     <ListView fx:id="highestRatedMoviesListView" prefHeight="200" maxWidth="600"/>

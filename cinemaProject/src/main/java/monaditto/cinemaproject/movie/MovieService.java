@@ -4,15 +4,17 @@ import monaditto.cinemaproject.category.Category;
 import monaditto.cinemaproject.category.CategoryDto;
 import monaditto.cinemaproject.category.CategoryRepository;
 import monaditto.cinemaproject.category.CategoryService;
+import monaditto.cinemaproject.opinion.OpinionRepository;
+import monaditto.cinemaproject.purchase.PurchaseService;
 import monaditto.cinemaproject.search.Trie;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -22,7 +24,11 @@ public class MovieService {
 
     private final CategoryRepository categoryRepository;
 
+    private final OpinionRepository opinionRepository;
+
     private final CategoryService categoryService;
+
+    private final PurchaseService purchaseService;
 
     private final MovieValidator movieValidator;
 
@@ -31,13 +37,17 @@ public class MovieService {
     @Autowired
     public MovieService(MovieRepository movieRepository,
                         CategoryRepository categoryRepository,
+                        OpinionRepository opinionRepository,
                         MovieValidator movieValidator,
                         CategoryService categoryService,
+                        PurchaseService purchaseService,
                         Trie trie) {
         this.movieRepository = movieRepository;
         this.categoryRepository = categoryRepository;
+        this.opinionRepository = opinionRepository;
         this.movieValidator = movieValidator;
         this.categoryService = categoryService;
+        this.purchaseService = purchaseService;
         this.trie = trie;
 
         buildTrie();
@@ -60,6 +70,58 @@ public class MovieService {
                 .map(MovieDto::movieToMovieDto)
                 .limit(5)
                 .toList();
+    }
+
+    public List<MovieWithAverageRatingDto> getTopRatedMovies() {
+        List<Object[]> topRatedMovies = movieRepository.findTopRatedMovies();
+        return topRatedMovies.stream()
+                .limit(7)
+                .map(result -> {
+                    Movie movie = (Movie) result[0];
+                    Double avgRating = (Double) result[1];
+                    return new MovieWithAverageRatingDto(MovieDto.movieToMovieDto(movie), avgRating);
+                })
+                .toList();
+    }
+
+    public List<MovieWithAverageRatingDto> getRecommendedMovies(Long userId) {
+        Long categoryId = purchaseService.getMostPurchasedCategoryIdForUser(userId);
+        System.out.println("jestem tu");
+        if (categoryId == 0) {
+            System.out.println("dupa");
+            return new ArrayList<>();
+        }
+
+        List<Movie> recommendedNotWatchedMovies =
+                movieRepository.findMoviesByCategoryAndNotWatchedByUser(categoryId, userId, LocalDateTime.now());
+
+        List<MovieWithAverageRatingDto> recommendations = computeAverageRatings(recommendedNotWatchedMovies);
+        recommendations.sort(Comparator.comparingDouble(MovieWithAverageRatingDto::averageRating).reversed());
+
+        if (recommendations.size() < 7) {
+            List<Movie> randomMovies = movieRepository.findMoviesNotWatchedByUser(userId);
+            Collections.shuffle(randomMovies);
+            randomMovies = randomMovies.subList(0, 7);
+            List<MovieWithAverageRatingDto> randomRecommendations = computeAverageRatings(randomMovies);
+
+            recommendations.addAll(randomRecommendations);
+        }
+
+        System.out.println("jestem tam");
+
+        return recommendations.stream().limit(7).collect(Collectors.toList());
+    }
+
+    private List<MovieWithAverageRatingDto> computeAverageRatings(List<Movie> movies) {
+        List<MovieWithAverageRatingDto> moviesWithAverageRating = new ArrayList<>();
+        for (Movie movie : movies) {
+            Double averageRating = opinionRepository.findAverageRatingByMovieId(movie.getId());
+            MovieWithAverageRatingDto recommendation =
+                    new MovieWithAverageRatingDto(MovieDto.movieToMovieDto(movie), averageRating);
+            moviesWithAverageRating.add(recommendation);
+        }
+
+        return moviesWithAverageRating;
     }
 
     public List<MovieDto> searchMovies(String query) {

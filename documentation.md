@@ -4180,6 +4180,8 @@ public class AdminMoviesController {
 `EditMovie.fxml`
 ![](img/ui/edit-movie.png)
 
+
+
 ```xml
 <AnchorPane stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.admin.AdminEditMovieController"
@@ -5455,8 +5457,930 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
 }
 ```
 
+## Kasjer
+istnieje jest właściwie rzecz biorąc bardzo podobny do admina (używa siostrzanych klas). Nie widze potrzeby pisac tutaj niczego dodatkowego bo nic nowego tu nie ma 
+
+### FXMLe:
+
+#### Kupowanie biletów
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.text.Font?>
+<?import javafx.geometry.Insets?>
+<AnchorPane fx:id="rootPane" prefHeight="800" prefWidth="800" stylesheets="@../../styles/Styles.css"
+            xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="monaditto.cinemafront.controller.cashier.CashierBuyTicketsController">
+    <VBox spacing="20">
+        <padding>
+            <Insets top="24" right="24" bottom="24" left="24"/>
+        </padding>
+        <VBox spacing="10">
+            <Label text="Buy tickets">
+                <font>
+                    <Font size="32.0"/>
+                </font>
+            </Label>
+            <Label fx:id="movieNameLabel">
+                <font>
+                    <Font size="24.0"/>
+                </font>
+            </Label>
+            <Label fx:id="movieTimeLabel">
+                <font>
+                    <Font size="24.0"/>
+                </font>
+            </Label>
+        </VBox>
+        <Label fx:id="errorLabel" />
+        <VBox>
+            <Label text="UserId"/>
+            <TextField fx:id="userIdField"/>
+        </VBox>
+        <VBox>
+            <Label text="Number of seats"/>
+            <TextField fx:id="numOfSeatsField"/>
+        </VBox>
+        <HBox spacing="10">
+            <Button text="Cancel" onAction="#handleCancel" />
+            <Button text="Buy" onAction="#handleBuy" />
+        </HBox>
+    </VBox>
+</AnchorPane>
+```
+
+i controler
+
+```java
+@Controller
+public class CashierBuyTicketsController {
+
+    private final StageInitializer stageInitializer;
+
+    private final PurchaseClientAPI purchaseClientAPI;
+    public AnchorPane rootPane;
+
+    private ScreeningDto screeningDto;
+
+    @FXML
+    private Label movieNameLabel;
+
+    @FXML
+    private Label movieTimeLabel;
+
+    @FXML
+    private Label errorLabel;
+
+    @FXML
+    private TextField userIdField;
+
+    @FXML
+    private TextField numOfSeatsField;
+
+    @Autowired
+    public CashierBuyTicketsController(StageInitializer stageInitializer, PurchaseClientAPI purchaseClientAPI) {
+        this.stageInitializer = stageInitializer;
+        this.purchaseClientAPI = purchaseClientAPI;
+    }
+
+    @FXML
+    private void initialize() {
+        ChangeListener<String> listener = (observable, oldValue, newValue) -> {
+            if (!newValue.matches("\\d*")) {
+                numOfSeatsField.setText(newValue.replaceAll("\\D", ""));
+            } else if (!newValue.isEmpty()) {
+                try {
+                    int value = Integer.parseInt(newValue);
+                    if (value < 1) {
+                        numOfSeatsField.setText(oldValue);
+                    }
+                } catch (NumberFormatException e) {
+                    numOfSeatsField.setText(oldValue);
+                }
+            }
+        };
+        //userIdField.textProperty().addListener(listener);
+        numOfSeatsField.textProperty().addListener(listener);
+        numOfSeatsField.setText("1");
+    }
+
+    public void setScreeningDto(ScreeningDto screeningDto) {
+        this.screeningDto = screeningDto;
+        this.movieTimeLabel.setText("Starting at " + screeningDto.start());
+    }
+
+    public void setMovieName(String movieName) {
+        this.movieNameLabel.setText("Movie name: " + movieName);
+    }
+
+    @FXML
+    public void handleBuy(ActionEvent event) {
+        Long userId = Long.valueOf(userIdField.getText());
+        int numOfSeats = Integer.parseInt(numOfSeatsField.getText());
+        var purchaseDto = new PurchaseDto(1L, userId, screeningDto.id(), numOfSeats, ReservationStatus.UNPAID);
+        purchaseClientAPI.createPurchase(purchaseDto)
+                .thenAccept(result -> {
+                    Platform.runLater(() -> {
+                        switch (result.statusCode()) {
+                            case 200 -> {
+                                try {
+                                    stageInitializer.loadStage(FXMLResourceEnum.CASHIER_PURCHASES);
+                                } catch (IOException e) {
+                                    showError("Error navigating to screenings page: " + e.getMessage());
+                                }
+                            }
+                            case 400 -> showError("Invalid purchase request. Please check your inputs.");
+                            case 409 -> showError("Cannot complete purchase. Seats might not be available.");
+                            case 500 -> showError("Server error. Please try again later.");
+                            default -> showError("Unexpected error occurred. Please try again.");
+                        }
+                    });
+                })
+                .exceptionally(throwable -> {
+                    Platform.runLater(() ->
+                            showError("Connection error: " + throwable.getMessage()));
+                    return null;
+                });
+    }
+
+    private void showError(String message) {
+        errorLabel.setText(message);
+        errorLabel.setVisible(true);
+        errorLabel.setStyle("-fx-text-fill: red;");
+    }
+
+    @FXML
+    public void handleCancel(ActionEvent event) {
+        try {
+            stageInitializer.loadStage(FXMLResourceEnum.CASHIER_SCREENINGS);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+```
+
+#### Przeglądanie filmów
+
+```xml
+<?import javafx.scene.layout.AnchorPane?>
+
+<?import javafx.scene.control.ListView?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.shape.Rectangle?>
+<AnchorPane stylesheets="@../../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.cashier.CashierMoviesController"
+            fx:id="rootPane" prefHeight="600" prefWidth="800">
+    <StackPane>
+        <Rectangle fx:id="backgroundRectangle" fill="CADETBLUE" stroke="#ffffff8b" strokeType="INSIDE"/>
+        <VBox spacing="20" alignment="CENTER">
+            <Label text="ALL MOVIES" styleClass="moviesLabel"/>
+            <VBox spacing="10" prefWidth="600" prefHeight="300" alignment="CENTER">
+                <ListView fx:id="moviesListView" maxWidth="600"/>
+            </VBox>
+            <Button text="Go Back" styleClass="moviesButton" onAction="#handleGoBack" />
+        </VBox>
+    </StackPane>
+</AnchorPane>
+```
+
+i controler
+
+```java
+@Controller
+public class CashierMoviesController {
+
+    private final StageInitializer stageInitializer;
+
+    private ObservableList<MovieDto> movieDtoList;
+
+    @Autowired
+    private MovieClientAPI movieClientAPI;
+
+    @FXML
+    private ListView<MovieDto> moviesListView;
+
+    @FXML
+    private Rectangle backgroundRectangle;
+
+    @FXML
+    private AnchorPane rootPane;
+
+    public CashierMoviesController(StageInitializer stageInitializer) {
+        this.stageInitializer = stageInitializer;
+    }
+
+    @FXML
+    private void initialize() {
+        initializeMovieListView();
+        initializeResponsiveness();
+        loadMovies();
+    }
+
+    private void initializeMovieListView() {
+        movieDtoList = FXCollections.observableArrayList();
+        moviesListView.setItems(movieDtoList);
+
+        moviesListView.setCellFactory(list -> new ListCell<>() {
+            @Override
+            protected void updateItem(MovieDto movieDto, boolean empty) {
+                super.updateItem(movieDto, empty);
+                if (empty || movieDto == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(movieDto.title() + " (" + movieDto.releaseDate().getYear() + ")");
+                }
+            }
+        });
+
+    }
+
+    private void initializeResponsiveness() {
+        backgroundRectangle.widthProperty().bind(rootPane.widthProperty());
+        backgroundRectangle.heightProperty().bind(rootPane.heightProperty());
+    }
+
+    private void loadMovies() {
+        movieClientAPI.loadMovies()
+                .thenAccept(movieDtoList::addAll);
+    }
+
+    @FXML
+    private void handleGoBack() {
+        try {
+            stageInitializer.loadStage(FXMLResourceEnum.CASHIER_PANEL);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+```
+
+#### Panel główny
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.layout.AnchorPane?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Button?>
+
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.shape.Rectangle?>
+<AnchorPane stylesheets="@../../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.cashier.CashierPanelController"
+            fx:id="rootPane" prefHeight="800" prefWidth="800">
+
+    <StackPane>
+        <Rectangle fx:id="backgroundRectangle" fill="AQUAMARINE" stroke="#ffffff8b" strokeType="INSIDE"/>
+        <VBox spacing="30" style="-fx-padding: 24" alignment="CENTER">
+            <Label text="Siema siema kasowniku co tam?" styleClass="adminPanelLabel"/>
+            <Button fx:id="moviesButton" styleClass="adminPanelButton" text="Display Movies" onAction="#handleMovies"/>
+            <Button fx:id="screeningsButton" styleClass="adminPanelButton" text="Display Screenings" onAction="#handleScreenings"/>
+            <Button fx:id="purchasesButton" styleClass="adminPanelButton" text="Purchases" onAction="#handlePurchases"/>
+            <Button fx:id="signOutButton" styleClass="adminPanelButton" text="Sign out" onAction="#handleSignOut"/>
+        </VBox>
+    </StackPane>
+
+</AnchorPane>
+```
+
+i controler
+
+```java
+
+@Controller
+public class CashierPanelController {
+
+    @FXML
+    public Rectangle backgroundRectangle;
+    @FXML
+    public Button moviesButton;
+    @FXML
+    public Button screeningsButton;
+    @FXML
+    public Button purchasesButton;
+    @FXML
+    public Button signOutButton;
+
+    private final StageInitializer stageInitializer;
+
+    public AnchorPane rootPane;
+
+    public CashierPanelController(StageInitializer stageInitializer) {
+        this.stageInitializer = stageInitializer;
+    }
 
 
+    @FXML
+    private void handleMovies() {
+        try {
+            stageInitializer.loadStage(FXMLResourceEnum.CASHIER_MOVIE);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
+    private void handleScreenings() {
+        try {
+            stageInitializer.loadStage(FXMLResourceEnum.CASHIER_SCREENINGS);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
+    public void handlePurchases() {
+        try {
+            stageInitializer.loadStage(FXMLResourceEnum.CASHIER_PURCHASES);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
+    private void handleSignOut() {
+        try {
+            stageInitializer.loadStage(FXMLResourceEnum.LOGIN);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
+    private void initialize() {
+        backgroundRectangle.widthProperty().bind(rootPane.widthProperty());
+        backgroundRectangle.heightProperty().bind(rootPane.heightProperty());
+
+        List<Button> buttons = List.of(moviesButton, screeningsButton, signOutButton);
+        buttons.forEach(this::initializeButtons);
+    }
+
+    private void initializeButtons(Button button) {
+        button.setOnMouseEntered(e -> button.setCursor(Cursor.HAND));
+        button.setOnMouseExited(e -> button.setCursor(Cursor.DEFAULT));
+    }
+}
+```
+
+
+#### Lista zakupów / potwierdzenie zakupu
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.geometry.Insets?>
+<AnchorPane fx:id="rootPane" prefHeight="800" prefWidth="800" stylesheets="@../../styles/Styles.css"
+            xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="monaditto.cinemafront.controller.cashier.CashierPurchasesController">
+    <VBox spacing="10">
+        <padding>
+            <Insets top="20" right="20" bottom="20" left="20"/>
+        </padding>
+
+        <Label text="All Purchases" style="-fx-font-size: 20; -fx-font-weight: bold;"/>
+
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <TextField fx:id="movieTitleFilter" promptText="Screening ID" prefWidth="150"/>
+            <ComboBox fx:id="statusFilter" prefWidth="150"/>
+            <Button fx:id="clearFiltersButton" text="Clear Filters"/>
+        </HBox>
+
+        <StackPane VBox.vgrow="ALWAYS">
+            <ListView fx:id="purchaseListView" prefWidth="752" />
+            <ProgressIndicator fx:id="loadingIndicator" visible="false"/>
+        </StackPane>
+
+        <Label fx:id="errorLabel" visible="false" style="-fx-text-fill: red;"/>
+
+        <Button text="Back to Dashboard" onAction="#handleBack"/>
+    </VBox>
+</AnchorPane>
+```
+
+i controler
+
+
+```java
+@Controller
+public class CashierPurchasesController {
+    private final StageInitializer stageInitializer;
+    private final PurchaseClientAPI purchaseClientAPI;
+
+    @FXML
+    private ListView<PurchaseResponseDto> purchaseListView;
+    @FXML
+    private Label errorLabel;
+    @FXML
+    private TextField movieTitleFilter;
+    @FXML
+    private ComboBox<ReservationStatus> statusFilter;
+    @FXML
+    private Button clearFiltersButton;
+
+    @Autowired
+    public CashierPurchasesController(StageInitializer stageInitializer,
+                                    PurchaseClientAPI purchaseClientAPI) {
+        this.stageInitializer = stageInitializer;
+        this.purchaseClientAPI = purchaseClientAPI;
+    }
+
+    @FXML
+    private void initialize() {
+        setupFilters();
+        setupListView();
+        loadAllPurchases();
+    }
+
+    private void setupFilters() {
+        movieTitleFilter.setPromptText("Filter by Movie Title");
+        movieTitleFilter.textProperty().addListener((observable, oldValue, newValue) -> {
+            applyFilters();
+        });
+
+        statusFilter.getItems().addAll(ReservationStatus.values());
+        statusFilter.setPromptText("Filter by Status");
+        statusFilter.setOnAction(e -> applyFilters());
+
+        clearFiltersButton.setOnAction(e -> clearFilters());
+    }
+
+    private void setupListView() {
+        purchaseListView.setCellFactory(listView -> new PurchaseListCell(this::handlePayment, this::handleCancellation));
+        purchaseListView.setPlaceholder(new Label("No purchases found"));
+    }
+
+    private void loadAllPurchases() {
+        errorLabel.setVisible(false);
+
+        purchaseClientAPI.loadPurchases()
+                .thenAccept(purchases -> {
+                    Platform.runLater(() -> {
+                        purchaseListView.getItems().clear();
+                        purchaseListView.getItems().addAll(purchases);
+                    });
+                })
+                .exceptionally(throwable -> {
+                    Platform.runLater(() -> {
+                        showError("Error loading purchases: " + throwable.getMessage());
+                    });
+                    return null;
+                });
+    }
+
+
+    private void handlePayment(Long purchaseId) {
+        purchaseClientAPI.confirmPurchase(purchaseId)
+                .thenAccept(result -> {
+                    Platform.runLater(() -> {
+                        if (result.statusCode() == 200) {
+                            loadAllPurchases();
+                        } else {
+                            showError("Failed to process payment: " + result.body());
+                        }
+                    });
+                })
+                .exceptionally(throwable -> {
+                    Platform.runLater(() ->
+                            showError("Error processing payment: " + throwable.getMessage()));
+                    return null;
+                });
+    }
+
+    private void handleCancellation(Long purchaseId) {
+        purchaseClientAPI.cancelPurchase(purchaseId)
+                .thenAccept(result -> {
+                    Platform.runLater(() -> {
+                        if (result.statusCode() == 200) {
+                            loadAllPurchases();
+                        } else {
+                            showError("Failed to cancel purchase: " + result.body());
+                        }
+                    });
+                })
+                .exceptionally(throwable -> {
+                    Platform.runLater(() ->
+                            showError("Error cancelling purchase: " + throwable.getMessage()));
+                    return null;
+                });
+    }
+
+    private void applyFilters() {
+        String movieTitle = movieTitleFilter.getText().toLowerCase().trim();
+        ReservationStatus selectedStatus = statusFilter.getValue();
+
+        if (movieTitle.isEmpty() && selectedStatus == null) {
+            loadAllPurchases();
+            return;
+        }
+
+        errorLabel.setVisible(false);
+
+        purchaseClientAPI.loadPurchases()
+                .thenAccept(purchases -> {
+                    Platform.runLater(() -> {
+                        List<PurchaseResponseDto> filteredPurchases = purchases;
+
+                        if (!movieTitle.isEmpty()) {
+                            filteredPurchases = filteredPurchases.stream()
+                                    .filter(p -> p.movieTitle().toLowerCase().contains(movieTitle))
+                                    .toList();
+                        }
+
+                        if (selectedStatus != null) {
+                            filteredPurchases = filteredPurchases.stream()
+                                    .filter(p -> p.status() == selectedStatus)
+                                    .toList();
+                        }
+
+                        purchaseListView.getItems().clear();
+                        purchaseListView.getItems().addAll(filteredPurchases);
+                    });
+                })
+                .exceptionally(throwable -> {
+                    Platform.runLater(() -> {
+                        showError("Error applying filters: " + throwable.getMessage());
+                    });
+                    return null;
+                });
+    }
+
+    private void clearFilters() {
+        movieTitleFilter.clear();
+        statusFilter.setValue(null);
+        loadAllPurchases();
+    }
+
+    private void showError(String message) {
+        errorLabel.setText(message);
+        errorLabel.setVisible(true);
+    }
+
+    @FXML
+    public void handleBack(ActionEvent event) {
+        try {
+            stageInitializer.loadStage(FXMLResourceEnum.CASHIER_PANEL);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static class PurchaseListCell extends ListCell<PurchaseResponseDto> {
+        private final VBox content;
+        private final Label titleLabel;
+        private final Label detailsLabel;
+        private final Label statusLabel;
+        private final Label userNameLabel;
+        private final HBox buttonContainer;
+        private final Button payButton;
+        private final Button cancelButton;
+        private final Consumer<Long> onPay;
+        private final Consumer<Long> onCancel;
+
+
+        public PurchaseListCell(Consumer<Long> onPay, Consumer<Long> onCancel) {
+            this.onPay = onPay;
+            this.onCancel = onCancel;
+
+            content = new VBox(5);
+            content.setPadding(new Insets(10));
+            content.setStyle("-fx-background-color: white; -fx-border-color: #ddd; " +
+                    "-fx-border-radius: 5; -fx-background-radius: 5;");
+
+            titleLabel = new Label();
+            titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+
+            detailsLabel = new Label();
+            detailsLabel.setStyle("-fx-text-fill: #666;");
+
+            statusLabel = new Label();
+
+            userNameLabel = new Label();
+            userNameLabel.setStyle("-fx-font-style: italic; -fx-text-fill: #666;");
+
+            buttonContainer = new HBox(10);
+            buttonContainer.setAlignment(Pos.CENTER_RIGHT);
+
+            payButton = new Button("Mark as paid");
+            payButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; " +
+                    "-fx-background-radius: 15;");
+
+            cancelButton = new Button("Cancel");
+            cancelButton.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; " +
+                    "-fx-background-radius: 15;");
+
+            buttonContainer.getChildren().addAll(cancelButton, payButton);
+            content.getChildren().addAll(titleLabel, detailsLabel, statusLabel, userNameLabel, buttonContainer);
+        }
+
+        @Override
+        protected void updateItem(PurchaseResponseDto purchase, boolean empty) {
+            super.updateItem(purchase, empty);
+
+            titleLabel.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
+
+            if (empty || purchase == null) {
+                setGraphic(null);
+            } else {
+                titleLabel.setText(String.format(purchase.movieTitle() + " - " + purchase.screeningTime()));
+                detailsLabel.setText(String.format("%d " + (purchase.boughtSeats() > 1 ? "seats" : "seat"), purchase.boughtSeats()));
+                userNameLabel.setText("User Name: " + purchase.userName());
+                statusLabel.setText("Status: " + purchase.status());
+                switch (purchase.status()) {
+                    case UNPAID -> {
+                        statusLabel.setStyle("-fx-text-fill: #f44336;");
+                        buttonContainer.setVisible(true);
+                        payButton.setOnAction(e -> onPay.accept(purchase.id()));
+                        cancelButton.setOnAction(e -> onCancel.accept(purchase.id()));
+                    }
+                    case PAID -> {
+                        statusLabel.setStyle("-fx-text-fill: #4CAF50;");
+                        buttonContainer.setVisible(false);
+                    }
+                    case CANCELLED -> {
+                        statusLabel.setStyle("-fx-text-fill: #9e9e9e;");
+                        buttonContainer.setVisible(false);
+                    }
+                }
+
+                setGraphic(content);
+            }
+        }
+
+    }
+}
+```
+
+#### Lista seansów
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.shape.Rectangle?>
+<AnchorPane stylesheets="@../../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.cashier.CashierScreeningsController"
+            fx:id="rootPane" prefHeight="600" prefWidth="800">
+    <StackPane>
+        <Rectangle fx:id="backgroundRectangle" fill="CADETBLUE" stroke="#ffffff8b" strokeType="INSIDE"/>
+        <VBox spacing="20" alignment="CENTER">
+            <Label text="ALL SCREENINGS" styleClass="moviesLabel"/>
+            <HBox spacing="10" alignment="CENTER">
+                <Button text="Dzisiaj" fx:id="buttonToday" styleClass="moviesButton" onAction="#handleDateToday"/>
+                <Button text="Jutro" fx:id="buttonTomorrow" styleClass="moviesButton" onAction="#handleDateTomorrow"/>
+                <Button text="Pojutrze" fx:id="buttonPlusTwo" styleClass="moviesButton" onAction="#handleDate_plus_2"/>
+                <Button text="Popojutrze" fx:id="buttonPlusThree" styleClass="moviesButton" onAction="#handleDate_plus_3"/>
+                <Button text="Popopojutrze" fx:id="buttonPlusFour" styleClass="moviesButton" onAction="#handleDate_plus_4"/>
+            </HBox>
+            <VBox spacing="10" prefWidth="600" prefHeight="300" alignment="CENTER">
+                <ListView fx:id="screeningsListView" maxWidth="600"/>
+                <HBox spacing="10" alignment="CENTER">
+                    <Button text="Buy tickets!" fx:id="buyButton" styleClass="moviesButton" onAction="#handleBuyTickets" />
+                </HBox>
+            </VBox>
+            <Button text="Go Back" styleClass="moviesButton" onAction="#handleGoBack" />
+        </VBox>
+    </StackPane>
+</AnchorPane>
+
+i controler
+
+```java
+
+@Controller
+public class CashierScreeningsController {
+
+    private final StageInitializer stageInitializer;
+
+    private final BackendConfig backendConfig;
+
+    private ObservableList<ScreeningDto> screeningsDtoList;
+
+    private List<ScreeningDto> allScreenings;
+
+    private List<MovieDto> movieDtoList;
+
+    private Map<Long, String> movieMap;
+
+    @Autowired
+    private ScreeningClientAPI screeningClientAPI;
+
+    @Autowired
+    private MovieClientAPI movieClientAPI;
+
+    private final CashierBuyTicketsController buyTicketsController;
+
+    @FXML
+    private ListView<ScreeningDto> screeningsListView;
+
+    @FXML
+    private Rectangle backgroundRectangle;
+
+    @FXML
+    private AnchorPane rootPane;
+
+    @FXML
+    private Button buttonToday;
+
+    @FXML
+    private Button buttonTomorrow;
+
+    @FXML
+    private Button buttonPlusTwo;
+
+    @FXML
+    private Button buttonPlusThree;
+
+    @FXML
+    private Button buttonPlusFour;
+
+    @FXML
+    private Button buyButton;
+
+    public CashierScreeningsController(StageInitializer stageInitializer,
+                                       BackendConfig backendConfig,
+                                       CashierBuyTicketsController cashierBuyTicketsController) {
+        this.stageInitializer = stageInitializer;
+        this.backendConfig = backendConfig;
+        this.buyTicketsController = cashierBuyTicketsController;
+
+    }
+
+    @FXML
+    private void initialize() {
+        allScreenings = new ArrayList<>();
+        initializeScreeningListView();
+        initializeResponsiveness();
+        initializeButtons();
+        loadUpcomingScreenings();
+        initializeDayButtons();
+    }
+
+    private void initializeScreeningListView() {
+        screeningsDtoList = FXCollections.observableArrayList();
+        screeningsListView.setItems(screeningsDtoList);
+
+        screeningsListView.setCellFactory(list -> new ListCell<>() {
+            @Override
+            protected void updateItem(ScreeningDto screeningDto, boolean empty) {
+                super.updateItem(screeningDto, empty);
+                if (empty || screeningDto == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, dd MMMM yyyy, HH:mm");
+                    String formattedDate = screeningDto.start().format(formatter);
+
+                    String movieName = movieMap.get(screeningDto.movieId());
+                    LocalDateTime date = screeningDto.start();
+                    setText(movieName + " in room: " + screeningDto.movieRoomId() + ". Start: " + formattedDate);
+                }
+            }
+        });
+
+    }
+
+    private void initializeResponsiveness() {
+        backgroundRectangle.widthProperty().bind(rootPane.widthProperty());
+        backgroundRectangle.heightProperty().bind(rootPane.heightProperty());
+    }
+
+    private void initializeButtons() {
+        BooleanBinding isSingleCellSelected = Bindings.createBooleanBinding(
+                () -> screeningsListView.getSelectionModel().getSelectedItems().size() != 1,
+                screeningsListView.getSelectionModel().getSelectedItems()
+        );
+
+        buyButton.disableProperty().bind(isSingleCellSelected);
+    }
+
+    private void loadUpcomingScreenings() {
+        loadMovieMap();
+        screeningClientAPI.loadUpcomingScreenings()
+                .thenAccept(screeningDtos -> {
+                    screeningsDtoList.addAll(screeningDtos);
+                    allScreenings.addAll(screeningDtos);
+                });
+    }
+
+    private void loadMovieMap() {
+        new Thread(() -> {
+            try {
+                movieDtoList = movieClientAPI.loadMovies().get();
+
+                movieMap = movieDtoList.stream()
+                        .collect(Collectors.toMap(MovieDto::id, MovieDto::title));
+
+            } catch (Exception e) {
+                Platform.runLater(() -> {
+                    System.err.println("Error loading movies: " + e.getMessage());
+                });
+            }
+        }).start();
+    }
+
+    private void initializeDayButtons() {
+        LocalDate today = LocalDate.now();
+        LocalDate tomorrow = today.plusDays(1);
+        LocalDate plusTwo = today.plusDays(2);
+        LocalDate plusThree = today.plusDays(3);
+        LocalDate plusFour = today.plusDays(4);
+
+        buttonToday.setText(today.format(DateTimeFormatter.ofPattern("dd.MM")));
+        buttonTomorrow.setText(tomorrow.format(DateTimeFormatter.ofPattern("dd.MM")));
+        buttonPlusTwo.setText(plusTwo.format(DateTimeFormatter.ofPattern("dd.MM")));
+        buttonPlusThree.setText(plusThree.format(DateTimeFormatter.ofPattern("dd.MM")));
+        buttonPlusFour.setText(plusFour.format(DateTimeFormatter.ofPattern("dd.MM")));
+    }
+
+    @FXML
+    private void handleGoBack(ActionEvent event) {
+        try {
+            stageInitializer.loadStage(FXMLResourceEnum.CASHIER_PANEL);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
+    private void handleDateToday(ActionEvent event) {
+        LocalDate targetDate = LocalDate.now();
+        setScreeningsOn(targetDate);
+    }
+
+    @FXML
+    private void handleDateTomorrow(ActionEvent event) {
+        LocalDate targetDate = LocalDate.now().plusDays(1);
+        setScreeningsOn(targetDate);
+    }
+
+    @FXML
+    private void handleDate_plus_2(ActionEvent event) {
+        LocalDate targetDate = LocalDate.now().plusDays(2);
+        setScreeningsOn(targetDate);
+    }
+
+    @FXML
+    private void handleDate_plus_3(ActionEvent event) {
+        LocalDate targetDate = LocalDate.now().plusDays(3);
+        setScreeningsOn(targetDate);
+    }
+
+    @FXML
+    private void handleDate_plus_4(ActionEvent event) {
+        LocalDate targetDate = LocalDate.now().plusDays(4);
+        setScreeningsOn(targetDate);
+    }
+
+    @FXML
+    private void handleBuyTickets(ActionEvent event) {
+        try {
+            stageInitializer.loadStage(FXMLResourceEnum.CASHIER_BUY_TICKETS);
+            buyTicketsController.setScreeningDto(screeningsListView.getSelectionModel().getSelectedItem());
+            buyTicketsController.setMovieName(movieMap.get(screeningsListView.getSelectionModel().getSelectedItem().movieId()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void setScreeningsOn(LocalDate targetDate) {
+        List<ScreeningDto> filteredScreenings = allScreenings.stream()
+                .filter(screening -> screening.start().toLocalDate().equals(targetDate))
+                .collect(Collectors.toList());
+
+        screeningsDtoList.setAll(filteredScreenings);
+    }
+}
+```
+
+```
 
 # Dodatki
 ## Automatyczne wypełnianie bazy danych
@@ -5635,9 +6559,9 @@ public class AppConfiguration {
 
 
 
-## Moduł kryptograficzny - krypto
+## Moduł kryptograficzny + Security
 
-Moduł zawiera obecnie jedną klase: *PasswordHasher*
+Moduł krytograficzny zawiera obecnie jedną klase: *PasswordHasher*
 
 PasswordHasher to komponent Springa odpowiedzialny za haszowanie haseł z 
 wykorzystaniem algorytmu ``SHA-256``. W procesie haszowania dodawany jest 
@@ -5645,7 +6569,10 @@ wykorzystaniem algorytmu ``SHA-256``. W procesie haszowania dodawany jest
 bezpieczeństwo generowanego skrótu i znacząco zmniejsza szanse trafienia
 poprzez atak tęczowymi tablicami.
 
-### API
+Co do Security, to jest ono egzekwowane poprzez głównie wbudowane metody springa, co pozwala nam na zachowanie mechanizmów `sesji` bez implementacji niepotrzebnych klas
+
+### PaswordHasher
+#### API 
 
 kompotent ten zawiera metode `hashPassword(String password): String`
 
@@ -5669,6 +6596,8 @@ magazynie tajemnic.
 W procesie hashowania nie jest używana sól, co osłabia silnośc hasha, lecz podczas pisania
 funkcji skrótu model bazy danych był już stworzony i nie chcieliśmy dodawać pola, który
 nie ma zastosowania w naszym przypadku. Mimo tego dalej uważam, że warto o tym wspomieć.
+
+
 
 ```java
 
@@ -5703,3 +6632,191 @@ public class PasswordHasher {
 
 }
 ```
+### SecurityConfig
+
+Klasa SecurityConfig to konfiguracja zabezpieczeń dla aplikacji opartej na Spring Security. Definiuje szczegóły zarządzania bezpieczeństwem, takie jak uwierzytelnianie, autoryzacja, obsługa sesji oraz filtrowanie żądań HTTP. Klasa wykorzystuje adnotacje Spring, takie jak @Configuration oraz @EnableMethodSecurity, co pozwala na aktywację zaawansowanych funkcji bezpieczeństwa.
+
+#### Adnotacje klasy
+
+`@Configuration`: Informuje Spring, że klasa zawiera definicje beanów.
+
+`@EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true)`: Umożliwia korzystanie z adnotacji takich jak @Secured i @RolesAllowed do zarządzania uprawnieniami na poziomie metod.
+
+#### Metody
+
+Metody
+
+`filterChain(HttpSecurity http)`
+
+Metoda definiuje główną konfigurację zabezpieczeń HTTP:
+
+- Autoryzacja żądań:
+
+   - Publicznie dostępne endpointy: /api/auth/login, /api/registration, api/admin-panel/users.
+
+   - Wymaganie uwierzytelnienia dla wszystkich pozostałych żądań.
+
+- Wyłączenie mechanizmów:
+
+    - Wyłączony CSRF za pomocą csrf(AbstractHttpConfigurer::disable).
+
+- Obsługa CORS: 
+
+    - Włączone domyślne ustawienia CORS za pomocą cors(withDefaults()).
+
+- Zarządzanie sesją:
+
+    - Ustawienie polityki sesji na SessionCreationPolicy.ALWAYS.
+
+    - Podstawowe uwierzytelnianie: Aktywacja HTTP Basic Authentication za pomocą httpBasic(withDefaults()).
+
+Na końcu metoda ustawia menedżera uwierzytelniania, korzystając z metody authenticationManager(http).
+
+`authenticationManager(HttpSecurity http)`
+
+Typ zwracany: `AuthenticationManager`
+
+Metoda definiuje konfigurację menedżera uwierzytelniania:
+
+- Używa CustomUserDetailsService do załadowania szczegółów użytkownika.
+
+- Ustawia niestandardowy encoder haseł (passwordEncoder()).
+
+- Zwraca instancję AuthenticationManager.
+
+`passwordEncoder()`
+
+Typ zwracany: `PasswordEncoder`
+
+Metoda definiuje bean encodera haseł. Wykorzystuje CustomPasswordEncoder, który bazuje na komponencie PasswordHasher.
+
+
+Klasa w konstruktorze dodatkowo wstrzykuje
+
+- `CustomUserDetailsService `
+
+    Serwis odpowiedzialny za załadowanie szczegółów użytkownika podczas procesu uwierzytelniania. oraz jej przechowywanie
+
+- `PasswordHasher`
+
+   Klasa obsługująca logikę haszowania haseł, wykorzystywana przez niestandardowy encoder haseł (`CustomPasswordEncoder`).
+
+
+```java
+@Configuration
+@EnableMethodSecurity(
+        securedEnabled = true,
+        jsr250Enabled = true    // This enables @RolesAllowed
+)
+public class SecurityConfig {
+
+
+    private final CustomUserDetailsService customUserDetailsService;
+    private final PasswordHasher passwordHasher;
+
+    @Autowired
+    public SecurityConfig(CustomUserDetailsService customUserDetailsService, PasswordHasher passwordHasher) {
+        this.customUserDetailsService = customUserDetailsService;
+        this.passwordHasher = passwordHasher;
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
+        http
+            .authorizeHttpRequests((requests) -> requests
+                .requestMatchers("/api/auth/login","/api/registration", "api/admin-panel/users").permitAll()
+                .anyRequest().authenticated()
+            )
+            .csrf(AbstractHttpConfigurer::disable)
+            .cors(withDefaults())
+            .sessionManagement(sessionManagement -> sessionManagement
+                    .sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
+            )
+            .httpBasic(withDefaults());
+
+        http.authenticationManager(authenticationManager(http));
+
+        return http.build();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
+        AuthenticationManagerBuilder authBuilder =
+                http.getSharedObject(AuthenticationManagerBuilder.class);
+
+        authBuilder
+                .userDetailsService(customUserDetailsService)
+                .passwordEncoder(passwordEncoder());
+        return authBuilder.build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new CustomPasswordEncoder(passwordHasher);
+    }
+}
+```
+
+### Przechowywanie danych sesji
+
+Tym zajmują się dosyć oczywiście napisane `CustomUserDetails` i `CustomUserDetailsService`
+
+Obie te klasy są implementacjami odpowiadających im interfejsów (Bez custom)
+Dzięki temu możemy w lepszy sposób zarządzać rolami springowymi które będą nam potrzebne do zabezpieczenia endpointów
+
+### Mechanizm sesji:
+
+W Klasie odpowiadającej za logowanie można zobaczyć fragment:
+
+```java
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            UserDto userDto = userService.findByEmail(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Set-Cookie", "JSESSIONID=" + session.getId() + "; Path=/; HttpOnly");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(new AuthResponse(userDto.id(), roleService.getUserRoles(userDto.id())));
+```
+
+Dzięki temu kawałkowi Informujemy front end jaką obecnie mamy sesje, dzięki czemu frontend może przy jej użyciu komunikować się z backendem jako już zalogowany użytkownik (wysyłając ciasteczko ze swoim numerem sesji spring web security zajmuje się tym już automatycznie)
+
+Zwykły użytkownik ma do dostępu 2 endpointy, a do każdego innego trzeba być już zalogowanym:
+
+```java
+            .authorizeHttpRequests((requests) -> requests
+                .requestMatchers("/api/auth/login","/api/registration").permitAll()
+                .anyRequest().authenticated())
+```
+
+Dzięki temu użytkownik może logowac/rejestrować się dowolnie a potem po zalogowaniu kożystac jako już odpowiedniej rangi użytkownik
+
+### Role
+
+Nasz projekt wyróżnia 3 role:
+- `ADMIN` - administrator, ma dostęp do wszystkiego
+- `CASHIER` - kasjer, ma dostęp do przeglądania filmów, pojedyńczych odtworzeń i kupowania na nie biletów (dla użytkownika nie tylko dla siebie)
+- `USER` - przeglądanie, kupowanie, ocenianie
+
+Role są egzekwowane poprzez założenie na prawie wszystkie (patrz wyżej) endopointy adnotacji pozwalającej danej roli używać tego endpointu
+
+przykład:
+```java
+    @RolesAllowed({"ADMIN","CASHIER", "USER"})
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<PurchaseResponseDto>> getPurchasesByUser(@PathVariable Long userId) {
+        List<PurchaseResponseDto> purchases = purchaseService.findByUser(userId)
+                .stream()
+                .map(PurchaseResponseDto::fromEntity)
+                .toList();
+        return ResponseEntity.ok(purchases);
+    }
+```
+
+dzięki temu osoba która nie ma nadanej danej roli nie może dostać się do danego endpointa i otrzyma komunikat zwrotny `401 unauthorized` lub `403 forbidden`
+
+

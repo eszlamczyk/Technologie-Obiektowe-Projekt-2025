@@ -8,6 +8,8 @@ import monaditto.cinemaproject.movie.MovieDto;
 import monaditto.cinemaproject.movie.MovieService;
 import monaditto.cinemaproject.movieRoom.MovieRoomDto;
 import monaditto.cinemaproject.movieRoom.MovieRoomService;
+import monaditto.cinemaproject.opinion.OpinionDto;
+import monaditto.cinemaproject.opinion.OpinionService;
 import monaditto.cinemaproject.role.Role;
 import monaditto.cinemaproject.role.RoleRepository;
 import monaditto.cinemaproject.role.RoleService;
@@ -24,6 +26,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 @Configuration
 public class AppConfiguration {
@@ -37,7 +40,8 @@ public class AppConfiguration {
             CategoryService categoryService,
             MovieService movieService,
             MovieRoomService movieRoomService,
-            ScreeningService screeningService) {
+            ScreeningService screeningService,
+            OpinionService opinionService) {
         return args -> {
             if (userService.getUsers().isEmpty()) {
                 initUsers(userService, roleService, roleRepository, passwordHasher);
@@ -45,6 +49,7 @@ public class AppConfiguration {
                 initMovies(movieService);
                 initMovieRooms(movieRoomService);
                 initScreenings(screeningService);
+                initOpinions(opinionService);
             }
         };
     }
@@ -434,6 +439,38 @@ public class AppConfiguration {
 
         for (ScreeningDto screeningDto : screeningDtos) {
             screeningService.saveScreening(screeningDto);
+        }
+    }
+
+    private static void initOpinions(OpinionService opinionService) {
+        List<OpinionDto> opinionDtos = new ArrayList<>();
+        Random random = new Random();
+
+        String[] comments = {
+                "Świetny film!",
+                "Bardzo mi się podobał.",
+                "Mógłby być lepszy.",
+                "Nie polecam.",
+                "Rewelacyjna produkcja!"
+        };
+
+        for (long movieId = 1; movieId <= 13; movieId++) {
+            for (long userId = 5; userId <= 15; userId++) {
+                if (movieId == 8) {
+                    break;
+                }
+
+                double rating = 1 + (10 * random.nextDouble());
+                String comment = comments[random.nextInt(comments.length)];
+
+                OpinionDto opinionDto = new OpinionDto(userId, movieId, rating, comment);
+
+                opinionDtos.add(opinionDto);
+            }
+        }
+
+        for (OpinionDto opinionDto : opinionDtos) {
+            opinionService.addOpinion(opinionDto);
         }
     }
 }

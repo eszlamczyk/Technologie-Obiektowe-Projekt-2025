@@ -12,12 +12,12 @@ public class Opinion {
     public static final String TABLE_NAME = "opinions";
 
     @Id
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Id
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "movie_id", nullable = false)
     private Movie movie;
 

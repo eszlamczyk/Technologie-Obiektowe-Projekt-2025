@@ -36,4 +36,5 @@ public interface MovieRepository extends JpaRepository<Movie,Long> {
                                                         @Param("userId") Long userId,
                                                         @Param("localDateTime") LocalDateTime localDateTime);
 
+    boolean existsByIdAndReleaseDateBefore(Long aLong, LocalDate date);
 }

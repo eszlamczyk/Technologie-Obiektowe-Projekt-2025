@@ -20,6 +20,7 @@
             <Button fx:id="categoriesButton" styleClass="adminPanelButton" text="Categories" onAction="#handleCategories"/>
             <Button fx:id="movieRoomsButton" styleClass="adminPanelButton" text="Movie Rooms" onAction="#handleMovieRooms"/>
             <Button fx:id="purchasesButton" styleClass="adminPanelButton" text="Purchases" onAction="#handlePurchases"/>
+            <Button fx:id="opinionsButton" styleClass="adminPanelButton" text="Opinions" onAction="#handleOpinions"/>
             <Button fx:id="signOutButton" styleClass="adminPanelButton" text="Sign out" onAction="#handleSignOut"/>
             </VBox>
     </StackPane>

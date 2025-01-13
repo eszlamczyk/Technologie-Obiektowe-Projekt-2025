@@ -19,6 +19,7 @@ public enum FXMLResourceEnum {
     ADMIN_EDIT_MOVIE_ROOM,
     ADMIN_BUY_TICKETS,
     ADMIN_PURCHASES,
+    ADMIN_OPINIONS,
     USER_PANEL,
     USER_RECOMMENDATIONS,
     USER_MOVIE,
@@ -50,6 +51,7 @@ public enum FXMLResourceEnum {
             case ADMIN_BUY_TICKETS -> "fxml/admin/AdminBuyTickets.fxml";
             case ADMIN_EDIT_MOVIE_ROOM -> "fxml/edit/EditMovieRoom.fxml";
             case ADMIN_PURCHASES -> "fxml/admin/AdminPurchases.fxml";
+            case ADMIN_OPINIONS -> "fxml/admin/AdminOpinions.fxml";
             case USER_PANEL -> "fxml/user/UserPanel.fxml";
             case USER_RECOMMENDATIONS -> "fxml/user/UserRecommendation.fxml";
             case USER_MOVIE -> "fxml/user/UserMovie.fxml";

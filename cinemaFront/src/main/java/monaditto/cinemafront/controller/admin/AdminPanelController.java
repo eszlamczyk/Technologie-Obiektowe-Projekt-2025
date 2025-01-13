@@ -101,6 +101,15 @@ public class AdminPanelController {
     }
 
     @FXML
+    public void handleOpinions(ActionEvent event) {
+        try {
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_OPINIONS);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
     private void handleSignOut(ActionEvent event) {
         try {
             stageInitializer.loadStage(FXMLResourceEnum.LOGIN);

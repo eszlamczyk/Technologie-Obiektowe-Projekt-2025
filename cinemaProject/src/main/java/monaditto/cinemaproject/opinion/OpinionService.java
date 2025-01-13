@@ -8,6 +8,7 @@ import monaditto.cinemaproject.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -27,6 +28,14 @@ public class OpinionService {
 
         if (exists) {
             throw new IllegalArgumentException("User has already submitted an opinion for this movie.");
+        }
+
+        LocalDate date = LocalDate.now();
+
+        boolean isReleased = movieRepository.existsByIdAndReleaseDateBefore(opinionDto.movieId(), date);
+
+        if (!isReleased) {
+            throw new IllegalArgumentException("Wait until this movie will be released!");
         }
 
         User user = userRepository.findById(opinionDto.userId())

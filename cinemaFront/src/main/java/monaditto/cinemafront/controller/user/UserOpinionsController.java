@@ -20,6 +20,8 @@ import monaditto.cinemafront.session.SessionContext;
 import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -91,12 +93,13 @@ public class UserOpinionsController {
                             setText(null);
                         } else {
                             MovieDto movie = movieMap.get(item.movieId());
+                            BigDecimal roundedRating = BigDecimal.valueOf(item.rating()).setScale(2, RoundingMode.HALF_UP);
                             if (movie != null) {
                                 setText("🎬 " + movie.title() +
-                                        " | ⭐ " + item.rating() + "\n" +
+                                        " | ⭐ " + roundedRating + "\n" +
                                         "💬 " + item.comment());
                             } else {
-                                setText("🎬 Movie info not available | ⭐ " + item.rating() + "\n" +
+                                setText("🎬 Movie info not available | ⭐ " + roundedRating + "\n" +
                                         "💬 " + item.comment());
                             }
                         }

@@ -14,10 +14,26 @@ public interface MovieRepository extends JpaRepository<Movie,Long> {
     List<Movie> findComingSoonMovies(@Param("today") LocalDate today);
 
     @Query("SELECT m FROM Movie m " +
+            "JOIN m.categories c " +
             "JOIN m.screenings s " +
-            "LEFT JOIN Purchase p ON p.screening.id = s.id AND p.user.id = :userId " +
-            "WHERE p.id IS NULL")
-    List<Movie> findMoviesNotWatchedByUser(@Param("userId") Long userId);
+            "WHERE s.start > :localDateTime " +
+            "AND NOT EXISTS (" +
+            "    SELECT 1 " +
+            "    FROM Category cat " +
+            "    WHERE cat.id = :categoryId " +
+            "    AND cat MEMBER OF m.categories" +
+            ") " +
+            "AND NOT EXISTS (" +
+            "    SELECT p" +
+            "    FROM Purchase p" +
+            "    JOIN p.screening ps" +
+            "    WHERE p.user.id = :userId" +
+            "    AND ps.movie.id = m.id" +
+            "    AND p.reservationStatus = 'PAID'" +
+            ")")
+    List<Movie> findOtherMoviesNotWatchedByUser(@Param("categoryId") Long categoryId,
+                                                @Param("userId") Long userId,
+                                                @Param("localDateTime") LocalDateTime localDateTime);
 
     @Query("SELECT m, AVG(o.rating) FROM Movie m " +
             "JOIN Opinion o ON o.movie.id = m.id " +
@@ -25,13 +41,20 @@ public interface MovieRepository extends JpaRepository<Movie,Long> {
             "ORDER BY AVG(o.rating) DESC")
     List<Object[]> findTopRatedMovies();
 
-    @Query("SELECT m FROM Movie m " +
+    @Query("SELECT DISTINCT m " +
+            "FROM Movie m " +
             "JOIN m.categories c " +
             "JOIN m.screenings s " +
-            "LEFT JOIN Purchase p ON p.screening.id = s.id AND p.user.id = :userId AND p.reservationStatus = 'PAID' " +
             "WHERE c.id = :categoryId " +
             "AND s.start > :localDateTime " +
-            "AND p.id IS NULL")
+            "AND NOT EXISTS (" +
+            "    SELECT p" +
+            "    FROM Purchase p" +
+            "    JOIN p.screening ps" +
+            "    WHERE p.user.id = :userId" +
+            "    AND ps.movie.id = m.id" +
+            "    AND p.reservationStatus = 'PAID'" +
+            ")")
     List<Movie> findMoviesByCategoryAndNotWatchedByUser(@Param("categoryId") Long categoryId,
                                                         @Param("userId") Long userId,
                                                         @Param("localDateTime") LocalDateTime localDateTime);

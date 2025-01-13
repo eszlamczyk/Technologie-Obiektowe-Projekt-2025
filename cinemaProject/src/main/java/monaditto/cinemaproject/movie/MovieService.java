@@ -85,6 +85,8 @@ public class MovieService {
     }
 
     public List<MovieWithAverageRatingDto> getRecommendedMovies(Long userId) {
+        int maxSize = 7;
+
         Long categoryId = purchaseService.getMostPurchasedCategoryIdForUser(userId);
         if (categoryId == 0) {
             return new ArrayList<>();
@@ -93,19 +95,31 @@ public class MovieService {
         List<Movie> recommendedNotWatchedMovies =
                 movieRepository.findMoviesByCategoryAndNotWatchedByUser(categoryId, userId, LocalDateTime.now());
 
-        List<MovieWithAverageRatingDto> recommendations = computeAverageRatings(recommendedNotWatchedMovies);
-        recommendations.sort(Comparator.comparingDouble(MovieWithAverageRatingDto::averageRating).reversed());
-
-        if (recommendations.size() < 7) {
-            List<Movie> randomMovies = movieRepository.findMoviesNotWatchedByUser(userId);
+        if (recommendedNotWatchedMovies.size() < maxSize) {
+            List<Movie> randomMovies = movieRepository.findOtherMoviesNotWatchedByUser(categoryId, userId, LocalDateTime.now());
             Collections.shuffle(randomMovies);
-            randomMovies = randomMovies.subList(0, 7);
-            List<MovieWithAverageRatingDto> randomRecommendations = computeAverageRatings(randomMovies);
-
-            recommendations.addAll(randomRecommendations);
+            randomMovies = randomMovies.subList(0, maxSize - recommendedNotWatchedMovies.size());
+            recommendedNotWatchedMovies.addAll(randomMovies);
         }
 
-        return recommendations.stream().limit(7).collect(Collectors.toList());
+        List<MovieWithAverageRatingDto> recommendations = computeAverageRatings(recommendedNotWatchedMovies);
+        recommendations.sort(MovieService::sortRecommendedMovies);
+
+        return recommendations.stream().limit(maxSize).collect(Collectors.toList());
+    }
+
+    private static int sortRecommendedMovies(MovieWithAverageRatingDto movie1, MovieWithAverageRatingDto movie2) {
+        Double rating1 = movie1.averageRating();
+        Double rating2 = movie2.averageRating();
+
+        if (rating1 == null) {
+            rating1 = 20.0;
+        }
+        if (rating2 == null) {
+            rating2 = 20.0;
+        }
+
+        return Double.compare(rating2, rating1);
     }
 
     private List<MovieWithAverageRatingDto> computeAverageRatings(List<Movie> movies) {

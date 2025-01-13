@@ -22,6 +22,7 @@ import monaditto.cinemafront.controller.MovieCellCreator;
 import monaditto.cinemafront.databaseMapping.MovieDto;
 import monaditto.cinemafront.databaseMapping.MovieWithAverageRatingDto;
 import monaditto.cinemafront.request.PosterDownloader;
+import monaditto.cinemafront.session.SessionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -35,6 +36,8 @@ public class UserRecommendationsController {
     private final MovieClientAPI movieClientAPI;
 
     private final MovieCellCreator movieCellCreator;
+
+    private final SessionContext sessionContext;
 
     private ObservableList<MovieDto> comingSoonMovieDtoList;
 
@@ -63,10 +66,14 @@ public class UserRecommendationsController {
     @FXML
     private AnchorPane rootPane;
 
-    public UserRecommendationsController(StageInitializer stageInitializer, MovieClientAPI movieClientAPI, MovieCellCreator movieCellCreator) {
+    public UserRecommendationsController(StageInitializer stageInitializer,
+                                         MovieClientAPI movieClientAPI,
+                                         MovieCellCreator movieCellCreator,
+                                         SessionContext sessionContext) {
         this.stageInitializer = stageInitializer;
         this.movieClientAPI = movieClientAPI;
         this.movieCellCreator = movieCellCreator;
+        this.sessionContext = sessionContext;
     }
 
     @FXML
@@ -89,6 +96,7 @@ public class UserRecommendationsController {
 
     private void initializeMovieListView(ObservableList<MovieDto> movieDtoList, ListView<MovieDto> moviesListView) {
         moviesListView.setItems(movieDtoList);
+        moviesListView.setSelectionModel(null);
 
         moviesListView.setCellFactory(list -> new ListCell<>() {
             @Override
@@ -137,7 +145,7 @@ public class UserRecommendationsController {
                 .thenAccept(comingSoonMovieDtoList::addAll)
                 .thenRun(() -> comingSoonMoviesListView.setPrefHeight(130 * comingSoonMovieDtoList.size()));
 
-        movieClientAPI.loadRecommendedMovies(2L)
+        movieClientAPI.loadRecommendedMovies(sessionContext.getUserId())
                 .thenAccept(recommendedMovieDtoList::addAll)
                 .thenRun(this::updateRecommendedMoviesView);
 

@@ -37,7 +37,7 @@ public class PurchaseController {
                 : ResponseEntity.notFound().build();
     }
 
-    @RolesAllowed({"ADMIN","CASHIER"})
+    @RolesAllowed({"ADMIN","CASHIER", "USER"})
     @PostMapping
     public ResponseEntity<PurchaseResponseDto> createPurchase(@RequestBody PurchaseDto purchaseDto) {
         try {

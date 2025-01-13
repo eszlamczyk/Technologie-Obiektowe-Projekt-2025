@@ -10,6 +10,8 @@ import monaditto.cinemafront.databaseMapping.MovieWithAverageRatingDto;
 import monaditto.cinemafront.request.PosterDownloader;
 import org.springframework.stereotype.Component;
 
+import java.util.Locale;
+
 @Component
 public class MovieCellCreator {
 
@@ -40,10 +42,20 @@ public class MovieCellCreator {
 
         VBox vBox = getDescription(movieWithAverageRatingDto.movieDto());
 
-        Label label = new Label("Average rating = " + movieWithAverageRatingDto.averageRating().toString());
+        Label label = getAverageRatingLabel(movieWithAverageRatingDto);
 
         hBox.getChildren().addAll(imageView, vBox, label);
         return hBox;
+    }
+
+    private static Label getAverageRatingLabel(MovieWithAverageRatingDto movieWithAverageRatingDto) {
+        String averageRatingMessage;
+        if (movieWithAverageRatingDto.averageRating() == null) {
+            averageRatingMessage = "Be the first to review this movie!";
+        } else {
+            averageRatingMessage = String.format(Locale.ENGLISH, "Average rating = %.2f", movieWithAverageRatingDto.averageRating());
+        }
+        return new Label(averageRatingMessage);
     }
 
     private VBox getDescription(MovieDto movieDto) {

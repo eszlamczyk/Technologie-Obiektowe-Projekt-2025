@@ -433,9 +433,10 @@ public class AppConfiguration {
         screeningDtos.add(new ScreeningDto((Long) null, 4L, 2L, LocalDateTime.now().plusDays(1).plusMinutes(300), 30.00));
         screeningDtos.add(new ScreeningDto((Long) null, 6L, 1L, LocalDateTime.now().plusMinutes(300), 40.00));
         screeningDtos.add(new ScreeningDto((Long) null, 6L, 3L, LocalDateTime.now().plusDays(1), 40.00));
-        screeningDtos.add(new ScreeningDto((Long) null, 9L, 4L, LocalDateTime.now().plusDays(0), 40.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 9L, 4L, LocalDateTime.now().plusMinutes(600), 40.00));
         screeningDtos.add(new ScreeningDto((Long) null, 10L, 4L, LocalDateTime.now().plusDays(1), 40.00));
         screeningDtos.add(new ScreeningDto((Long) null, 11L, 4L, LocalDateTime.now().plusDays(2), 40.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 5L, 4L, LocalDateTime.now().minusDays(1), 40.00));
 
         for (ScreeningDto screeningDto : screeningDtos) {
             screeningService.saveScreening(screeningDto);

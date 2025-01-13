@@ -5,7 +5,10 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
 
-<AnchorPane fx:id="rootPane" prefHeight="800" prefWidth="800" stylesheets="@../../styles/Styles.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.admin.AdminEditMovieController">
+<AnchorPane fx:id="rootPane" prefHeight="800" prefWidth="800"
+            stylesheets="@../../styles/Styles.css" xmlns="http://javafx.com/javafx/17.0.2-ea"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="monaditto.cinemafront.controller.admin.AdminEditMovieController">
 
     <Rectangle fx:id="backgroundRectangle" fill="Azure" stroke="#ffffff8b" strokeType="INSIDE" />
     <HBox alignment="CENTER" spacing="10">
@@ -15,7 +18,7 @@
                 <TextField fx:id="titleField" promptText="Movie title" />
                 <TextArea fx:id="descriptionField" prefHeight="100" promptText="Description" wrapText="true" />
                 <TextField fx:id="durationField" promptText="Duration" />
-                <TextField fx:id="releaseDateField" promptText="Release date" />
+                <DatePicker fx:id="releaseDateField" promptText="Select Release Date" />
                 <HBox spacing="5">
                     <TextField fx:id="posterUrlField" promptText="Poster url address" />
                     <Button onAction="#handleTestPosterUrl" text="Test" />

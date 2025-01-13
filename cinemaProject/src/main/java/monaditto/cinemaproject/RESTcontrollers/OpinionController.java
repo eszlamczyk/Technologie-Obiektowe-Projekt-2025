@@ -27,6 +27,11 @@ public class OpinionController {
         }
     }
 
+    @GetMapping
+    public ResponseEntity<List<OpinionDto>> getAllOpinions() {
+        return ResponseEntity.ok(opinionService.getAllOpinions());
+    }
+
     @RolesAllowed({"ADMIN","CASHIER", "USER"})
     @GetMapping("/{userId}/{movieId}")
     public ResponseEntity<OpinionDto> getOpinion(

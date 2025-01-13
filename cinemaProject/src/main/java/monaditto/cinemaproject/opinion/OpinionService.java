@@ -47,6 +47,10 @@ public class OpinionService {
         opinionRepository.save(opinion);
     }
 
+    public List<OpinionDto> getAllOpinions() {
+        return opinionRepository.findAll().stream().map(OpinionDto::opinionToOpinionDto).toList();
+    }
+
     public OpinionDto getOpinion(Long userId, Long movieId) {
         OpinionId opinionId = getOpinionId(userId, movieId);
 

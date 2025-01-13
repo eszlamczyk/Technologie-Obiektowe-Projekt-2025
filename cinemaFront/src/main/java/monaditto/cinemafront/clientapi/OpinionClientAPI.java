@@ -90,6 +90,24 @@ public class OpinionClientAPI {
                 });
     }
 
+    public CompletableFuture<List<OpinionDto>> getAllOpinions() {
+        HttpRequest request = RequestBuilder.buildRequestGET(endpointUrl);
+
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(response -> {
+                    if (response.statusCode() == 200) {
+                        try {
+                            return objectMapper.readValue(response.body(),
+                                    new TypeReference<List<OpinionDto>>() {});
+                        } catch (JsonProcessingException e) {
+                            throw new RuntimeException("Error parsing all opinions", e);
+                        }
+                    } else {
+                        throw new RuntimeException("Failed to load all opinions: " + response.body());
+                    }
+                });
+    }
+
     public int delete(OpinionDto opinionDto) {
         HttpRequest request = RequestBuilder.buildRequestDELETE(
                 endpointUrl + "/" + opinionDto.userId() + "/" + opinionDto.movieId()

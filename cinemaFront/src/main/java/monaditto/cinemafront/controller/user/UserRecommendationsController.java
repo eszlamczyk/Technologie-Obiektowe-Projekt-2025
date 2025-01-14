@@ -80,7 +80,6 @@ public class UserRecommendationsController {
     private void initialize() {
         initializeMovieListViews();
         initializeResponsiveness();
-        initializeButtons();
 
         Platform.runLater(this::loadMovies);
     }
@@ -163,15 +162,6 @@ public class UserRecommendationsController {
             recommendedMoviesListView.setVisible(true);
             recommendedMoviesListView.setPrefHeight(130 * recommendedMovieDtoList.size());
         }
-    }
-
-    private void initializeButtons() {
-//        BooleanBinding isSingleCellSelected = Bindings.createBooleanBinding(
-//                () -> comingSoonMoviesListView.getSelectionModel().getSelectedItems().size() != 1,
-//                comingSoonMoviesListView.getSelectionModel().getSelectedItems()
-//        );
-//
-//        rateButton.disableProperty().bind(isSingleCellSelected);
     }
 
     @FXML

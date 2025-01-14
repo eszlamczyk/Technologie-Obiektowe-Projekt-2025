@@ -64,7 +64,6 @@ public class UserMoviesController {
         initializeMovieListView();
         initializeResponsiveness();
         initializeButtons();
-//        loadMovies();
     }
 
     private void initializeMovieListView() {
@@ -83,17 +82,11 @@ public class UserMoviesController {
                 }
             }
         });
-
     }
 
     private void initializeResponsiveness() {
         backgroundRectangle.widthProperty().bind(rootPane.widthProperty());
         backgroundRectangle.heightProperty().bind(rootPane.heightProperty());
-    }
-
-    private void loadMovies() {
-        movieClientAPI.loadMovies()
-                .thenAccept(movieDtoList::addAll);
     }
 
     private void initializeButtons() {
@@ -114,7 +107,6 @@ public class UserMoviesController {
 
         movieClientAPI.searchMovies(query)
                 .thenAccept(this::updateMovieList);
-//        loadMovies();
     }
 
     private void updateMovieList(List<MovieDto> foundMovieDtoList) {

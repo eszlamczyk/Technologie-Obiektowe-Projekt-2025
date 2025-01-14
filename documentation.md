@@ -507,6 +507,19 @@ public class MovieValidator {
 }
 ```
 
+`MovieWithAverageRatingDto`
+
+Rekord do wysyłania przez kontroler, zawiera on zwykłe `MovieDto` oraz odpowiednią średnią ocen
+
+```java
+public record MovieWithAverageRatingDto(
+
+        MovieDto movieDto,
+
+        Double averageRating
+) {}
+```
+
 #### Warstwa serwisowa
 
 `MovieService`
@@ -520,25 +533,118 @@ public class MovieService {
 
     private final CategoryRepository categoryRepository;
 
+    private final OpinionRepository opinionRepository;
+
     private final CategoryService categoryService;
 
+    private final PurchaseService purchaseService;
+
     private final MovieValidator movieValidator;
+
+    private final Trie trie;
 
     @Autowired
     public MovieService(MovieRepository movieRepository,
                         CategoryRepository categoryRepository,
+                        OpinionRepository opinionRepository,
                         MovieValidator movieValidator,
-                        CategoryService categoryService) {
+                        CategoryService categoryService,
+                        PurchaseService purchaseService,
+                        Trie trie) {
         this.movieRepository = movieRepository;
         this.categoryRepository = categoryRepository;
+        this.opinionRepository = opinionRepository;
         this.movieValidator = movieValidator;
         this.categoryService = categoryService;
+        this.purchaseService = purchaseService;
+        this.trie = trie;
+
+        buildTrie();
+    }
+
+    private void buildTrie() {
+        movieRepository.findAll().stream()
+                .map(MovieDto::movieToMovieDto)
+                .forEach(trie::insert);
     }
 
     public List<MovieDto> getMovies() {
         return movieRepository.findAll().stream()
                 .map(MovieDto::movieToMovieDto)
                 .toList();
+    }
+
+    public List<MovieDto> getComingSoonMovies() {
+        return movieRepository.findComingSoonMovies(LocalDate.now()).stream()
+                .map(MovieDto::movieToMovieDto)
+                .limit(5)
+                .toList();
+    }
+
+    public List<MovieWithAverageRatingDto> getTopRatedMovies() {
+        List<Object[]> topRatedMovies = movieRepository.findTopRatedMovies();
+        return topRatedMovies.stream()
+                .limit(7)
+                .map(result -> {
+                    Movie movie = (Movie) result[0];
+                    Double avgRating = (Double) result[1];
+                    return new MovieWithAverageRatingDto(MovieDto.movieToMovieDto(movie), avgRating);
+                })
+                .toList();
+    }
+
+    public List<MovieWithAverageRatingDto> getRecommendedMovies(Long userId) {
+        int maxSize = 7;
+
+        Long categoryId = purchaseService.getMostPurchasedCategoryIdForUser(userId);
+        if (categoryId == 0) {
+            return new ArrayList<>();
+        }
+
+        List<Movie> recommendedNotWatchedMovies =
+                movieRepository.findMoviesByCategoryAndNotWatchedByUser(categoryId, userId, LocalDateTime.now());
+
+        if (recommendedNotWatchedMovies.size() < maxSize) {
+            List<Movie> randomMovies = movieRepository.findOtherMoviesNotWatchedByUser(categoryId, userId, LocalDateTime.now());
+            Collections.shuffle(randomMovies);
+            randomMovies = randomMovies.subList(0, maxSize - recommendedNotWatchedMovies.size());
+            recommendedNotWatchedMovies.addAll(randomMovies);
+        }
+
+        List<MovieWithAverageRatingDto> recommendations = computeAverageRatings(recommendedNotWatchedMovies);
+        recommendations.sort(MovieService::sortRecommendedMovies);
+
+        return recommendations.stream().limit(maxSize).collect(Collectors.toList());
+    }
+
+    private static int sortRecommendedMovies(MovieWithAverageRatingDto movie1, MovieWithAverageRatingDto movie2) {
+        Double rating1 = movie1.averageRating();
+        Double rating2 = movie2.averageRating();
+
+        if (rating1 == null) {
+            rating1 = 20.0;
+        }
+        if (rating2 == null) {
+            rating2 = 20.0;
+        }
+
+        return Double.compare(rating2, rating1);
+    }
+
+    private List<MovieWithAverageRatingDto> computeAverageRatings(List<Movie> movies) {
+        List<MovieWithAverageRatingDto> moviesWithAverageRating = new ArrayList<>();
+        for (Movie movie : movies) {
+            Double averageRating = opinionRepository.findAverageRatingByMovieId(movie.getId());
+            MovieWithAverageRatingDto recommendation =
+                    new MovieWithAverageRatingDto(MovieDto.movieToMovieDto(movie), averageRating);
+            moviesWithAverageRating.add(recommendation);
+        }
+
+        return moviesWithAverageRating;
+    }
+
+    public List<MovieDto> searchMovies(String query) {
+        return trie.search(query);
     }
 
     public Optional<MovieDto> getMovieById(Long id) {
@@ -571,7 +677,11 @@ public class MovieService {
 
         List<Long> categoryIds = getCategoriesIds(categories);
 
-        return setCategories(movie.getId(), categoryIds);
+        CreateMovieStatus createMovieStatus = setCategories(movie.getId(), categoryIds);
+        if (createMovieStatus.isSuccess()) {
+            trie.insert(MovieDto.movieToMovieDto(movie));
+        }
+        return createMovieStatus;
     }
 
     public CreateMovieStatus createMovieByNames(MovieDto movieDto, List<String> categoryNames) {
@@ -585,7 +695,11 @@ public class MovieService {
 
         List<Long> categoryIds = categoryService.getCategoryIdsByName(categoryNames);
 
-        return setCategories(movie.getId(), categoryIds);
+        CreateMovieStatus createMovieStatus = setCategories(movie.getId(), categoryIds);
+        if (createMovieStatus.isSuccess()) {
+            trie.insert(MovieDto.movieToMovieDto(movie));
+        }
+        return createMovieStatus;
     }
 
     public CreateMovieStatus editMovie(Long movieId, MovieDto newMovieDto, List<CategoryDto> categories) {
@@ -599,6 +713,7 @@ public class MovieService {
             return CreateMovieStatus.MOVIE_DOESNT_EXIST;
         }
         Movie movie = optionalMovie.get();
+        MovieDto oldMovieDto = MovieDto.movieToMovieDto(movie);
 
         updateMovie(movie, newMovieDto);
 
@@ -609,6 +724,9 @@ public class MovieService {
         }
 
         movieRepository.save(movie);
+        trie.remove(oldMovieDto);
+        trie.insert(MovieDto.movieToMovieDto(movie));
+
         return CreateMovieStatus.SUCCESS;
     }
 
@@ -619,6 +737,7 @@ public class MovieService {
         }
 
         movieRepository.delete(movie.get());
+        trie.remove(MovieDto.movieToMovieDto(movie.get()));
         return true;
     }
 
@@ -676,6 +795,57 @@ public class MovieService {
 
 ```java
 public interface MovieRepository extends JpaRepository<Movie,Long> {
+
+    @Query("SELECT m FROM Movie m WHERE m.releaseDate > :today ORDER BY m.releaseDate")
+    List<Movie> findComingSoonMovies(@Param("today") LocalDate today);
+
+    @Query("SELECT m FROM Movie m " +
+            "JOIN m.categories c " +
+            "JOIN m.screenings s " +
+            "WHERE s.start > :localDateTime " +
+            "AND NOT EXISTS (" +
+            "    SELECT 1 " +
+            "    FROM Category cat " +
+            "    WHERE cat.id = :categoryId " +
+            "    AND cat MEMBER OF m.categories" +
+            ") " +
+            "AND NOT EXISTS (" +
+            "    SELECT p" +
+            "    FROM Purchase p" +
+            "    JOIN p.screening ps" +
+            "    WHERE p.user.id = :userId" +
+            "    AND ps.movie.id = m.id" +
+            "    AND p.reservationStatus = 'PAID'" +
+            ")")
+    List<Movie> findOtherMoviesNotWatchedByUser(@Param("categoryId") Long categoryId,
+                                                @Param("userId") Long userId,
+                                                @Param("localDateTime") LocalDateTime localDateTime);
+
+    @Query("SELECT m, AVG(o.rating) FROM Movie m " +
+            "JOIN Opinion o ON o.movie.id = m.id " +
+            "GROUP BY m " +
+            "ORDER BY AVG(o.rating) DESC")
+    List<Object[]> findTopRatedMovies();
+
+    @Query("SELECT DISTINCT m " +
+            "FROM Movie m " +
+            "JOIN m.categories c " +
+            "JOIN m.screenings s " +
+            "WHERE c.id = :categoryId " +
+            "AND s.start > :localDateTime " +
+            "AND NOT EXISTS (" +
+            "    SELECT p" +
+            "    FROM Purchase p" +
+            "    JOIN p.screening ps" +
+            "    WHERE p.user.id = :userId" +
+            "    AND ps.movie.id = m.id" +
+            "    AND p.reservationStatus = 'PAID'" +
+            ")")
+    List<Movie> findMoviesByCategoryAndNotWatchedByUser(@Param("categoryId") Long categoryId,
+                                                        @Param("userId") Long userId,
+                                                        @Param("localDateTime") LocalDateTime localDateTime);
+
+    boolean existsByIdAndReleaseDateBefore(Long aLong, LocalDate date);
 }
 ```
 
@@ -1262,6 +1432,9 @@ public class PurchaseService {
     @Autowired
     private ScreeningRepository screeningRepository;
 
+    @Autowired
+    private CategoryRepository categoryRepository;
+
     public List<Purchase> findAll() {
         return purchaseRepository.findAll();
     }
@@ -1280,6 +1453,16 @@ public class PurchaseService {
 
     public List<Purchase> findByStatus(ReservationStatus status) {
         return purchaseRepository.findByReservationStatus(status);
+    }
+
+    public Long getMostPurchasedCategoryIdForUser(Long userId) {
+        List<Object[]> result = categoryRepository.findMostPurchasedCategoryByUserId(userId);
+
+        if (result.isEmpty()) {
+            return 0L;
+        }
+
+        return (Long) result.get(0)[0];
     }
 
     public Purchase create(PurchaseDto purchaseDto) {
@@ -2296,11 +2479,38 @@ public class MovieController {
         this.movieService = movieService;
     }
 
+    @RolesAllowed({"ADMIN","CASHIER", "USER"})
     @GetMapping()
     public ResponseEntity<List<MovieDto>> getMovies() {
         return ResponseEntity.ok().body(movieService.getMovies());
     }
 
+    @RolesAllowed({"ADMIN","CASHIER", "USER"})
+    @GetMapping("/coming-soon")
+    public ResponseEntity<List<MovieDto>> getComingSoonMovies() {
+        return ResponseEntity.ok().body(movieService.getComingSoonMovies());
+    }
+
+
+    @RolesAllowed({"USER"})
+    @GetMapping("/recommended/{id}")
+    public ResponseEntity<List<MovieWithAverageRatingDto>> getRecommendedMovies(@PathVariable("id") Long id) {
+        return ResponseEntity.ok().body(movieService.getRecommendedMovies(id));
+    }
+
+    @RolesAllowed({"USER"})
+    @GetMapping("/top-rated")
+    public ResponseEntity<List<MovieWithAverageRatingDto>> getTopRatedMovies() {
+        return ResponseEntity.ok().body(movieService.getTopRatedMovies());
+    }
+
+    @RolesAllowed({"ADMIN","CASHIER", "USER"})
+    @PutMapping("/search")
+    public ResponseEntity<List<MovieDto>> searchMovies(@RequestBody String query) {
+        return ResponseEntity.ok().body(movieService.searchMovies(query));
+    }
+
+    @RolesAllowed({"ADMIN"})
     @DeleteMapping("delete/{id}")
     public ResponseEntity<String> deleteMovie(@PathVariable Long id) {
         if (movieService.deleteMovie(id)) {
@@ -2310,6 +2520,7 @@ public class MovieController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(message);
     }
 
+    @RolesAllowed({"ADMIN"})
     @PutMapping("/create")
     public ResponseEntity<String> createMovie(@RequestBody MovieWithCategoriesDto wrapperDto) {
         Status createMovieStatus = movieService.createMovie(wrapperDto.movieDto(), wrapperDto.categories());
@@ -2321,6 +2532,7 @@ public class MovieController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(createMovieStatus.message());
     }
 
+    @RolesAllowed({"ADMIN"})
     @PutMapping("/edit/{id}")
     public ResponseEntity<String> editMovie(@PathVariable Long id, @RequestBody MovieWithCategoriesDto wrapperDto) {
         Status editMovieStatus = movieService.editMovie(id, wrapperDto.movieDto(), wrapperDto.categories());
@@ -2332,8 +2544,9 @@ public class MovieController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(editMovieStatus.message());
     }
 
+    @RolesAllowed({"ADMIN","CASHIER", "USER"})
     @GetMapping("/categories/{id}")
-    public ResponseEntity<List<CategoryDto>> editMovie(@PathVariable Long id) {
+    public ResponseEntity<List<CategoryDto>> getMovieCategories(@PathVariable Long id) {
         List<CategoryDto> categories = movieService.getMovieCategories(id);
 
         return ResponseEntity.ok().body(categories);
@@ -3047,10 +3260,10 @@ public class RequestBuilder {
 }
 ```
 
-`ControllerResource`
+`FXMLResourceEnum`
 
 ```java
-public enum ControllerResource {
+public enum FXMLResourceEnum {
     LOGIN,
     REGISTRATION,
     ADMIN_PANEL,
@@ -3058,26 +3271,60 @@ public enum ControllerResource {
     ADMIN_EDIT_USER,
     ADMIN_MOVIE,
     ADMIN_EDIT_MOVIE,
+    ADMIN_CATEGORY,
+    ADMIN_EDIT_CATEGORY,
     ADMIN_SCREENINGS,
     ADMIN_EDIT_SCREENING,
+    ADMIN_MOVIE_ROOMS,
+    ADMIN_EDIT_MOVIE_ROOM,
+    ADMIN_BUY_TICKETS,
+    ADMIN_PURCHASES,
+    ADMIN_OPINIONS,
     USER_PANEL,
+    USER_RECOMMENDATIONS,
     USER_MOVIE,
-    USER_SCREENINGS;
+    USER_SCREENINGS,
+    USER_BUY_TICKETS,
+    USER_PURCHASES,
+    CASHIER_PANEL,
+    CASHIER_MOVIE,
+    CASHIER_SCREENINGS,
+    CASHIER_PURCHASES,
+    CASHIER_BUY_TICKETS,
+    RATE_PANEL,
+    USER_OPINIONS;
 
     public Resource getResource() {
         String resourceUrl = switch(this) {
-            case LOGIN -> "fxml/Login.fxml";
-            case REGISTRATION -> "fxml/Registration.fxml";
-            case ADMIN_PANEL -> "fxml/AdminPanel.fxml";
-            case ADMIN_USER -> "fxml/AdminUser.fxml";
-            case ADMIN_EDIT_USER -> "fxml/EditUser.fxml";
-            case ADMIN_MOVIE -> "fxml/AdminMovie.fxml";
-            case ADMIN_EDIT_MOVIE -> "fxml/EditMovie.fxml";
-            case ADMIN_SCREENINGS -> "fxml/AdminScreenings.fxml";
-            case ADMIN_EDIT_SCREENING -> "fxml/EditScreening.fxml";
-            case USER_PANEL -> "fxml/UserPanel.fxml";
-            case USER_MOVIE -> "fxml/UserMovie.fxml";
-            case USER_SCREENINGS -> "fxml/UserScreenings.fxml";
+            case LOGIN -> "fxml/authentication/Login.fxml";
+            case REGISTRATION -> "fxml/authentication/Registration.fxml";
+            case ADMIN_PANEL -> "fxml/admin/AdminPanel.fxml";
+            case ADMIN_USER -> "fxml/admin/AdminUser.fxml";
+            case ADMIN_EDIT_USER -> "fxml/edit/EditUser.fxml";
+            case ADMIN_MOVIE -> "fxml/admin/AdminMovie.fxml";
+            case ADMIN_EDIT_MOVIE -> "fxml/edit/EditMovie.fxml";
+            case ADMIN_CATEGORY -> "fxml/admin/AdminCategory.fxml";
+            case ADMIN_EDIT_CATEGORY -> "fxml/edit/EditCategory.fxml";
+            case ADMIN_SCREENINGS -> "fxml/admin/AdminScreenings.fxml";
+            case ADMIN_EDIT_SCREENING -> "fxml/edit/EditScreening.fxml";
+            case ADMIN_MOVIE_ROOMS -> "fxml/admin/AdminMovieRoom.fxml";
+            case ADMIN_BUY_TICKETS -> "fxml/admin/AdminBuyTickets.fxml";
+            case ADMIN_EDIT_MOVIE_ROOM -> "fxml/edit/EditMovieRoom.fxml";
+            case ADMIN_PURCHASES -> "fxml/admin/AdminPurchases.fxml";
+            case ADMIN_OPINIONS -> "fxml/admin/AdminOpinions.fxml";
+            case USER_PANEL -> "fxml/user/UserPanel.fxml";
+            case USER_RECOMMENDATIONS -> "fxml/user/UserRecommendation.fxml";
+            case USER_MOVIE -> "fxml/user/UserMovie.fxml";
+            case USER_SCREENINGS -> "fxml/user/UserScreenings.fxml";
+            case USER_BUY_TICKETS -> "fxml/user/UserBuyTickets.fxml";
+            case USER_PURCHASES -> "fxml/user/UserPurchases.fxml";
+            case CASHIER_PANEL -> "fxml/cashier/CashierPanel.fxml";
+            case CASHIER_MOVIE -> "fxml/cashier/CashierMovie.fxml";
+            case CASHIER_SCREENINGS ->  "fxml/cashier/CashierScreenings.fxml";
+            case CASHIER_PURCHASES -> "fxml/cashier/CashierPurchases.fxml";
+            case CASHIER_BUY_TICKETS -> "fxml/cashier/CashierBuyTickets.fxml";
+            case RATE_PANEL -> "fxml/user/UserRatePanel.fxml";
+            case USER_OPINIONS -> "fxml/user/UserOpinions.fxml";
         };
 
         return new ClassPathResource(resourceUrl);
@@ -3254,7 +3501,7 @@ public class RegistrationController {
     @FXML
     public void loadLoginPage() {
         try {
-            stageInitializer.loadStage(ControllerResource.LOGIN);
+            stageInitializer.loadStage(FXMLResourceEnum.LOGIN);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -3399,7 +3646,7 @@ public class LoginController {
                             if (isAdmin) {
                                 Platform.runLater(() -> {
                                     try {
-                                        stageInitializer.loadStage(ControllerResource.ADMIN_PANEL);
+                                        stageInitializer.loadStage(FXMLResourceEnum.ADMIN_PANEL);
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
@@ -3407,7 +3654,7 @@ public class LoginController {
                             } else {
                                 Platform.runLater(() -> {
                                     try {
-                                        stageInitializer.loadStage(ControllerResource.USER_PANEL);
+                                        stageInitializer.loadStage(FXMLResourceEnum.USER_PANEL);
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
@@ -3430,7 +3677,7 @@ public class LoginController {
     @FXML
     private void loadRegisterPage(MouseEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.REGISTRATION);
+            stageInitializer.loadStage(FXMLResourceEnum.REGISTRATION);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -3509,7 +3756,7 @@ public class UserPanelController {
     @FXML
     private void handleUserMovies(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.USER_MOVIE);
+            stageInitializer.loadStage(FXMLResourceEnum.USER_MOVIE);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -3518,7 +3765,7 @@ public class UserPanelController {
     @FXML
     private void handleUserScreenings(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.USER_SCREENINGS);
+            stageInitializer.loadStage(FXMLResourceEnum.USER_SCREENINGS);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -3527,7 +3774,7 @@ public class UserPanelController {
     @FXML
     private void handleSignOut(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.LOGIN);
+            stageInitializer.loadStage(FXMLResourceEnum.LOGIN);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -3552,7 +3799,7 @@ public class UserPanelController {
 `UserMovie.fxml`
 
 ```xml
-<AnchorPane stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
+<AnchorPane stylesheets="@../../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.user.UserMoviesController"
             fx:id="rootPane" prefHeight="600" prefWidth="800">
     <StackPane>
@@ -3560,9 +3807,13 @@ public class UserPanelController {
         <VBox spacing="20" alignment="CENTER">
             <Label text="ALL MOVIES" styleClass="moviesLabel"/>
             <VBox spacing="10" prefWidth="600" prefHeight="300" alignment="CENTER">
+                <HBox spacing="20" alignment="CENTER">
+                    <TextField fx:id="searchBar" promptText="search for movies"/>
+                    <Button fx:id="searchButton" text="Search" onAction="#handleSearch"/>
+                </HBox>
                 <ListView fx:id="moviesListView" maxWidth="600"/>
                 <HBox spacing="10" alignment="CENTER">
-                    <Button text="Rate" fx:id="rateButton" styleClass="moviesButton" />
+                    <Button text="Rate" fx:id="rateButton" styleClass="moviesButton" onAction="#handleRate" />
                 </HBox>
             </VBox>
             <Button text="Go Back" styleClass="moviesButton" onAction="#handleGoBack" />
@@ -3581,11 +3832,19 @@ public class UserMoviesController {
 
     private ObservableList<MovieDto> movieDtoList;
 
+    private final UserRateMovieController userRateMovieController;
+
     @Autowired
     private MovieClientAPI movieClientAPI;
 
     @FXML
     private ListView<MovieDto> moviesListView;
+
+    @FXML
+    private TextField searchBar;
+
+    @FXML
+    private Button searchButton;
 
     @FXML
     private Button rateButton;
@@ -3596,8 +3855,10 @@ public class UserMoviesController {
     @FXML
     private AnchorPane rootPane;
 
-    public UserMoviesController(StageInitializer stageInitializer) {
+    public UserMoviesController(StageInitializer stageInitializer,
+                                UserRateMovieController userRateMovieController) {
         this.stageInitializer = stageInitializer;
+        this.userRateMovieController = userRateMovieController;
     }
 
     @FXML
@@ -3605,7 +3866,6 @@ public class UserMoviesController {
         initializeMovieListView();
         initializeResponsiveness();
         initializeButtons();
-        loadMovies();
     }
 
     private void initializeMovieListView() {
@@ -3624,17 +3884,11 @@ public class UserMoviesController {
                 }
             }
         });
-
     }
 
     private void initializeResponsiveness() {
         backgroundRectangle.widthProperty().bind(rootPane.widthProperty());
         backgroundRectangle.heightProperty().bind(rootPane.heightProperty());
-    }
-
-    private void loadMovies() {
-        movieClientAPI.loadMovies()
-                .thenAccept(movieDtoList::addAll);
     }
 
     private void initializeButtons() {
@@ -3647,9 +3901,217 @@ public class UserMoviesController {
     }
 
     @FXML
+    private void handleSearch(ActionEvent event) {
+        String query = searchBar.getText();
+        if (query.isBlank()) {
+            return;
+        }
+
+        movieClientAPI.searchMovies(query)
+                .thenAccept(this::updateMovieList);
+    }
+
+    private void updateMovieList(List<MovieDto> foundMovieDtoList) {
+        Platform.runLater(() -> {
+            movieDtoList.clear();
+            movieDtoList.addAll(foundMovieDtoList);
+        });
+    }
+
+    @FXML
     private void handleGoBack(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.USER_PANEL);
+            stageInitializer.loadStage(FXMLResourceEnum.USER_PANEL);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML void handleRate(ActionEvent event) {
+        try {
+            MovieDto movieDto = moviesListView.getSelectionModel().getSelectedItem();
+            stageInitializer.loadStage(FXMLResourceEnum.RATE_PANEL);
+            userRateMovieController.setMovie(movieDto);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+```
+
+`UserRecommendation.fxml`
+
+```xml
+<AnchorPane stylesheets="@../../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.user.UserRecommendationsController"
+            fx:id="rootPane" prefHeight="800" prefWidth="800">
+
+        <ScrollPane fx:id="scrollPane" prefHeight="800" prefWidth="800" vbarPolicy="NEVER" hbarPolicy="NEVER">
+            <HBox fx:id="mainHBox" alignment="CENTER" style="-fx-background-color: #97f3c8;">
+                <VBox prefWidth="800" spacing="20" alignment="CENTER" style="-fx-background-color: #97f3c8;">
+                    <Region prefHeight="20" />
+                    <Button text="Go Back" styleClass="moviesButton" onAction="#handleGoBack" />
+                    <Label text="COMING SOON" styleClass="moviesLabel"/>
+                    <ListView fx:id="comingSoonMoviesListView" prefHeight="200" maxWidth="600"/>
+                    <Label text="YOU MAY ALSO LIKE" styleClass="moviesLabel"/>
+                    <Label fx:id="recommendedMoviesEmptyLabel"
+                           text="Watch your first movie to receive your recommendations"
+                           style="-fx-font-size: 14px;"
+                           visible="false"/>
+                    <ListView fx:id="recommendedMoviesListView" prefHeight="200" maxWidth="600"/>
+                    <Label text="HIGHEST RATED" styleClass="moviesLabel"/>
+                    <ListView fx:id="highestRatedMoviesListView" prefHeight="200" maxWidth="600"/>
+                    <Button text="Go Back" styleClass="moviesButton" onAction="#handleGoBack" />
+                    <Region prefHeight="20" />
+                </VBox>
+            </HBox>
+        </ScrollPane>
+</AnchorPane>
+```
+
+`UserRecommendationsController`
+
+```java
+@Controller
+public class UserRecommendationsController {
+
+    private final StageInitializer stageInitializer;
+
+    private final MovieClientAPI movieClientAPI;
+
+    private final MovieCellCreator movieCellCreator;
+
+    private final SessionContext sessionContext;
+
+    private ObservableList<MovieDto> comingSoonMovieDtoList;
+
+    @FXML
+    private ListView<MovieDto> comingSoonMoviesListView;
+
+    private ObservableList<MovieWithAverageRatingDto> recommendedMovieDtoList;
+
+    @FXML
+    private ListView<MovieWithAverageRatingDto> recommendedMoviesListView;
+
+    private ObservableList<MovieWithAverageRatingDto> highestRatedMovieDtoList;
+
+    @FXML
+    private ListView<MovieWithAverageRatingDto> highestRatedMoviesListView;
+
+    @FXML
+    private Label recommendedMoviesEmptyLabel;
+
+    @FXML
+    private ScrollPane scrollPane;
+
+    @FXML
+    private HBox mainHBox;
+
+    @FXML
+    private AnchorPane rootPane;
+
+    public UserRecommendationsController(StageInitializer stageInitializer,
+                                         MovieClientAPI movieClientAPI,
+                                         MovieCellCreator movieCellCreator,
+                                         SessionContext sessionContext) {
+        this.stageInitializer = stageInitializer;
+        this.movieClientAPI = movieClientAPI;
+        this.movieCellCreator = movieCellCreator;
+        this.sessionContext = sessionContext;
+    }
+
+    @FXML
+    private void initialize() {
+        initializeMovieListViews();
+        initializeResponsiveness();
+
+        Platform.runLater(this::loadMovies);
+    }
+
+    private void initializeMovieListViews() {
+        comingSoonMovieDtoList = FXCollections.observableArrayList();
+        initializeMovieListView(comingSoonMovieDtoList, comingSoonMoviesListView);
+        recommendedMovieDtoList = FXCollections.observableArrayList();
+        initializeMovieWithRatingsListView(recommendedMovieDtoList, recommendedMoviesListView);
+        highestRatedMovieDtoList = FXCollections.observableArrayList();
+        initializeMovieWithRatingsListView(highestRatedMovieDtoList, highestRatedMoviesListView);
+    }
+
+    private void initializeMovieListView(ObservableList<MovieDto> movieDtoList, ListView<MovieDto> moviesListView) {
+        moviesListView.setItems(movieDtoList);
+        moviesListView.setSelectionModel(null);
+
+        moviesListView.setCellFactory(list -> new ListCell<>() {
+            @Override
+            protected void updateItem(MovieDto movieDto, boolean empty) {
+                super.updateItem(movieDto, empty);
+                if (empty || movieDto == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    HBox hBox = movieCellCreator.createMovieCell(movieDto);
+                    setGraphic(hBox);
+                }
+            }
+        });
+    }
+
+
+    private void initializeMovieWithRatingsListView(ObservableList<MovieWithAverageRatingDto> movieDtoList,
+                                                    ListView<MovieWithAverageRatingDto> moviesListView) {
+        moviesListView.setItems(movieDtoList);
+
+        moviesListView.setCellFactory(list -> new ListCell<>() {
+            @Override
+            protected void updateItem(MovieWithAverageRatingDto movieWithAverageRatingDto, boolean empty) {
+                super.updateItem(movieWithAverageRatingDto, empty);
+                if (empty || movieWithAverageRatingDto == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    HBox hBox = movieCellCreator.createMovieCell(movieWithAverageRatingDto);
+                    setGraphic(hBox);
+                }
+            }
+        });
+    }
+
+    private void initializeResponsiveness() {
+        scrollPane.prefHeightProperty().bind(rootPane.heightProperty());
+        scrollPane.prefWidthProperty().bind(rootPane.widthProperty());
+
+        mainHBox.prefWidthProperty().bind(rootPane.widthProperty());
+    }
+
+    private void loadMovies() {
+        movieClientAPI.loadComingSoonMovies()
+                .thenAccept(comingSoonMovieDtoList::addAll)
+                .thenRun(() -> comingSoonMoviesListView.setPrefHeight(130 * comingSoonMovieDtoList.size()));
+
+        movieClientAPI.loadRecommendedMovies(sessionContext.getUserId())
+                .thenAccept(recommendedMovieDtoList::addAll)
+                .thenRun(this::updateRecommendedMoviesView);
+
+        movieClientAPI.loadTopRatedMovies()
+                .thenAccept(highestRatedMovieDtoList::addAll)
+                .thenRun(() -> highestRatedMoviesListView.setPrefHeight(130 * highestRatedMovieDtoList.size()));
+    }
+
+    private void updateRecommendedMoviesView() {
+        if (recommendedMovieDtoList.isEmpty()) {
+            recommendedMoviesEmptyLabel.setVisible(true);
+            recommendedMoviesListView.setVisible(false);
+        } else {
+            recommendedMoviesEmptyLabel.setVisible(false);
+            recommendedMoviesListView.setVisible(true);
+            recommendedMoviesListView.setPrefHeight(130 * recommendedMovieDtoList.size());
+        }
+    }
+
+    @FXML
+    private void handleGoBack(ActionEvent event) {
+        try {
+            stageInitializer.loadStage(FXMLResourceEnum.USER_PANEL);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -3684,6 +4146,80 @@ public class UserMoviesController {
         </VBox>
     </StackPane>
 </AnchorPane>
+```
+
+`MovieCellCreator`
+
+Klasa zajmująca się tworzeniem *customowej* komórki na wyświetlenie informacji o filmie
+
+```java
+@Component
+public class MovieCellCreator {
+
+    private PosterDownloader posterDownloader;
+
+    public MovieCellCreator(PosterDownloader posterDownloader) {
+        this.posterDownloader = posterDownloader;
+    }
+
+    public HBox createMovieCell(MovieDto movieDto) {
+        HBox hBox = new HBox(10);
+        hBox.setStyle("-fx-padding: 10;");
+
+        ImageView imageView = getImageView(movieDto);
+
+        VBox vBox = getDescription(movieDto);
+
+        hBox.getChildren().addAll(imageView, vBox);
+        return hBox;
+    }
+
+
+    public HBox createMovieCell(MovieWithAverageRatingDto movieWithAverageRatingDto) {
+        HBox hBox = new HBox(10);
+        hBox.setStyle("-fx-padding: 10;");
+
+        ImageView imageView = getImageView(movieWithAverageRatingDto.movieDto());
+
+        VBox vBox = getDescription(movieWithAverageRatingDto.movieDto());
+
+        Label label = getAverageRatingLabel(movieWithAverageRatingDto);
+
+        hBox.getChildren().addAll(imageView, vBox, label);
+        return hBox;
+    }
+
+    private static Label getAverageRatingLabel(MovieWithAverageRatingDto movieWithAverageRatingDto) {
+        String averageRatingMessage;
+        if (movieWithAverageRatingDto.averageRating() == null) {
+            averageRatingMessage = "Be the first to review this movie!";
+        } else {
+            averageRatingMessage = String.format(Locale.ENGLISH, "Average rating = %.2f", movieWithAverageRatingDto.averageRating());
+        }
+        return new Label(averageRatingMessage);
+    }
+
+    private VBox getDescription(MovieDto movieDto) {
+        VBox vBox = new VBox();
+        Label titleLabel = new Label(movieDto.title());
+        titleLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        Label releaseDateLabel = new Label("Premiere date: "+ movieDto.releaseDate().toString());
+        releaseDateLabel.setStyle("-fx-font-size: 14px;");
+
+        vBox.getChildren().addAll(titleLabel, releaseDateLabel);
+        return vBox;
+    }
+
+    private ImageView getImageView(MovieDto movieDto) {
+        ImageView imageView = new ImageView();
+        imageView.setFitHeight(100);
+        imageView.setFitWidth(75);
+        posterDownloader.isPosterUrlValid(movieDto.posterUrl());
+        Image image = posterDownloader.getPoster();
+        imageView.setImage(image);
+        return imageView;
+    }
+}
 ```
 
 `UserScreeningsController`
@@ -3837,7 +4373,7 @@ public class UserScreeningsController {
     @FXML
     private void handleGoBack(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.USER_PANEL);
+            stageInitializer.loadStage(FXMLResourceEnum.USER_PANEL);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -4449,7 +4985,7 @@ public class AdminPanelController {
     @FXML
     private void handleAdminUsers(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_USER);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_USER);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -4458,7 +4994,7 @@ public class AdminPanelController {
     @FXML
     private void handleAdminMovies(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_MOVIE);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_MOVIE);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -4467,7 +5003,7 @@ public class AdminPanelController {
     @FXML
     private void handleScreenings(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_SCREENINGS);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_SCREENINGS);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -4476,7 +5012,7 @@ public class AdminPanelController {
     @FXML
     private void handleSignOut(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.LOGIN);
+            stageInitializer.loadStage(FXMLResourceEnum.LOGIN);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -4615,7 +5151,7 @@ public class AdminUsersController {
     @FXML
     private void handleGoBack(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_PANEL);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_PANEL);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -5047,7 +5583,7 @@ public class AdminMoviesController {
     private void handleEdit(ActionEvent event) {
         try {
             MovieDto toEdit = moviesListView.getSelectionModel().getSelectedItem();
-            stageInitializer.loadStage(ControllerResource.ADMIN_EDIT_MOVIE);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_EDIT_MOVIE);
             adminEditMovieController.setMovieDto(toEdit);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -5057,7 +5593,7 @@ public class AdminMoviesController {
     @FXML
     private void handleAdd(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_EDIT_MOVIE);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_EDIT_MOVIE);
             adminEditMovieController.resetMovieDto();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -5067,7 +5603,7 @@ public class AdminMoviesController {
     @FXML
     private void handleGoBack(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_PANEL);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_PANEL);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -5082,51 +5618,52 @@ public class AdminMoviesController {
 
 
 ```xml
-<AnchorPane stylesheets="@../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
-            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.admin.AdminEditMovieController"
-            fx:id="rootPane" prefHeight="800" prefWidth="800">
+<AnchorPane fx:id="rootPane" prefHeight="800" prefWidth="800"
+            stylesheets="@../../styles/Styles.css" xmlns="http://javafx.com/javafx/17.0.2-ea"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="monaditto.cinemafront.controller.admin.AdminEditMovieController">
 
-    <Rectangle fx:id="backgroundRectangle" fill="Azure" stroke="#ffffff8b" strokeType="INSIDE"/>
+    <Rectangle fx:id="backgroundRectangle" fill="Azure" stroke="#ffffff8b" strokeType="INSIDE" />
     <HBox alignment="CENTER" spacing="10">
-        <VBox spacing="10" style="-fx-padding: 24" alignment="CENTER" prefWidth="400">
+        <VBox alignment="CENTER" prefWidth="400" spacing="10" style="-fx-padding: 24">
             <Label fx:id="mainLabel" style="-fx-font-size: 24;" />
             <VBox spacing="4">
                 <TextField fx:id="titleField" promptText="Movie title" />
-                <TextArea fx:id="descriptionField" promptText="Description" prefHeight="100" wrapText="true"/>
+                <TextArea fx:id="descriptionField" prefHeight="100" promptText="Description" wrapText="true" />
                 <TextField fx:id="durationField" promptText="Duration" />
-                <TextField fx:id="releaseDateField" promptText="Release date" />
+                <DatePicker fx:id="releaseDateField" promptText="Select Release Date" />
                 <HBox spacing="5">
                     <TextField fx:id="posterUrlField" promptText="Poster url address" />
-                    <Button text="Test" onAction="#handleTestPosterUrl"/>
+                    <Button onAction="#handleTestPosterUrl" text="Test" />
                 </HBox>
 
                 <VBox prefHeight="200">
                     <HBox>
                         <VBox>
-                            <Label text="Assigned categories" style="-fx-font-size: 16;" />
+                            <Label style="-fx-font-size: 16;" text="Assigned categories" />
                             <ListView fx:id="assignedCategoriesListView" />
                         </VBox>
                         <VBox>
-                            <Label text="Available categories" style="-fx-font-size: 16;" />
+                            <Label style="-fx-font-size: 16;" text="Available categories" />
                             <ListView fx:id="availableCategoriesListView" />
                         </VBox>
                     </HBox>
                     <HBox spacing="6">
-                        <Button fx:id="addCategoryButton" text="Add category" onAction="#handleAddCategory"/>
-                        <Button fx:id="removeCategoryButton" text="Remove category" onAction="#handleRemoveCategory"/>
+                        <Button fx:id="addCategoryButton" onAction="#handleAddCategory" text="Add category" />
+                        <Button fx:id="removeCategoryButton" onAction="#handleRemoveCategory" text="Remove category" />
                     </HBox>
                 </VBox>
-                <VBox prefHeight="80" style="-fx-padding: 15" alignment="CENTER">
-                    <Label fx:id="statusLabel" maxWidth="400" wrapText="true" textAlignment="CENTER"/>
+                <VBox alignment="CENTER" prefHeight="80" style="-fx-padding: 15">
+                    <Label fx:id="statusLabel" maxWidth="400" textAlignment="CENTER" wrapText="true" />
                 </VBox>
                 <HBox spacing="6">
-                    <Button fx:id="cancelButton" text="Cancel" onAction="#handleCancel"/>
-                    <Button fx:id="saveButton" text="Save" onAction="#handleSave"/>
+                    <Button fx:id="cancelButton" onAction="#handleCancel" text="Cancel" />
+                    <Button fx:id="saveButton" onAction="#handleSave" text="Save" />
                 </HBox>
             </VBox>
         </VBox>
         <VBox alignment="CENTER">
-            <ImageView fx:id="imageView" fitHeight="400" preserveRatio="true"/>
+            <ImageView fx:id="imageView" fitHeight="400" preserveRatio="true" />
         </VBox>
     </HBox>
 </AnchorPane>
@@ -5167,7 +5704,7 @@ public class AdminEditMovieController {
     private TextField durationField;
 
     @FXML
-    private TextField releaseDateField;
+    private DatePicker releaseDateField;
 
     @FXML
     private TextField posterUrlField;
@@ -5251,12 +5788,10 @@ public class AdminEditMovieController {
     }
 
     private void loadEditedMovie() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-
         titleField.setText(movieDto.title());
         descriptionField.setText(movieDto.description());
         durationField.setText(String.valueOf(movieDto.duration()));
-        releaseDateField.setText(movieDto.releaseDate().format(formatter));
+        releaseDateField.setValue(movieDto.releaseDate());
         posterUrlField.setText(movieDto.posterUrl());
     }
 
@@ -5264,7 +5799,7 @@ public class AdminEditMovieController {
         titleField.clear();
         descriptionField.clear();
         durationField.clear();
-        releaseDateField.clear();
+        releaseDateField.setValue(LocalDate.now());
         posterUrlField.clear();
     }
 
@@ -5361,16 +5896,13 @@ public class AdminEditMovieController {
 
     private Optional<MovieDto> createMovieDto() {
         try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-            LocalDate parsedDate = LocalDate.parse(releaseDateField.getText(), formatter);
-
             MovieDto movieDto = new MovieDto(
                     null,
                     titleField.getText(),
                     descriptionField.getText(),
                     Integer.parseInt(durationField.getText()),
                     posterUrlField.getText(),
-                    parsedDate);
+                    releaseDateField.getValue());
 
             return Optional.of(movieDto);
         } catch (NumberFormatException e) {
@@ -5400,7 +5932,7 @@ public class AdminEditMovieController {
     @FXML
     private void handleCancel(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_MOVIE);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_MOVIE);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -5426,6 +5958,14 @@ public class MovieClientAPI {
 
     private String categoriesUrl;
 
+    private String comingSoonUrl;
+
+    private String recommendedUrl;
+
+    private String topRatedUrl;
+
+    private String searchUrl;
+
     private String baseUrl;
 
     private final ObjectMapper objectMapper;
@@ -5434,9 +5974,12 @@ public class MovieClientAPI {
 
     private final BackendConfig backendConfig;
 
-    public MovieClientAPI(BackendConfig backendConfig, CategoryClientAPI categoryClientAPI) {
+    private final HttpClient httpClient;
+
+    public MovieClientAPI(BackendConfig backendConfig, CategoryClientAPI categoryClientAPI, HttpClient httpClient) {
         this.backendConfig = backendConfig;
         this.categoryClientAPI = categoryClientAPI;
+        this.httpClient = httpClient;
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         initializeUrls();
@@ -5449,20 +5992,23 @@ public class MovieClientAPI {
         createUrl = endpointUrl + "/create";
         editUrl = endpointUrl + "/edit";
         categoriesUrl = endpointUrl + "/categories";
+        comingSoonUrl = endpointUrl + "/coming-soon";
+        searchUrl = endpointUrl + "/search";
+        recommendedUrl = endpointUrl + "/recommended";
+        topRatedUrl = endpointUrl + "/top-rated";
     }
 
     public CompletableFuture<ResponseResult> createMovie(MovieDto movieDto, List<CategoryDto> categories) {
         MovieWithCategoriesDto wrapperDto = new MovieWithCategoriesDto(movieDto, categories);
         String jsonBody = serializeWrapperDto(wrapperDto);
 
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestPUT(createUrl, jsonBody);
 
-        return sendCreateMovieRequest(client, request);
+        return sendCreateMovieRequest(request);
     }
 
-    private CompletableFuture<ResponseResult> sendCreateMovieRequest(HttpClient client, HttpRequest request) {
-        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+    private CompletableFuture<ResponseResult> sendCreateMovieRequest(HttpRequest request) {
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(response -> new ResponseResult(response.statusCode(), response.body()))
                 .exceptionally(e -> {
                     System.err.println("Error loading the movies: " + e.getMessage());
@@ -5474,14 +6020,13 @@ public class MovieClientAPI {
         MovieWithCategoriesDto wrapperDto = new MovieWithCategoriesDto(newMovieDto, categories);
         String jsonBody = serializeWrapperDto(wrapperDto);
 
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestPUT(editUrl + "/" + movieId, jsonBody);
 
-        return sendEditMovieRequest(client, request);
+        return sendEditMovieRequest(request);
     }
 
-    private CompletableFuture<ResponseResult> sendEditMovieRequest(HttpClient client, HttpRequest request) {
-        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+    private CompletableFuture<ResponseResult> sendEditMovieRequest(HttpRequest request) {
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(response -> new ResponseResult(response.statusCode(), response.body()))
                 .exceptionally(e -> {
                     System.err.println("Error editing the movies: " + e.getMessage());
@@ -5490,14 +6035,13 @@ public class MovieClientAPI {
     }
 
     public CompletableFuture<List<CategoryDto>> getMovieCategories(MovieDto movieDto) {
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestGET(categoriesUrl + "/" + movieDto.id());
 
-        return sendGetMovieCategoriesRequest(client, request);
+        return sendGetMovieCategoriesRequest(request);
     }
 
-    private CompletableFuture<List<CategoryDto>> sendGetMovieCategoriesRequest(HttpClient client, HttpRequest request) {
-        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+    private CompletableFuture<List<CategoryDto>> sendGetMovieCategoriesRequest(HttpRequest request) {
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(HttpResponse::body)
                 .thenApply(categoryClientAPI::parseCategoryList)
                 .exceptionally(e -> {
@@ -5506,19 +6050,82 @@ public class MovieClientAPI {
                 });
     }
 
-    public CompletableFuture<List<MovieDto>> loadMovies() {
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = RequestBuilder.buildRequestGET(endpointUrl);
+    public CompletableFuture<List<MovieDto>> loadComingSoonMovies() {
+        HttpRequest request = RequestBuilder.buildRequestGET(comingSoonUrl);
 
-        return sendLoadMoviesRequest(client, request);
+        return sendLoadComingSoonMoviesRequest(request);
     }
 
-    private CompletableFuture<List<MovieDto>> sendLoadMoviesRequest(HttpClient client, HttpRequest request) {
-        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+    private CompletableFuture<List<MovieDto>> sendLoadComingSoonMoviesRequest(HttpRequest request) {
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(HttpResponse::body)
                 .thenApply(this::parseMovieList)
                 .exceptionally(e -> {
                     System.err.println("Error loading the movies: " + e.getMessage());
+                    return new ArrayList<>();
+                });
+    }
+
+    public CompletableFuture<List<MovieWithAverageRatingDto>> loadRecommendedMovies(Long userId) {
+        HttpRequest request = RequestBuilder.buildRequestGET(recommendedUrl + "/" + userId);
+
+        return sendLoadRecommendedMoviesRequest(request);
+    }
+
+    private CompletableFuture<List<MovieWithAverageRatingDto>> sendLoadRecommendedMoviesRequest(HttpRequest request) {
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(HttpResponse::body)
+                .thenApply(this::parseMovieWithRatingsList)
+                .exceptionally(e -> {
+                    System.err.println("Error loading the movies: " + e.getMessage());
+                    return new ArrayList<>();
+                });
+    }
+
+    public CompletableFuture<List<MovieWithAverageRatingDto>> loadTopRatedMovies() {
+        HttpRequest request = RequestBuilder.buildRequestGET(topRatedUrl);
+
+        return sendLoadTopRatedMoviesRequest(request);
+    }
+
+    private CompletableFuture<List<MovieWithAverageRatingDto>> sendLoadTopRatedMoviesRequest(HttpRequest request) {
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(HttpResponse::body)
+                .thenApply(this::parseMovieWithRatingsList)
+                .exceptionally(e -> {
+                    System.err.println("Error loading the movies: " + e.getMessage());
+                    return new ArrayList<>();
+                });
+    }
+
+    public CompletableFuture<List<MovieDto>> loadMovies() {
+        HttpRequest request = RequestBuilder.buildRequestGET(endpointUrl);
+
+        return sendLoadMoviesRequest(request);
+    }
+
+    private CompletableFuture<List<MovieDto>> sendLoadMoviesRequest(HttpRequest request) {
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(HttpResponse::body)
+                .thenApply(this::parseMovieList)
+                .exceptionally(e -> {
+                    System.err.println("Error loading the movies: " + e.getMessage());
+                    return new ArrayList<>();
+                });
+    }
+
+    public CompletableFuture<List<MovieDto>> searchMovies(String query) {
+        HttpRequest request = RequestBuilder.buildRequestPUT(searchUrl, query);
+
+        return sendSearchMoviesRequest(request);
+    }
+
+    private CompletableFuture<List<MovieDto>> sendSearchMoviesRequest(HttpRequest request) {
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(HttpResponse::body)
+                .thenApply(this::parseMovieList)
+                .exceptionally(e -> {
+                    System.err.println("Error searching the movies: " + e.getMessage());
                     return new ArrayList<>();
                 });
     }
@@ -5531,6 +6138,14 @@ public class MovieClientAPI {
         }
     }
 
+    private List<MovieWithAverageRatingDto> parseMovieWithRatingsList(String responseBody) {
+        try {
+            return objectMapper.readValue(responseBody, new TypeReference<>() {});
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error parsing movie with ratings list: " + e.getMessage(), e);
+        }
+    }
+
     private String serializeWrapperDto(MovieWithCategoriesDto wrapperDto) {
         try {
             return objectMapper.writeValueAsString(wrapperDto);
@@ -5540,10 +6155,9 @@ public class MovieClientAPI {
     }
 
     public int delete(MovieDto movieDto) {
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestDELETE(deleteUrl + "/" + movieDto.id());
 
-        return sendDeleteMovieRequest(client, request);
+        return sendDeleteMovieRequest(httpClient, request);
     }
 
     private int sendDeleteMovieRequest(HttpClient client, HttpRequest request) {
@@ -5765,7 +6379,7 @@ public class AdminScreeningsController {
     private void handleEdit(ActionEvent event) {
         try {
             ScreeningDto toEdit = screeningsListView.getSelectionModel().getSelectedItem();
-            stageInitializer.loadStage(ControllerResource.ADMIN_EDIT_SCREENING);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_EDIT_SCREENING);
             adminEditScreeningController.setScreeningDto(toEdit);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -5775,7 +6389,7 @@ public class AdminScreeningsController {
     @FXML
     private void handleAdd(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_EDIT_SCREENING);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_EDIT_SCREENING);
             adminEditScreeningController.resetScreeningDto();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -5785,7 +6399,7 @@ public class AdminScreeningsController {
     @FXML
     private void handleGoBack(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_PANEL);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_PANEL);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -6081,7 +6695,7 @@ public class AdminEditScreeningController {
     @FXML
     private void handleCancel(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_SCREENINGS);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_SCREENINGS);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -7068,6 +7682,7 @@ public class CashierPurchasesController {
         </VBox>
     </StackPane>
 </AnchorPane>
+```
 
 i controler
 
@@ -7277,8 +7892,6 @@ public class CashierScreeningsController {
         screeningsDtoList.setAll(filteredScreenings);
     }
 }
-```
-
 ```
 
 # Dodatki

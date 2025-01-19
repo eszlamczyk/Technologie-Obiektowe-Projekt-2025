@@ -132,6 +132,11 @@ public class AdminPanelController {
         button.setOnMouseExited(e -> button.setCursor(Cursor.DEFAULT));
     }
 
-
-
+    public void handleStats(ActionEvent event) {
+        try {
+            stageInitializer.loadStage(FXMLResourceEnum.STATS_PANEL);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

@@ -8,7 +8,7 @@
 <?import javafx.scene.shape.Rectangle?>
 <AnchorPane stylesheets="@../../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.admin.AdminPanelController"
-            fx:id="rootPane" prefHeight="800" prefWidth="800">
+            fx:id="rootPane" prefHeight="1000" prefWidth="800">
 
     <StackPane>
         <Rectangle fx:id="backgroundRectangle" fill="AQUAMARINE" stroke="#ffffff8b" strokeType="INSIDE"/>
@@ -21,6 +21,7 @@
             <Button fx:id="movieRoomsButton" styleClass="adminPanelButton" text="Movie Rooms" onAction="#handleMovieRooms"/>
             <Button fx:id="purchasesButton" styleClass="adminPanelButton" text="Purchases" onAction="#handlePurchases"/>
             <Button fx:id="opinionsButton" styleClass="adminPanelButton" text="Opinions" onAction="#handleOpinions"/>
+            <Button fx:id="statsButton" styleClass="adminPanelButton" text="Statistics" onAction="#handleStats"/>
             <Button fx:id="signOutButton" styleClass="adminPanelButton" text="Sign out" onAction="#handleSignOut"/>
             </VBox>
     </StackPane>

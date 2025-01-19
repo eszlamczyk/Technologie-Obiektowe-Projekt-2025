@@ -27,39 +27,15 @@ public class StatisticsController {
     }
 
     @RolesAllowed({"ADMIN"})
-    @GetMapping("/most-popular-movie-week")
-    public MovieWithEarningsDto getMostPopularMovieLastWeek() {
-        return statisticsService.getMostPopularMovieForPeriod(PeriodType.WEEK);
+    @GetMapping("/most-popular-movie/{periodType}")
+    public MovieWithEarningsDto getMostPopularMovieLastWeek(@PathVariable PeriodType periodType) {
+        return statisticsService.getMostPopularMovieForPeriod(periodType);
     }
 
     @RolesAllowed({"ADMIN"})
-    @GetMapping("/most-popular-movie-month")
-    public MovieWithEarningsDto getMostPopularMovieLastMonth() {
-        return statisticsService.getMostPopularMovieForPeriod(PeriodType.MONTH);
-    }
-
-    @RolesAllowed({"ADMIN"})
-    @GetMapping("/most-popular-movie-year")
-    public MovieWithEarningsDto getMostPopularMovieLastYear() {
-        return statisticsService.getMostPopularMovieForPeriod(PeriodType.YEAR);
-    }
-
-    @RolesAllowed({"ADMIN"})
-    @GetMapping("/most-popular-category-week")
-    public CategoryDto getMostPopularCategoryLastWeek() {
-        return statisticsService.getMostPopularCategoryForPeriod(PeriodType.WEEK);
-    }
-
-    @RolesAllowed({"ADMIN"})
-    @GetMapping("/most-popular-category-month")
-    public CategoryDto getMostPopularCategoryLastMonth() {
-        return statisticsService.getMostPopularCategoryForPeriod(PeriodType.MONTH);
-    }
-
-    @RolesAllowed({"ADMIN"})
-    @GetMapping("/most-popular-category-year")
-    public CategoryDto getMostPopularCategoryLastYear() {
-        return statisticsService.getMostPopularCategoryForPeriod(PeriodType.YEAR);
+    @GetMapping("/most-popular-category/{periodType}")
+    public CategoryDto getMostPopularCategoryLastWeek(@PathVariable PeriodType periodType) {
+        return statisticsService.getMostPopularCategoryForPeriod(periodType);
     }
 
     @RolesAllowed({"ADMIN"})

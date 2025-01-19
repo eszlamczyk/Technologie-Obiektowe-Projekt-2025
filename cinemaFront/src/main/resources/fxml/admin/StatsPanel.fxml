@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.Rectangle?>
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="monaditto.cinemafront.controller.admin.StatsPanel"
+            fx:id="rootPane"
+            prefHeight="800" prefWidth="800">
+
+    <StackPane>
+        <Rectangle fx:id="backgroundRectangle" fill="AQUAMARINE" stroke="#ffffff8b" strokeType="INSIDE"/>
+    </StackPane>
+    <Button text="Go Back" styleClass="moviesButton" onAction="#handleGoBack" />
+    <VBox spacing="20" alignment="TOP_CENTER" layoutX="50" layoutY="20">
+        <Label text="Statystyki Kina" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
+
+        <!-- Revenue Stats -->
+        <VBox spacing="10">
+            <Label text="Przychody" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+            <GridPane hgap="10" vgap="10">
+                <Label text="Przychód w tym tygodniu:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <Label fx:id="currentWeekRevenue" text="-" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                <Label text="Przychód w poprzednim tygodniu:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <Label fx:id="lastWeekRevenue" text="-" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                <Label text="Przychód w tym miesiącu:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <Label fx:id="currentMonthRevenue" text="-" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                <Label text="Przychód w poprzednim miesiącu:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                <Label fx:id="lastMonthRevenue" text="-" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+                <Label text="Przychód w tym roku:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                <Label fx:id="currentYearRevenue" text="-" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+                <Label text="Przychód w poprzednim roku:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                <Label fx:id="lastYearRevenue" text="-" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+            </GridPane>
+        </VBox>
+
+        <!-- Popular Movies Stats -->
+        <VBox spacing="10">
+            <Label text="Najpopularniejsze Filmy" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+            <GridPane hgap="10" vgap="10">
+                <Label text="Najpopularniejszy film w ostatnim tygodniu:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <Label fx:id="currentWeekTopMovie" text="-" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                <Label text="Najpopularniejszy film w ostatnim ostatnim:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <Label fx:id="currentMonthTopMovie" text="-" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                <Label text="Najpopularniejszy film w ostatnim roku:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <Label fx:id="currentYearTopMovie" text="-" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+            </GridPane>
+        </VBox>
+
+        <!-- Popular Categories Stats -->
+        <VBox spacing="10">
+            <Label text="Najpopularniejsze Kategorie" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+            <GridPane hgap="10" vgap="10">
+                <Label text="Najpopularniejsza kategoria w ostatnim tygodniu:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <Label fx:id="currentWeekTopCategory" text="-" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                <Label text="Najpopularniejsza kategoria w ostatnim miesiącu:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <Label fx:id="currentMonthTopCategory" text="-" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                <Label text="Najpopularniejsza kategoria w ostatnim roku:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <Label fx:id="currentYearTopCategory" text="-" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+            </GridPane>
+        </VBox>
+
+        <!-- Average Traffic Stats -->
+        <VBox spacing="10">
+            <Label text="Średni Ruch" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+            <GridPane hgap="10" vgap="10">
+                <Label text="Średni ruch w tym tygodniu:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <Label fx:id="currentWeekAvgTraffic" text="-" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                <Label text="Średni ruch w poprzednim tygodniu:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <Label fx:id="lastWeekAvgTraffic" text="-" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                <Label text="Średni ruch w tym miesiącu:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <Label fx:id="currentMonthAvgTraffic" text="-" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                <Label text="Średni ruch w poprzednim miesiącu:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                <Label fx:id="lastMonthAvgTraffic" text="-" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+                <Label text="Średni ruch w tym roku:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                <Label fx:id="currentYearAvgTraffic" text="-" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+                <Label text="Średni ruch w poprzednim roku:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                <Label fx:id="lastYearAvgTraffic" text="-" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+            </GridPane>
+        </VBox>
+    </VBox>
+</AnchorPane>

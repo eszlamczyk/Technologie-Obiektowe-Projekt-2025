@@ -15,7 +15,7 @@ import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.clientapi.CategoryClientAPI;
 import monaditto.cinemafront.clientapi.MovieClientAPI;
 import monaditto.cinemafront.config.BackendConfig;
-import monaditto.cinemafront.controller.ControllerResource;
+import monaditto.cinemafront.controller.FXMLResourceEnum;
 import monaditto.cinemafront.databaseMapping.CategoryDto;
 import monaditto.cinemafront.databaseMapping.MovieDto;
 import monaditto.cinemafront.request.PosterDownloader;
@@ -24,7 +24,6 @@ import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
@@ -63,7 +62,7 @@ public class AdminEditMovieController {
     private TextField durationField;
 
     @FXML
-    private TextField releaseDateField;
+    private DatePicker releaseDateField;
 
     @FXML
     private TextField posterUrlField;
@@ -147,12 +146,10 @@ public class AdminEditMovieController {
     }
 
     private void loadEditedMovie() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-
         titleField.setText(movieDto.title());
         descriptionField.setText(movieDto.description());
         durationField.setText(String.valueOf(movieDto.duration()));
-        releaseDateField.setText(movieDto.releaseDate().format(formatter));
+        releaseDateField.setValue(movieDto.releaseDate());
         posterUrlField.setText(movieDto.posterUrl());
     }
 
@@ -160,7 +157,7 @@ public class AdminEditMovieController {
         titleField.clear();
         descriptionField.clear();
         durationField.clear();
-        releaseDateField.clear();
+        releaseDateField.setValue(LocalDate.now());
         posterUrlField.clear();
     }
 
@@ -257,16 +254,13 @@ public class AdminEditMovieController {
 
     private Optional<MovieDto> createMovieDto() {
         try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-            LocalDate parsedDate = LocalDate.parse(releaseDateField.getText(), formatter);
-
             MovieDto movieDto = new MovieDto(
                     null,
                     titleField.getText(),
                     descriptionField.getText(),
                     Integer.parseInt(durationField.getText()),
                     posterUrlField.getText(),
-                    parsedDate);
+                    releaseDateField.getValue());
 
             return Optional.of(movieDto);
         } catch (NumberFormatException e) {
@@ -296,7 +290,7 @@ public class AdminEditMovieController {
     @FXML
     private void handleCancel(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_MOVIE);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_MOVIE);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

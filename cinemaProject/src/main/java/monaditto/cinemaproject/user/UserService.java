@@ -2,6 +2,8 @@ package monaditto.cinemaproject.user;
 
 import jakarta.transaction.Transactional;
 import monaditto.cinemaproject.crypto.PasswordHasher;
+import monaditto.cinemaproject.role.Role;
+import monaditto.cinemaproject.role.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +16,8 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    private final RoleRepository roleRepository;
+
     private final PasswordHasher passwordHasher;
 
     private final UserValidator userValidator;
@@ -21,10 +25,12 @@ public class UserService {
     @Autowired
     public UserService(
             UserRepository userRepository,
+            RoleRepository roleRepository,
             PasswordHasher passwordHasher,
             UserValidator userValidator) {
 
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
         this.passwordHasher = passwordHasher;
         this.userValidator = userValidator;
     }
@@ -91,6 +97,11 @@ public class UserService {
                 userDto.lastName(),
                 userDto.email(),
                 hashedPassword);
+        Optional<Role> userRole = roleRepository.findByName("user");
+        if (userRole.isEmpty()) {
+            return CreateUserStatus.DATABASE_ERROR;
+        }
+        user.getRoles().add(userRole.get());
         try {
             save(user);
             return CreateUserStatus.SUCCESS;

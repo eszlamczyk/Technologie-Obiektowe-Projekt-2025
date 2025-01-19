@@ -16,7 +16,7 @@ import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.clientapi.MovieClientAPI;
 import monaditto.cinemafront.clientapi.ScreeningClientAPI;
 import monaditto.cinemafront.config.BackendConfig;
-import monaditto.cinemafront.controller.ControllerResource;
+import monaditto.cinemafront.controller.FXMLResourceEnum;
 import monaditto.cinemafront.databaseMapping.MovieDto;
 import monaditto.cinemafront.databaseMapping.ScreeningDto;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -203,7 +203,7 @@ public class AdminScreeningsController {
     private void handleEdit(ActionEvent event) {
         try {
             ScreeningDto toEdit = screeningsListView.getSelectionModel().getSelectedItem();
-            stageInitializer.loadStage(ControllerResource.ADMIN_EDIT_SCREENING);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_EDIT_SCREENING);
             adminEditScreeningController.setScreeningDto(toEdit);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -213,7 +213,7 @@ public class AdminScreeningsController {
     @FXML
     private void handleAdd(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_EDIT_SCREENING);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_EDIT_SCREENING);
             adminEditScreeningController.resetScreeningDto();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -223,7 +223,7 @@ public class AdminScreeningsController {
     @FXML
     private void handleGoBack(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_PANEL);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_PANEL);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -262,7 +262,7 @@ public class AdminScreeningsController {
     @FXML
     private void handleBuy(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_BUY_TICKETS);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_BUY_TICKETS);
             adminBuyTicketsController.setScreeningDto(screeningsListView.getSelectionModel().getSelectedItem());
             adminBuyTicketsController.setMovieName(movieMap.get(screeningsListView.getSelectionModel().getSelectedItem().movieId()));
         } catch (IOException e) {

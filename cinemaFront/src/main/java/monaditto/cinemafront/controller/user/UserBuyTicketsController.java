@@ -7,10 +7,11 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.clientapi.PurchaseClientAPI;
-import monaditto.cinemafront.controller.ControllerResource;
+import monaditto.cinemafront.controller.FXMLResourceEnum;
 import monaditto.cinemafront.databaseMapping.PurchaseDto;
 import monaditto.cinemafront.databaseMapping.ReservationStatus;
 import monaditto.cinemafront.databaseMapping.ScreeningDto;
+
 import monaditto.cinemafront.session.SessionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -85,7 +86,7 @@ public class UserBuyTicketsController {
                         switch (result.statusCode()) {
                             case 200 -> {
                                 try {
-                                    stageInitializer.loadStage(ControllerResource.USER_PURCHASES);
+                                    stageInitializer.loadStage(FXMLResourceEnum.USER_PURCHASES);
                                 } catch (IOException e) {
                                     showError("Error navigating to screenings page: " + e.getMessage());
                                 }
@@ -113,7 +114,7 @@ public class UserBuyTicketsController {
     @FXML
     public void handleCancel(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.USER_SCREENINGS);
+            stageInitializer.loadStage(FXMLResourceEnum.USER_SCREENINGS);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

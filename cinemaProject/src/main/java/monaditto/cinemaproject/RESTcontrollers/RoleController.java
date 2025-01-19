@@ -1,5 +1,6 @@
 package monaditto.cinemaproject.RESTcontrollers;
 
+import jakarta.annotation.security.RolesAllowed;
 import monaditto.cinemaproject.role.RoleDto;
 import monaditto.cinemaproject.role.RoleService;
 import monaditto.cinemaproject.user.UserDto;
@@ -25,6 +26,7 @@ public class RoleController {
         this.roleService = roleService;
     }
 
+    @RolesAllowed({"ADMIN"})
     @GetMapping("/assigned/{userId}")
     List<RoleDto> getUserRoles(@PathVariable Long userId){
         Optional<UserDto> optionalUser = userService.findById(userId);
@@ -35,6 +37,7 @@ public class RoleController {
         return roleService.getUserRoles(userDto.id());
     }
 
+    @RolesAllowed({"ADMIN"})
     @GetMapping("/available/{userId}")
     List<RoleDto> getAvailableRolesForUser(@PathVariable Long userId){
         Optional<UserDto> optionalUser = userService.findById(userId);
@@ -45,6 +48,7 @@ public class RoleController {
         return roleService.getAvailableRoles(userDto.id());
     }
 
+    @RolesAllowed({"ADMIN"})
     @PostMapping("/update/{userId}")
     public ResponseEntity<Void> updateRoles(
             @PathVariable Long userId,

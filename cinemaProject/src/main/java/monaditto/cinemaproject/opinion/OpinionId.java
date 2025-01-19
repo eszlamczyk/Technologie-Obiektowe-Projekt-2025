@@ -8,9 +8,11 @@ import java.util.Objects;
 
 public class OpinionId implements Serializable {
 
-    private final User user;
+    private User user;
 
-    private final Movie movie;
+    private Movie movie;
+
+    public OpinionId() {}
 
     public OpinionId(User user, Movie movie) {
         this.user = user;

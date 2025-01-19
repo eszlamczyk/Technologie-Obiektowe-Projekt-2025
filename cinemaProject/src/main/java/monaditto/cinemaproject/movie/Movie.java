@@ -1,6 +1,7 @@
 package monaditto.cinemaproject.movie;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import monaditto.cinemaproject.category.Category;
 import monaditto.cinemaproject.opinion.Opinion;
@@ -49,6 +50,7 @@ public class Movie {
             joinColumns = @JoinColumn(name = "movie_id"),
             inverseJoinColumns = @JoinColumn(name = "category_id")
     )
+    @JsonManagedReference
     private Set<Category> categories = new HashSet<>();
 
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL)
@@ -62,6 +64,10 @@ public class Movie {
         this.duration = duration;
         this.posterUrl = posterUrl;
         this.releaseDate = releaseDate;
+    }
+
+    public Movie(Long id) {
+        this.id = id;
     }
 
     public Long getId() {

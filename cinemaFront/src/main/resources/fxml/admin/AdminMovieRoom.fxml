@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.shape.Rectangle?>
+<AnchorPane stylesheets="@../../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.admin.AdminMovieRoomsController"
+            fx:id="rootPane" prefHeight="600" prefWidth="800">
+    <StackPane>
+        <Rectangle fx:id="backgroundRectangle" fill="CADETBLUE" stroke="#ffffff8b" strokeType="INSIDE"/>
+        <VBox spacing="20" alignment="CENTER">
+            <Label text="ALL MOVIE ROOMS" styleClass="moviesLabel"/>
+            <VBox spacing="10" prefWidth="600" prefHeight="300" alignment="CENTER">
+                <ListView fx:id="movieRoomsListView" maxWidth="600"/>
+                <HBox spacing="10" alignment="CENTER">
+                    <Button text="Add" styleClass="moviesButton" onAction="#handleAdd" />
+                    <Button text="Edit" fx:id="editButton" styleClass="moviesButton" onAction="#handleEdit" />
+                    <Button text="Delete" fx:id="deleteButton" styleClass="moviesButton" onAction="#handleDelete" />
+                </HBox>
+            </VBox>
+            <Button text="Go Back" styleClass="moviesButton" onAction="#handleGoBack" />
+        </VBox>
+    </StackPane>
+</AnchorPane>

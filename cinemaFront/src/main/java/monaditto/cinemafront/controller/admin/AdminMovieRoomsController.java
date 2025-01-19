@@ -15,7 +15,7 @@ import javafx.scene.shape.Rectangle;
 import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.clientapi.MovieRoomClientAPI;
 import monaditto.cinemafront.config.BackendConfig;
-import monaditto.cinemafront.controller.ControllerResource;
+import monaditto.cinemafront.controller.FXMLResourceEnum;
 import monaditto.cinemafront.databaseMapping.MovieRoomDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -104,7 +104,7 @@ public class AdminMovieRoomsController {
     @FXML
     public void handleAdd(ActionEvent event) {
         try{
-            stageInitializer.loadStage(ControllerResource.ADMIN_EDIT_MOVIE_ROOM);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_EDIT_MOVIE_ROOM);
             adminEditMovieRoomController.resetMovieRoomDto();
         }catch (IOException e){
             throw new RuntimeException(e);
@@ -115,7 +115,7 @@ public class AdminMovieRoomsController {
     public void handleEdit(ActionEvent event) {
         try{
             MovieRoomDto toEdit = movieRoomsListView.getSelectionModel().getSelectedItem();
-            stageInitializer.loadStage(ControllerResource.ADMIN_EDIT_MOVIE_ROOM);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_EDIT_MOVIE_ROOM);
             adminEditMovieRoomController.setMovieRoomDto(toEdit);
         }catch (IOException e){
             throw new RuntimeException(e);
@@ -138,7 +138,7 @@ public class AdminMovieRoomsController {
     @FXML
     private void handleGoBack(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_PANEL);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_PANEL);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -29,7 +29,10 @@ public class CategoryClientAPI {
 
     private final ObjectMapper objectMapper;
 
-    public CategoryClientAPI(BackendConfig backendConfig) {
+    private final HttpClient httpClient;
+
+    public CategoryClientAPI(HttpClient client, BackendConfig backendConfig) {
+        this.httpClient = client;
         this.backendConfig = backendConfig;
         objectMapper = new ObjectMapper();
         initializeUrls();
@@ -42,10 +45,9 @@ public class CategoryClientAPI {
     }
 
     public CompletableFuture<List<CategoryDto>> loadCategories() {
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestGET(endpointUrl);
 
-        return sendLoadCategoriesRequest(client, request);
+        return sendLoadCategoriesRequest(httpClient, request);
     }
 
     private CompletableFuture<List<CategoryDto>> sendLoadCategoriesRequest(HttpClient client, HttpRequest request) {
@@ -67,7 +69,6 @@ public class CategoryClientAPI {
     }
 
     public CompletableFuture<ResponseResult> createCategory(CategoryDto categoryDto){
-        HttpClient client = HttpClient.newHttpClient();
 
         String jsonString;
         try {
@@ -78,7 +79,7 @@ public class CategoryClientAPI {
 
         HttpRequest request = RequestBuilder.buildRequestPOST(endpointUrl,jsonString);
 
-        return sendCreateCategoryRequest(client,request);
+        return sendCreateCategoryRequest(httpClient,request);
     }
 
     private CompletableFuture<ResponseResult> sendCreateCategoryRequest(HttpClient client, HttpRequest request) {
@@ -88,7 +89,6 @@ public class CategoryClientAPI {
     }
 
     public CompletableFuture<ResponseResult> editCategory(Long categoryId, CategoryDto newCategoryDto){
-        HttpClient client = HttpClient.newHttpClient();
 
         String jsonString;
         try {
@@ -99,7 +99,7 @@ public class CategoryClientAPI {
 
         HttpRequest request = RequestBuilder.buildRequestPUT(endpointUrl + "/" + categoryId ,jsonString);
 
-        return sendEditMovieRequest(client,request);
+        return sendEditMovieRequest(httpClient,request);
     }
 
     private CompletableFuture<ResponseResult> sendEditMovieRequest(HttpClient client, HttpRequest request){
@@ -109,11 +109,10 @@ public class CategoryClientAPI {
     }
 
     public CompletableFuture<ResponseResult> deleteOneCategory(Long categoryId){
-        HttpClient client = HttpClient.newHttpClient();
 
         HttpRequest request = RequestBuilder.buildRequestDELETE(this.endpointUrl + "/" + categoryId);
 
-        return sendDeleteRequest(client, request);
+        return sendDeleteRequest(httpClient, request);
     }
 
     private CompletableFuture<ResponseResult> sendDeleteRequest(HttpClient client, HttpRequest request){

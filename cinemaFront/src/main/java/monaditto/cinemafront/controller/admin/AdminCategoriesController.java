@@ -15,7 +15,7 @@ import javafx.scene.shape.Rectangle;
 import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.clientapi.CategoryClientAPI;
 import monaditto.cinemafront.config.BackendConfig;
-import monaditto.cinemafront.controller.ControllerResource;
+import monaditto.cinemafront.controller.FXMLResourceEnum;
 import monaditto.cinemafront.databaseMapping.CategoryDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -107,7 +107,7 @@ public class AdminCategoriesController {
     @FXML
     public void handleAdd(ActionEvent actionEvent) {
         try{
-            stageInitializer.loadStage(ControllerResource.ADMIN_EDIT_CATEGORY);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_EDIT_CATEGORY);
             adminEditCategoryController.resetCategoryDto();
         }catch (IOException e){
             throw new RuntimeException(e);
@@ -117,7 +117,7 @@ public class AdminCategoriesController {
     public void handleEdit(ActionEvent actionEvent) {
         try{
             CategoryDto toEdit = categoriesListView.getSelectionModel().getSelectedItem();
-            stageInitializer.loadStage(ControllerResource.ADMIN_EDIT_CATEGORY);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_EDIT_CATEGORY);
             adminEditCategoryController.setCategoryDto(toEdit);
         }catch (IOException e){
             throw new RuntimeException(e);
@@ -139,7 +139,7 @@ public class AdminCategoriesController {
     @FXML
     private void handleGoBack(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_PANEL);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_PANEL);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -7,7 +7,7 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.shape.Rectangle;
 import monaditto.cinemafront.StageInitializer;
-import monaditto.cinemafront.controller.ControllerResource;
+import monaditto.cinemafront.controller.FXMLResourceEnum;
 import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
@@ -17,6 +17,9 @@ import java.util.List;
 public class UserPanelController {
 
     private final StageInitializer stageInitializer;
+
+    @FXML
+    private Button recommendedMoviesButton;
 
     @FXML
     private Button moviesButton;
@@ -38,9 +41,18 @@ public class UserPanelController {
     }
 
     @FXML
+    private void handleUserRecommendations(ActionEvent event) {
+        try {
+            stageInitializer.loadStage(FXMLResourceEnum.USER_RECOMMENDATIONS);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
     private void handleUserMovies(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.USER_MOVIE);
+            stageInitializer.loadStage(FXMLResourceEnum.USER_MOVIE);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -49,7 +61,7 @@ public class UserPanelController {
     @FXML
     private void handleUserScreenings(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.USER_SCREENINGS);
+            stageInitializer.loadStage(FXMLResourceEnum.USER_SCREENINGS);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -58,7 +70,7 @@ public class UserPanelController {
     @FXML
     private void handleUserPurchases(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.USER_PURCHASES);
+            stageInitializer.loadStage(FXMLResourceEnum.USER_PURCHASES);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -67,7 +79,16 @@ public class UserPanelController {
     @FXML
     private void handleSignOut(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.LOGIN);
+            stageInitializer.loadStage(FXMLResourceEnum.LOGIN);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
+    private void handleOpinions(ActionEvent event) {
+        try {
+            stageInitializer.loadStage(FXMLResourceEnum.USER_OPINIONS);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

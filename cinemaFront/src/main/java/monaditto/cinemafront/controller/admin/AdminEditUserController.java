@@ -56,16 +56,21 @@ public class AdminEditUserController {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    private final HttpClient httpClient;
+
     private BackendConfig backendConfig;
     private UserDto userDto;
     private Runnable afterSave;
 
     @Autowired
-    public AdminEditUserController(BackendConfig backendConfig) {
+    public AdminEditUserController(HttpClient httpClient, BackendConfig backendConfig) {
+        this.httpClient = httpClient;
         this.backendConfig = backendConfig;
     }
 
-    public AdminEditUserController(){}
+    public AdminEditUserController(HttpClient httpClient){
+        this.httpClient = httpClient;
+    }
 
     @Autowired
     public void setBackendConfig(BackendConfig backendConfig) {
@@ -107,8 +112,6 @@ public class AdminEditUserController {
         assignedRolesListView.setCellFactory(cellFactory);
         availableRolesListView.setCellFactory(cellFactory);
 
-        // Fetch available and assigned roles from the backend
-        HttpClient client = HttpClient.newHttpClient();
 
         // Fetch assigned roles
         HttpRequest assignedRequest = HttpRequest.newBuilder()
@@ -116,7 +119,7 @@ public class AdminEditUserController {
                 .GET()
                 .build();
 
-        client.sendAsync(assignedRequest, HttpResponse.BodyHandlers.ofString())
+        httpClient.sendAsync(assignedRequest, HttpResponse.BodyHandlers.ofString())
                 .thenApply(HttpResponse::body)
                 .thenApply(this::parseRoles)
                 .thenAccept(roles -> Platform.runLater(() -> FXCollections.observableArrayList(roles).forEach(assignedRolesListView.getItems()::add)))
@@ -131,7 +134,7 @@ public class AdminEditUserController {
                 .GET()
                 .build();
 
-        client.sendAsync(availableRequest, HttpResponse.BodyHandlers.ofString())
+        httpClient.sendAsync(availableRequest, HttpResponse.BodyHandlers.ofString())
                 .thenApply(HttpResponse::body)
                 .thenApply(this::parseRoles)
                 .thenAccept(roles -> Platform.runLater(() -> FXCollections.observableArrayList(roles).forEach(availableRolesListView.getItems()::add)))
@@ -143,7 +146,6 @@ public class AdminEditUserController {
 
     @FXML
     private void handleSave(ActionEvent event) {
-        HttpClient client = HttpClient.newHttpClient();
 
         // Serialize user details
         String newPassword = !passwordField.getText().isEmpty() ? passwordField.getText() : null;
@@ -156,7 +158,7 @@ public class AdminEditUserController {
                 .header("Content-Type", "application/json")
                 .build();
 
-        client.sendAsync(userUpdateRequest, HttpResponse.BodyHandlers.ofString())
+        httpClient.sendAsync(userUpdateRequest, HttpResponse.BodyHandlers.ofString())
                 .thenAccept((response) -> {
                     Platform.runLater(() -> statusLabel.setText(response.body()));
                     int statusCode = response.statusCode();
@@ -175,7 +177,7 @@ public class AdminEditUserController {
                             .header("Content-Type", "application/json")
                             .build();
 
-                    client.sendAsync(rolesUpdateRequest, HttpResponse.BodyHandlers.discarding())
+                    httpClient.sendAsync(rolesUpdateRequest, HttpResponse.BodyHandlers.discarding())
                             .thenRun(() -> Platform.runLater(() -> {
                                 afterSave.run();
                                 closeStage(event);

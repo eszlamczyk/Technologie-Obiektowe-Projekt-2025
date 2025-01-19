@@ -29,8 +29,11 @@ public class MovieRoomClientAPI {
 
     private final ObjectMapper objectMapper;
 
-    public MovieRoomClientAPI(BackendConfig backendConfig) {
+    private final HttpClient httpClient;
+
+    public MovieRoomClientAPI(BackendConfig backendConfig, HttpClient httpClient) {
         this.backendConfig = backendConfig;
+        this.httpClient = httpClient;
         objectMapper = new ObjectMapper();
         initializeUrls();
     }
@@ -41,10 +44,9 @@ public class MovieRoomClientAPI {
     }
 
     public CompletableFuture<List<MovieRoomDto>> loadMovieRooms() {
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestGET(endpointUrl);
 
-        return sendLoadMovieRoomsRequest(client, request);
+        return sendLoadMovieRoomsRequest(httpClient, request);
     }
 
     private CompletableFuture<List<MovieRoomDto>> sendLoadMovieRoomsRequest(HttpClient client, HttpRequest request) {
@@ -67,11 +69,11 @@ public class MovieRoomClientAPI {
 
 
     public CompletableFuture<ResponseResult> delete(Long categoryId){
-        HttpClient client = HttpClient.newHttpClient();
+
 
         HttpRequest request = RequestBuilder.buildRequestDELETE(this.endpointUrl + "/" + categoryId);
 
-        return sendDeleteRequest(client, request);
+        return sendDeleteRequest(httpClient, request);
     }
 
     private CompletableFuture<ResponseResult> sendDeleteRequest(HttpClient client, HttpRequest request){
@@ -81,7 +83,6 @@ public class MovieRoomClientAPI {
     }
 
     public CompletableFuture<ResponseResult> createMovieRoom(MovieRoomDto movieRoomDto){
-        HttpClient client = HttpClient.newHttpClient();
 
         String jsonString;
         try {
@@ -92,11 +93,10 @@ public class MovieRoomClientAPI {
 
         HttpRequest request = RequestBuilder.buildRequestPOST(endpointUrl,jsonString);
 
-        return sendCreateMovieRoomRequest(client,request);
+        return sendCreateMovieRoomRequest(httpClient,request);
     }
 
     public CompletableFuture<ResponseResult> editMovieRoom(Long movieRoomId, MovieRoomDto newMovieRoomDto){
-        HttpClient client = HttpClient.newHttpClient();
 
         String jsonString;
         try {
@@ -107,7 +107,7 @@ public class MovieRoomClientAPI {
 
         HttpRequest request = RequestBuilder.buildRequestPUT(endpointUrl + "/" + movieRoomId ,jsonString);
 
-        return sendEditMovieRequest(client,request);
+        return sendEditMovieRequest(httpClient,request);
     }
 
     private CompletableFuture<ResponseResult> sendEditMovieRequest(HttpClient client, HttpRequest request){

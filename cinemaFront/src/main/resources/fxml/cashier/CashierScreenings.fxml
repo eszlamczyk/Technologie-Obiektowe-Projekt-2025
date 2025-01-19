@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.shape.Rectangle?>
+<AnchorPane stylesheets="@../../styles/Styles.css" xmlns="http://javafx.com/javafx/8.0.72"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="monaditto.cinemafront.controller.cashier.CashierScreeningsController"
+            fx:id="rootPane" prefHeight="600" prefWidth="800">
+    <StackPane>
+        <Rectangle fx:id="backgroundRectangle" fill="CADETBLUE" stroke="#ffffff8b" strokeType="INSIDE"/>
+        <VBox spacing="20" alignment="CENTER">
+            <Label text="ALL SCREENINGS" styleClass="moviesLabel"/>
+            <HBox spacing="10" alignment="CENTER">
+                <Button text="Dzisiaj" fx:id="buttonToday" styleClass="moviesButton" onAction="#handleDateToday"/>
+                <Button text="Jutro" fx:id="buttonTomorrow" styleClass="moviesButton" onAction="#handleDateTomorrow"/>
+                <Button text="Pojutrze" fx:id="buttonPlusTwo" styleClass="moviesButton" onAction="#handleDate_plus_2"/>
+                <Button text="Popojutrze" fx:id="buttonPlusThree" styleClass="moviesButton" onAction="#handleDate_plus_3"/>
+                <Button text="Popopojutrze" fx:id="buttonPlusFour" styleClass="moviesButton" onAction="#handleDate_plus_4"/>
+            </HBox>
+            <VBox spacing="10" prefWidth="600" prefHeight="300" alignment="CENTER">
+                <ListView fx:id="screeningsListView" maxWidth="600"/>
+                <HBox spacing="10" alignment="CENTER">
+                    <Button text="Buy tickets!" fx:id="buyButton" styleClass="moviesButton" onAction="#handleBuyTickets" />
+                </HBox>
+            </VBox>
+            <Button text="Go Back" styleClass="moviesButton" onAction="#handleGoBack" />
+        </VBox>
+    </StackPane>
+</AnchorPane>

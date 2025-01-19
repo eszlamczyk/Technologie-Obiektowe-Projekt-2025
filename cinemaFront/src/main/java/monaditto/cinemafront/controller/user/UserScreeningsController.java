@@ -14,7 +14,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.shape.Rectangle;
 import monaditto.cinemafront.StageInitializer;
 import monaditto.cinemafront.config.BackendConfig;
-import monaditto.cinemafront.controller.ControllerResource;
+import monaditto.cinemafront.controller.FXMLResourceEnum;
 import monaditto.cinemafront.controller.admin.AdminEditScreeningController;
 import monaditto.cinemafront.clientapi.MovieClientAPI;
 import monaditto.cinemafront.clientapi.ScreeningClientAPI;
@@ -183,7 +183,7 @@ public class UserScreeningsController {
     @FXML
     private void handleGoBack(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.USER_PANEL);
+            stageInitializer.loadStage(FXMLResourceEnum.USER_PANEL);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -222,7 +222,7 @@ public class UserScreeningsController {
     @FXML
     private void handleBuyTickets(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.USER_BUY_TICKETS);
+            stageInitializer.loadStage(FXMLResourceEnum.USER_BUY_TICKETS);
             buyTicketsController.setScreeningDto(screeningsListView.getSelectionModel().getSelectedItem());
             buyTicketsController.setMovieName(movieMap.get(screeningsListView.getSelectionModel().getSelectedItem().movieId()));
         } catch (IOException e) {

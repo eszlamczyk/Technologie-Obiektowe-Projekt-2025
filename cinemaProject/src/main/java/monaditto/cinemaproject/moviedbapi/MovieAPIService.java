@@ -2,7 +2,9 @@ package monaditto.cinemaproject.moviedbapi;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import monaditto.cinemaproject.category.CategoryDto;
 import monaditto.cinemaproject.movie.MovieDto;
+import monaditto.cinemaproject.movie.MovieWithCategoriesDto;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -12,6 +14,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 @Component
@@ -31,7 +35,7 @@ public class MovieAPIService {
         return url + "&t=" + apiQuery.title().replace(" ", "+") + yearQuery;
     }
 
-    public MovieDto fetchMovieByQuery(APIQuery apiQuery) {
+    public MovieWithCategoriesDto fetchMovieByQuery(APIQuery apiQuery) {
         String url = API_URL + "?apikey=" + API_KEY;
         url = appendParams(url, apiQuery);
 
@@ -54,7 +58,7 @@ public class MovieAPIService {
                 .build();
     }
 
-    private MovieDto parseMovieResponse(String responseBody) throws IOException {
+    private MovieWithCategoriesDto parseMovieResponse(String responseBody) throws IOException {
         JsonNode jsonNode = objectMapper.readTree(responseBody);
 
         if (!jsonNode.has("Title") || jsonNode.has("Error")) {
@@ -73,7 +77,17 @@ public class MovieAPIService {
                 ? LocalDate.parse(jsonNode.get("Released").asText(), DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.ENGLISH))
                 : null;
 
-        return new MovieDto(title, description, duration, posterUrl, releaseDate);
+        MovieDto movieDto = new MovieDto(title, description, duration, posterUrl, releaseDate);
+
+        List<CategoryDto> categories = new ArrayList<>();
+        if (jsonNode.has("Genre") && !jsonNode.get("Genre").asText().equals("N/A")) {
+            String[] genres = jsonNode.get("Genre").asText().split(",\\s*");
+            for (String genre : genres) {
+                categories.add(new CategoryDto(genre));
+            }
+        }
+
+        return new MovieWithCategoriesDto(movieDto, categories);
     }
 }
 

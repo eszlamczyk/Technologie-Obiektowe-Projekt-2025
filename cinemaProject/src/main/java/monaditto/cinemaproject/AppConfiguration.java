@@ -7,6 +7,7 @@ import monaditto.cinemaproject.crypto.PasswordHasher;
 import monaditto.cinemaproject.movie.CreateMovieStatus;
 import monaditto.cinemaproject.movie.MovieDto;
 import monaditto.cinemaproject.movie.MovieService;
+import monaditto.cinemaproject.movie.MovieWithCategoriesDto;
 import monaditto.cinemaproject.movieRoom.MovieRoomDto;
 import monaditto.cinemaproject.movieRoom.MovieRoomService;
 import monaditto.cinemaproject.moviedbapi.APIQuery;
@@ -93,11 +94,28 @@ public class AppConfiguration {
 
     private static void initMoviesWithAPI(MovieService movieService, MovieAPIService movieAPIService, List<APIQuery> apiQueryList) {
 
+        HashSet<String> strings = new HashSet<>();
+
         for (APIQuery apiQuery : apiQueryList) {
-            MovieDto movieDto = movieAPIService.fetchMovieByQuery(apiQuery);
-            if (movieDto != null) {
-                movieService.createMovie(movieDto);
+            MovieWithCategoriesDto movieWithCategoriesDto = movieAPIService.fetchMovieByQuery(apiQuery);
+            if (movieWithCategoriesDto != null) {
+                List<String> categoriesNames = movieWithCategoriesDto.categories().stream()
+                        .map(categoryDto -> {
+//                            CategoryDto::categoryName
+                            strings.add(categoryDto.categoryName());
+                            return categoryDto.categoryName();
+                        })
+                        .toList();
+                CreateMovieStatus createMovieStatus = movieService.createMovieByNames(movieWithCategoriesDto.movieDto(), categoriesNames);
+                if (!createMovieStatus.isSuccess()) {
+                    System.err.println(createMovieStatus + " for movie: " + movieWithCategoriesDto.movieDto().title());
+                }
             }
+        }
+
+        System.out.println("syzdtkie-------------");
+        for (String string : strings) {
+            System.out.println(string);
         }
     }
 

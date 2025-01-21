@@ -35,14 +35,17 @@ import java.util.*;
 @Configuration
 public class AppConfiguration {
 
-    private static final APIQuery[] apiQueryList = {
+    private static final List<APIQuery> releasedApiQueryList = List.of(
             new APIQuery("Avengers", 2012),
             new APIQuery("Daredevil", 2015),
-            new APIQuery("Daredevil", 2025),
             new APIQuery("Blade Runner 2049", 2017),
-            new APIQuery("Indiana Jones", 0),
+            new APIQuery("Indiana Jones", 0)
+            );
 
-    };
+    private static final List<APIQuery> futureApiQueryList = List.of(
+            new APIQuery("Daredevil", 2025),
+            new APIQuery("Captain America", 2025)
+            );
 
     @Bean
     CommandLineRunner initData(
@@ -64,7 +67,7 @@ public class AppConfiguration {
 
                 initUsers(userService, roleService, roleRepository, passwordHasher);
 //                initMovies(movieService);
-                initMoviesWithAPI(movieService, movieAPIService);
+                initMoviesWithAPI(movieService, movieAPIService, releasedApiQueryList);
 
 
                 addCategoriesToMovies(movieService ,categoryService);
@@ -73,6 +76,7 @@ public class AppConfiguration {
                 initOpinions(opinionService, movieService);
 
                 initPurchases(purchaseService,userService,screeningService);
+                initMoviesWithAPI(movieService, movieAPIService, futureApiQueryList);
             }
         };
     }
@@ -87,7 +91,7 @@ public class AppConfiguration {
         return categoryMap;
     }
 
-    private static void initMoviesWithAPI(MovieService movieService, MovieAPIService movieAPIService) {
+    private static void initMoviesWithAPI(MovieService movieService, MovieAPIService movieAPIService, List<APIQuery> apiQueryList) {
 
         for (APIQuery apiQuery : apiQueryList) {
             MovieDto movieDto = movieAPIService.fetchMovieByQuery(apiQuery);
@@ -510,7 +514,7 @@ public class AppConfiguration {
             movieRoomIterator += 1;
 
             if (movieRoomIterator  >= movieRoomListSize){
-                movieRoomIterator = 0;
+                movieRoomIterator = 1;
                 plusMinutes += 180;
                 if (plusMinutes > 720){
                     plusMinutes = 0;

@@ -11,7 +11,7 @@ public class MovieValidator {
     public CreateMovieStatus validateMovieDto(MovieDto movieDto) {
         if (!validateString(movieDto.title()) ||
                 !validateString(movieDto.description()) ||
-                movieDto.duration() < 1) {
+                movieDto.duration() < 0) {
             return CreateMovieStatus.MISSING_DATA;
         }
 

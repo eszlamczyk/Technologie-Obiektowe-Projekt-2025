@@ -71,6 +71,9 @@ public class StatsClientAPI {
         return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(response -> {
                     if (response.statusCode() == 200) {
+                        if (response.body() == null || response.body().isEmpty()) {
+                            return new CategoryDto(0L, "Nie ma popularnej opinii");
+                        }
                         try {
                             return objectMapper.readValue(response.body(), CategoryDto.class);
                         } catch (JsonProcessingException e) {

@@ -1,5 +1,6 @@
 package monaditto.cinemaproject;
 
+
 import monaditto.cinemaproject.category.CategoryDto;
 import monaditto.cinemaproject.category.CategoryService;
 import monaditto.cinemaproject.crypto.PasswordHasher;
@@ -12,12 +13,15 @@ import monaditto.cinemaproject.moviedbapi.APIQuery;
 import monaditto.cinemaproject.moviedbapi.MovieAPIService;
 import monaditto.cinemaproject.opinion.OpinionDto;
 import monaditto.cinemaproject.opinion.OpinionService;
+import monaditto.cinemaproject.purchase.PurchaseDto;
+import monaditto.cinemaproject.purchase.PurchaseService;
 import monaditto.cinemaproject.role.Role;
 import monaditto.cinemaproject.role.RoleRepository;
 import monaditto.cinemaproject.role.RoleService;
 import monaditto.cinemaproject.screening.ScreeningDto;
 import monaditto.cinemaproject.screening.ScreeningService;
 import monaditto.cinemaproject.user.User;
+import monaditto.cinemaproject.user.UserDto;
 import monaditto.cinemaproject.user.UserService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -26,10 +30,7 @@ import org.springframework.context.annotation.Configuration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Random;
+import java.util.*;
 
 @Configuration
 public class AppConfiguration {
@@ -39,7 +40,6 @@ public class AppConfiguration {
             new APIQuery("Daredevil", 2015),
             new APIQuery("Daredevil", 2025),
             new APIQuery("Blade Runner 2049", 2017),
-            new APIQuery("asdawdjawbd", 2012),
             new APIQuery("Indiana Jones", 0),
 
     };
@@ -55,31 +55,64 @@ public class AppConfiguration {
             MovieRoomService movieRoomService,
             ScreeningService screeningService,
             OpinionService opinionService,
-            MovieAPIService movieAPIService) {
+            MovieAPIService movieAPIService,
+            PurchaseService purchaseService) {
         return args -> {
             if (userService.getUsers().isEmpty()) {
-                initUsers(userService, roleService, roleRepository, passwordHasher);
+                initMovieRooms(movieRoomService);
                 initCategories(categoryService);
 
-
+                initUsers(userService, roleService, roleRepository, passwordHasher);
 //                initMovies(movieService);
                 initMoviesWithAPI(movieService, movieAPIService);
 
 
-//                initMovieRooms(movieRoomService);
-//                initScreenings(screeningService);
-//                initOpinions(opinionService);
+                addCategoriesToMovies(movieService ,categoryService);
+
+                initScreenings(screeningService,movieService,movieRoomService);
+                initOpinions(opinionService, movieService);
+
+                initPurchases(purchaseService,userService,screeningService);
             }
         };
     }
+    private static Map<Long, Long> mapAllCategories(CategoryService categoryService){
+        List<CategoryDto> categories = categoryService.getCategories();
+        Map<Long, Long> categoryMap = new HashMap<>();
+
+        for (int i = 0; i < categories.size(); i++) {
+            categoryMap.put((long) i, categories.get(i).id());
+        }
+
+        return categoryMap;
+    }
 
     private static void initMoviesWithAPI(MovieService movieService, MovieAPIService movieAPIService) {
+
         for (APIQuery apiQuery : apiQueryList) {
             MovieDto movieDto = movieAPIService.fetchMovieByQuery(apiQuery);
             if (movieDto != null) {
                 movieService.createMovie(movieDto);
             }
         }
+    }
+
+    private static void addCategoriesToMovies(MovieService movieService, CategoryService categoryService){
+        Map<Long, Long> categoryMap = mapAllCategories(categoryService);
+        int amountOfCategories = categoryService.getCategories().size();
+        long categoryIterator1 = 1;
+        long categoryIterator2 = 2;
+
+        for (MovieDto movie : movieService.getMovies()){
+
+            movieService.setCategories(movie.id(),
+                    List.of(categoryMap.get(categoryIterator1 % amountOfCategories),
+                            categoryMap.get(categoryIterator2 % amountOfCategories)));
+
+            categoryIterator1 += 1;
+            categoryIterator2 += 1;
+        }
+
     }
 
     private static void initUsers(
@@ -445,33 +478,53 @@ public class AppConfiguration {
         movieRoomService.save(new MovieRoomDto("ROOM 5", 40));
     }
 
-    private static void initScreenings(ScreeningService screeningService) {
+    private static Map<Long, Long> mapAllMovieRooms(MovieRoomService movieRoomService){
+        List<MovieRoomDto> movieRooms = movieRoomService.getAllMovieRooms();
+        Map<Long, Long> categoryMap = new HashMap<>();
+
+        for (int i = 0; i < movieRooms.size(); i++) {
+            categoryMap.put((long) i, movieRooms.get(i).id());
+        }
+
+        return categoryMap;
+    }
+
+    private static void initScreenings(ScreeningService screeningService, MovieService movieService, MovieRoomService movieRoomService) {
+        int movieRoomListSize = movieRoomService.getAllMovieRooms().size();
+        Map<Long, Long> movieRoomsMap = mapAllMovieRooms(movieRoomService);
+
         List<ScreeningDto> screeningDtos = new ArrayList<>();
 
-        screeningDtos.add(new ScreeningDto((Long) null, 1L, 1L, LocalDateTime.now().plusDays(0), 20.00));
-        screeningDtos.add(new ScreeningDto((Long) null, 2L, 2L, LocalDateTime.now().plusMinutes(50), 25.00));
-        screeningDtos.add(new ScreeningDto((Long) null, 2L, 1L, LocalDateTime.now().plusDays(3), 20.00));
-        screeningDtos.add(new ScreeningDto((Long) null, 1L, 2L, LocalDateTime.now().plusDays(3), 35.00));
-        screeningDtos.add(new ScreeningDto((Long) null, 1L, 1L, LocalDateTime.now().plusDays(4), 20.00));
-        screeningDtos.add(new ScreeningDto((Long) null, 2L, 2L, LocalDateTime.now().plusDays(4), 35.00));
+        Random random = new Random();
 
-        screeningDtos.add(new ScreeningDto((Long) null, 3L, 2L, LocalDateTime.now().plusDays(1), 28.00));
-        screeningDtos.add(new ScreeningDto((Long) null, 3L, 2L, LocalDateTime.now().plusDays(2), 28.00));
-        screeningDtos.add(new ScreeningDto((Long) null, 4L, 1L, LocalDateTime.now().plusDays(2), 20.00));
-        screeningDtos.add(new ScreeningDto((Long) null, 4L, 2L, LocalDateTime.now().plusDays(1).plusMinutes(300), 30.00));
-        screeningDtos.add(new ScreeningDto((Long) null, 6L, 1L, LocalDateTime.now().plusMinutes(300), 40.00));
-        screeningDtos.add(new ScreeningDto((Long) null, 6L, 3L, LocalDateTime.now().plusDays(1), 40.00));
-        screeningDtos.add(new ScreeningDto((Long) null, 9L, 4L, LocalDateTime.now().plusMinutes(600), 40.00));
-        screeningDtos.add(new ScreeningDto((Long) null, 10L, 4L, LocalDateTime.now().plusDays(1), 40.00));
-        screeningDtos.add(new ScreeningDto((Long) null, 11L, 4L, LocalDateTime.now().plusDays(2), 40.00));
-        screeningDtos.add(new ScreeningDto((Long) null, 5L, 4L, LocalDateTime.now().minusDays(1), 40.00));
+        long movieRoomIterator = 1;
+
+        int plusDays = 1;
+        int plusMinutes = 0;
+
+        for (MovieDto movie : movieService.getMovies()){
+            screeningDtos.add(new ScreeningDto(null, movie.id(), movieRoomIterator,
+                    LocalDateTime.now().plusDays(plusDays).plusMinutes(plusMinutes),
+                    random.nextInt(3,8) * 5.00));
+
+            movieRoomIterator += 1;
+
+            if (movieRoomIterator  >= movieRoomListSize){
+                movieRoomIterator = 0;
+                plusMinutes += 180;
+                if (plusMinutes > 720){
+                    plusMinutes = 0;
+                    plusDays += 1;
+                }
+            }
+        }
 
         for (ScreeningDto screeningDto : screeningDtos) {
             screeningService.saveScreening(screeningDto);
         }
     }
 
-    private static void initOpinions(OpinionService opinionService) {
+    private static void initOpinions(OpinionService opinionService, MovieService movieService) {
         List<OpinionDto> opinionDtos = new ArrayList<>();
         Random random = new Random();
 
@@ -483,16 +536,16 @@ public class AppConfiguration {
                 "Rewelacyjna produkcja!"
         };
 
-        for (long movieId = 1; movieId <= 13; movieId++) {
+        for (MovieDto movieDto : movieService.getMovies()) {
             for (long userId = 5; userId <= 15; userId++) {
-                if (movieId == 8) {
+                if (movieDto.id() == 8) {
                     break;
                 }
 
                 double rating = 1 + (10 * random.nextDouble());
                 String comment = comments[random.nextInt(comments.length)];
 
-                OpinionDto opinionDto = new OpinionDto(userId, movieId, rating, comment);
+                OpinionDto opinionDto = new OpinionDto(userId, movieDto.id(), rating, comment);
 
                 opinionDtos.add(opinionDto);
             }
@@ -501,5 +554,49 @@ public class AppConfiguration {
         for (OpinionDto opinionDto : opinionDtos) {
             opinionService.addOpinion(opinionDto);
         }
+    }
+
+    private static Map<Long, Long> mapAllUsers(UserService userService){
+        List<UserDto> users = userService.getUsers();
+        Map<Long, Long> userMap = new HashMap<>();
+
+        for (int i = 0; i < users.size(); i++) {
+            userMap.put((long) i, users.get(i).id());
+        }
+
+        return userMap;
+    }
+
+    private static Map<Long, Long> mapAllScreenings(ScreeningService screeningService){
+        List<ScreeningDto> screenings = screeningService.getAllScreenings();
+        Map<Long, Long> screeningMap = new HashMap<>();
+
+        for (int i = 0; i < screenings.size(); i++) {
+            screeningMap.put((long) i, screenings.get(i).id());
+        }
+
+        return screeningMap;
+    }
+
+
+    private static void initPurchases(PurchaseService purchaseService, UserService userService, ScreeningService screeningService){
+
+        Random random = new Random();
+        int amountOfUsers = userService.getUsers().size();
+        int amountOfScreenings = screeningService.getAllScreenings().size();
+
+        Map<Long,Long> usersMap = mapAllUsers(userService);
+        Map<Long,Long> screeningsMap = mapAllScreenings(screeningService);
+
+        for (int i = 0; i < 20; i++) {
+            purchaseService.create(new PurchaseDto(
+                            usersMap.get((long) i % amountOfUsers),
+                            screeningsMap.get((long) i % amountOfScreenings),
+                            random.nextInt(1,3)
+                    )
+            );
+        }
+
+
     }
 }

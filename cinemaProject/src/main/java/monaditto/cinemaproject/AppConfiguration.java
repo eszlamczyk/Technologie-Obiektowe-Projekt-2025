@@ -8,6 +8,8 @@ import monaditto.cinemaproject.movie.MovieDto;
 import monaditto.cinemaproject.movie.MovieService;
 import monaditto.cinemaproject.movieRoom.MovieRoomDto;
 import monaditto.cinemaproject.movieRoom.MovieRoomService;
+import monaditto.cinemaproject.moviedbapi.APIQuery;
+import monaditto.cinemaproject.moviedbapi.MovieAPIService;
 import monaditto.cinemaproject.opinion.OpinionDto;
 import monaditto.cinemaproject.opinion.OpinionService;
 import monaditto.cinemaproject.role.Role;
@@ -26,10 +28,21 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 
 @Configuration
 public class AppConfiguration {
+
+    private static final APIQuery[] apiQueryList = {
+            new APIQuery("Avengers", 2012),
+            new APIQuery("Daredevil", 2015),
+            new APIQuery("Daredevil", 2025),
+            new APIQuery("Blade Runner 2049", 2017),
+            new APIQuery("asdawdjawbd", 2012),
+            new APIQuery("Indiana Jones", 0),
+
+    };
 
     @Bean
     CommandLineRunner initData(
@@ -41,17 +54,32 @@ public class AppConfiguration {
             MovieService movieService,
             MovieRoomService movieRoomService,
             ScreeningService screeningService,
-            OpinionService opinionService) {
+            OpinionService opinionService,
+            MovieAPIService movieAPIService) {
         return args -> {
             if (userService.getUsers().isEmpty()) {
                 initUsers(userService, roleService, roleRepository, passwordHasher);
                 initCategories(categoryService);
-                initMovies(movieService);
-                initMovieRooms(movieRoomService);
-                initScreenings(screeningService);
-                initOpinions(opinionService);
+
+
+//                initMovies(movieService);
+                initMoviesWithAPI(movieService, movieAPIService);
+
+
+//                initMovieRooms(movieRoomService);
+//                initScreenings(screeningService);
+//                initOpinions(opinionService);
             }
         };
+    }
+
+    private static void initMoviesWithAPI(MovieService movieService, MovieAPIService movieAPIService) {
+        for (APIQuery apiQuery : apiQueryList) {
+            MovieDto movieDto = movieAPIService.fetchMovieByQuery(apiQuery);
+            if (movieDto != null) {
+                movieService.createMovie(movieDto);
+            }
+        }
     }
 
     private static void initUsers(

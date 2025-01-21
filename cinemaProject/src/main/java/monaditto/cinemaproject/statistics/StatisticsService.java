@@ -56,12 +56,15 @@ public class StatisticsService {
                 break;
             case THIS_WEEK:
                 startDate = LocalDate.now().with(DayOfWeek.MONDAY).atStartOfDay();
+                endDate = startDate.plusDays(7);
                 break;
             case THIS_MONTH:
                 startDate = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+                endDate = startDate.plusMonths(1);
                 break;
             case THIS_YEAR:
                 startDate = LocalDate.now().withDayOfYear(1).atStartOfDay();
+                endDate = startDate.plusYears(1);
                 break;
             default:
                 throw new IllegalArgumentException("Nieznany typ okresu: " + periodType);
@@ -133,12 +136,15 @@ public class StatisticsService {
                 break;
             case THIS_WEEK:
                 startDate = LocalDate.now().with(DayOfWeek.MONDAY).atStartOfDay();
+                endDate = startDate.plusDays(7);
                 break;
             case THIS_MONTH:
                 startDate = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+                endDate = startDate.plusMonths(1);
                 break;
             case THIS_YEAR:
                 startDate = LocalDate.now().withDayOfYear(1).atStartOfDay();
+                endDate = startDate.plusYears(1);
                 break;
             default:
                 throw new IllegalArgumentException("Nieznany typ okresu: " + periodType);

@@ -40,8 +40,102 @@ public class AppConfiguration {
             new APIQuery("Avengers", 2012),
             new APIQuery("Daredevil", 2015),
             new APIQuery("Blade Runner 2049", 2017),
-            new APIQuery("Indiana Jones", 0)
-            );
+            new APIQuery("Indiana Jones", 0),
+            new APIQuery("Star Wars", 1977),
+            new APIQuery("Turbo", 2013),
+            new APIQuery("Asterix & Obelix: Mission Cleopatra", 2002),
+            new APIQuery("Lion King", 1994),
+            new APIQuery("The Father", 2020),
+            new APIQuery("Titanic", 1997),
+            new APIQuery("Spider-Man", 2002),
+            new APIQuery("Iron Man", 2008),
+            new APIQuery("Deadpool", 2016),
+
+            new APIQuery("Inception", 2010),
+            new APIQuery("The Dark Knight", 2008),
+            new APIQuery("Interstellar", 2014),
+            new APIQuery("Pulp Fiction", 1994),
+            new APIQuery("The Shawshank Redemption", 1994),
+            new APIQuery("Forrest Gump", 1994),
+            new APIQuery("Gladiator", 2000),
+            new APIQuery("The Matrix", 1999),
+            new APIQuery("Jurassic Park", 1993),
+            new APIQuery("The Godfather", 1972),
+            new APIQuery("The Godfather Part II", 1974),
+            new APIQuery("The Lord of the Rings: The Fellowship of the Ring", 2001),
+            new APIQuery("The Lord of the Rings: The Two Towers", 2002),
+            new APIQuery("The Lord of the Rings: The Return of the King", 2003),
+            new APIQuery("Harry Potter and the Sorcerer's Stone", 2001),
+            new APIQuery("Harry Potter and the Chamber of Secrets", 2002),
+            new APIQuery("Harry Potter and the Prisoner of Azkaban", 2004),
+            new APIQuery("Harry Potter and the Goblet of Fire", 2005),
+            new APIQuery("Harry Potter and the Order of the Phoenix", 2007),
+            new APIQuery("Harry Potter and the Half-Blood Prince", 2009),
+            new APIQuery("Harry Potter and the Deathly Hallows: Part 1", 2010),
+            new APIQuery("Harry Potter and the Deathly Hallows: Part 2", 2011),
+            new APIQuery("The Hobbit: An Unexpected Journey", 2012),
+            new APIQuery("The Hobbit: The Desolation of Smaug", 2013),
+            new APIQuery("The Hobbit: The Battle of the Five Armies", 2014),
+            new APIQuery("Pirates of the Caribbean: The Curse of the Black Pearl", 2003),
+            new APIQuery("Pirates of the Caribbean: Dead Man's Chest", 2006),
+            new APIQuery("Pirates of the Caribbean: At World's End", 2007),
+            new APIQuery("Pirates of the Caribbean: On Stranger Tides", 2011),
+            new APIQuery("Pirates of the Caribbean: Dead Men Tell No Tales", 2017),
+            new APIQuery("Frozen", 2013),
+            new APIQuery("Frozen II", 2019),
+            new APIQuery("Coco", 2017),
+            new APIQuery("Toy Story", 1995),
+            new APIQuery("Toy Story 2", 1999),
+            new APIQuery("Toy Story 3", 2010),
+            new APIQuery("Toy Story 4", 2019),
+            new APIQuery("Finding Nemo", 2003),
+            new APIQuery("Finding Dory", 2016),
+            new APIQuery("Inside Out", 2015),
+            new APIQuery("Up", 2009),
+            new APIQuery("Wall-E", 2008),
+            new APIQuery("Ratatouille", 2007),
+            new APIQuery("The Incredibles", 2004),
+            new APIQuery("Cars", 2006),
+            new APIQuery("Cars 2", 2011),
+            new APIQuery("Cars 3", 2017),
+            new APIQuery("Monsters, Inc.", 2001),
+            new APIQuery("Monsters University", 2013),
+            new APIQuery("Brave", 2012),
+            new APIQuery("The Good Dinosaur", 2015),
+            new APIQuery("Soul", 2020),
+            new APIQuery("Luca", 2021),
+            new APIQuery("Turning Red", 2022),
+            new APIQuery("Encanto", 2021),
+            new APIQuery("Zootopia", 2016),
+            new APIQuery("Moana", 2016),
+            new APIQuery("Big Hero 6", 2014),
+            new APIQuery("Tangled", 2010),
+            new APIQuery("The Princess and the Frog", 2009),
+            new APIQuery("Wreck-It Ralph", 2012),
+            new APIQuery("Ralph Breaks the Internet", 2018),
+            new APIQuery("Bolt", 2008),
+            new APIQuery("Meet the Robinsons", 2007),
+            new APIQuery("Chicken Little", 2005),
+            new APIQuery("The Emperor's New Groove", 2000),
+            new APIQuery("Treasure Planet", 2002),
+            new APIQuery("Atlantis: The Lost Empire", 2001),
+            new APIQuery("Lilo & Stitch", 2002),
+            new APIQuery("Brother Bear", 2003),
+            new APIQuery("Home on the Range", 2004),
+            new APIQuery("The Jungle Book", 1967),
+            new APIQuery("The Aristocats", 1970),
+            new APIQuery("Robin Hood", 1973),
+            new APIQuery("The Rescuers", 1977),
+            new APIQuery("The Fox and the Hound", 1981),
+            new APIQuery("The Black Cauldron", 1985),
+            new APIQuery("The Great Mouse Detective", 1986),
+            new APIQuery("Oliver & Company", 1988),
+            new APIQuery("The Little Mermaid", 1989),
+            new APIQuery("Beauty and the Beast", 1991),
+            new APIQuery("Aladdin", 1992),
+            new APIQuery("The Hunchback of Notre Dame", 1996)
+    );
+
 
     private static final List<APIQuery> futureApiQueryList = List.of(
             new APIQuery("Daredevil", 2025),
@@ -73,10 +167,10 @@ public class AppConfiguration {
 
                 addCategoriesToMovies(movieService ,categoryService);
 
-                initScreenings(screeningService,movieService,movieRoomService);
-                initOpinions(opinionService, movieService);
+                initScreenings(screeningService);
+                initOpinions(opinionService);
 
-                initPurchases(purchaseService,userService,screeningService);
+//                initPurchases(purchaseService,userService,screeningService);
                 initMoviesWithAPI(movieService, movieAPIService, futureApiQueryList);
             }
         };
@@ -221,17 +315,17 @@ public class AppConfiguration {
         if (categoryService.getCategories().isEmpty()) {
             List<CategoryDto> categories = new ArrayList<>();
 
-            categories.add(new CategoryDto("action"));
-            categories.add(new CategoryDto("romance"));
-            categories.add(new CategoryDto("thriller"));
-            categories.add(new CategoryDto("science fiction"));
-            categories.add(new CategoryDto("fantasy"));
-            categories.add(new CategoryDto("drama"));
-            categories.add(new CategoryDto("animation"));
-            categories.add(new CategoryDto("comedy"));
-            categories.add(new CategoryDto("musical"));
-            categories.add(new CategoryDto("superhero"));
-            categories.add(new CategoryDto("horror"));
+            categories.add(new CategoryDto("Action"));
+            categories.add(new CategoryDto("Sci-Fi"));
+            categories.add(new CategoryDto("Adventure"));
+            categories.add(new CategoryDto("Drama"));
+            categories.add(new CategoryDto("Crime"));
+            categories.add(new CategoryDto("Fantasy"));
+            categories.add(new CategoryDto("Animation"));
+            categories.add(new CategoryDto("Family"));
+            categories.add(new CategoryDto("Romance"));
+            categories.add(new CategoryDto("Mystery"));
+            categories.add(new CategoryDto("Comedy"));
 
             categories.forEach(categoryService::createCategory);
         }
@@ -511,42 +605,33 @@ public class AppConfiguration {
         return categoryMap;
     }
 
-    private static void initScreenings(ScreeningService screeningService, MovieService movieService, MovieRoomService movieRoomService) {
-        int movieRoomListSize = movieRoomService.getAllMovieRooms().size();
-        Map<Long, Long> movieRoomsMap = mapAllMovieRooms(movieRoomService);
-
+    private static void initScreenings(ScreeningService screeningService) {
         List<ScreeningDto> screeningDtos = new ArrayList<>();
 
-        Random random = new Random();
+        screeningDtos.add(new ScreeningDto((Long) null, 1L, 1L, LocalDateTime.now().plusDays(0), 20.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 2L, 2L, LocalDateTime.now().plusMinutes(50), 25.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 2L, 1L, LocalDateTime.now().plusDays(3), 20.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 1L, 2L, LocalDateTime.now().plusDays(3), 35.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 1L, 1L, LocalDateTime.now().plusDays(4), 20.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 2L, 2L, LocalDateTime.now().plusDays(4), 35.00));
 
-        long movieRoomIterator = 1;
-
-        int plusDays = 1;
-        int plusMinutes = 0;
-
-        for (MovieDto movie : movieService.getMovies()){
-            screeningDtos.add(new ScreeningDto(null, movie.id(), movieRoomIterator,
-                    LocalDateTime.now().plusDays(plusDays).plusMinutes(plusMinutes),
-                    random.nextInt(3,8) * 5.00));
-
-            movieRoomIterator += 1;
-
-            if (movieRoomIterator  >= movieRoomListSize){
-                movieRoomIterator = 1;
-                plusMinutes += 180;
-                if (plusMinutes > 720){
-                    plusMinutes = 0;
-                    plusDays += 1;
-                }
-            }
-        }
+        screeningDtos.add(new ScreeningDto((Long) null, 3L, 2L, LocalDateTime.now().plusDays(1), 28.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 3L, 2L, LocalDateTime.now().plusDays(2), 28.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 4L, 1L, LocalDateTime.now().plusDays(2), 20.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 4L, 2L, LocalDateTime.now().plusDays(1).plusMinutes(300), 30.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 6L, 1L, LocalDateTime.now().plusMinutes(300), 40.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 6L, 3L, LocalDateTime.now().plusDays(1), 40.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 9L, 4L, LocalDateTime.now().plusMinutes(600), 40.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 10L, 4L, LocalDateTime.now().plusDays(1), 40.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 11L, 4L, LocalDateTime.now().plusDays(2), 40.00));
+        screeningDtos.add(new ScreeningDto((Long) null, 5L, 4L, LocalDateTime.now().minusDays(1), 40.00));
 
         for (ScreeningDto screeningDto : screeningDtos) {
             screeningService.saveScreening(screeningDto);
         }
     }
 
-    private static void initOpinions(OpinionService opinionService, MovieService movieService) {
+    private static void initOpinions(OpinionService opinionService) {
         List<OpinionDto> opinionDtos = new ArrayList<>();
         Random random = new Random();
 
@@ -555,19 +640,21 @@ public class AppConfiguration {
                 "Bardzo mi się podobał.",
                 "Mógłby być lepszy.",
                 "Nie polecam.",
-                "Rewelacyjna produkcja!"
+                "Rewelacyjna produkcja!",
+                "ESSA!",
+                "Opinia opinia"
         };
 
-        for (MovieDto movieDto : movieService.getMovies()) {
+        for (long movieId = 1; movieId <= 95; movieId++) {
             for (long userId = 5; userId <= 15; userId++) {
-                if (movieDto.id() == 8) {
+                if (movieId == 10 || movieId == 20) {
                     break;
                 }
 
-                double rating = 1 + (10 * random.nextDouble());
+                double rating = (10 * random.nextDouble());
                 String comment = comments[random.nextInt(comments.length)];
 
-                OpinionDto opinionDto = new OpinionDto(userId, movieDto.id(), rating, comment);
+                OpinionDto opinionDto = new OpinionDto(userId, movieId, rating, comment);
 
                 opinionDtos.add(opinionDto);
             }
@@ -601,24 +688,24 @@ public class AppConfiguration {
     }
 
 
-    private static void initPurchases(PurchaseService purchaseService, UserService userService, ScreeningService screeningService){
-
-        Random random = new Random();
-        int amountOfUsers = userService.getUsers().size();
-        int amountOfScreenings = screeningService.getAllScreenings().size();
-
-        Map<Long,Long> usersMap = mapAllUsers(userService);
-        Map<Long,Long> screeningsMap = mapAllScreenings(screeningService);
-
-        for (int i = 0; i < 20; i++) {
-            purchaseService.create(new PurchaseDto(
-                            usersMap.get((long) i % amountOfUsers),
-                            screeningsMap.get((long) i % amountOfScreenings),
-                            random.nextInt(1,3)
-                    )
-            );
-        }
-
-
-    }
+//    private static void initPurchases(PurchaseService purchaseService, UserService userService, ScreeningService screeningService){
+//
+//        Random random = new Random();
+//        int amountOfUsers = userService.getUsers().size();
+//        int amountOfScreenings = screeningService.getAllScreenings().size();
+//
+//        Map<Long,Long> usersMap = mapAllUsers(userService);
+//        Map<Long,Long> screeningsMap = mapAllScreenings(screeningService);
+//
+//        for (int i = 0; i < 20; i++) {
+//            purchaseService.create(new PurchaseDto(
+//                            usersMap.get((long) i % amountOfUsers),
+//                            screeningsMap.get((long) i % amountOfScreenings),
+//                            random.nextInt(1,3)
+//                    )
+//            );
+//        }
+//
+//
+//    }
 }

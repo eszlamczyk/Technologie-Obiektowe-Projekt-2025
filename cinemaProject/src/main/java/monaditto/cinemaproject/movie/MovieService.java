@@ -157,6 +157,11 @@ public class MovieService {
         return createMovie(movieDto, List.of());
     }
 
+
+    public CreateMovieStatus createMovie(MovieWithCategoriesDto movieWithCategoriesDto) {
+        return createMovie(movieWithCategoriesDto.movieDto(), movieWithCategoriesDto.categories());
+    }
+
     public CreateMovieStatus createMovie(MovieDto movieDto, List<CategoryDto> categories) {
         CreateMovieStatus movieStatus = movieValidator.validateMovieDto(movieDto);
         if (movieStatus != CreateMovieStatus.SUCCESS) {

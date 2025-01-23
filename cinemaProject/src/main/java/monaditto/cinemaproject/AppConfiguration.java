@@ -1,21 +1,28 @@
 package monaditto.cinemaproject;
 
+
 import monaditto.cinemaproject.category.CategoryDto;
 import monaditto.cinemaproject.category.CategoryService;
 import monaditto.cinemaproject.crypto.PasswordHasher;
 import monaditto.cinemaproject.movie.CreateMovieStatus;
 import monaditto.cinemaproject.movie.MovieDto;
 import monaditto.cinemaproject.movie.MovieService;
+import monaditto.cinemaproject.movie.MovieWithCategoriesDto;
 import monaditto.cinemaproject.movieRoom.MovieRoomDto;
 import monaditto.cinemaproject.movieRoom.MovieRoomService;
+import monaditto.cinemaproject.moviedbapi.APIQuery;
+import monaditto.cinemaproject.moviedbapi.MovieAPIService;
 import monaditto.cinemaproject.opinion.OpinionDto;
 import monaditto.cinemaproject.opinion.OpinionService;
+import monaditto.cinemaproject.purchase.PurchaseDto;
+import monaditto.cinemaproject.purchase.PurchaseService;
 import monaditto.cinemaproject.role.Role;
 import monaditto.cinemaproject.role.RoleRepository;
 import monaditto.cinemaproject.role.RoleService;
 import monaditto.cinemaproject.screening.ScreeningDto;
 import monaditto.cinemaproject.screening.ScreeningService;
 import monaditto.cinemaproject.user.User;
+import monaditto.cinemaproject.user.UserDto;
 import monaditto.cinemaproject.user.UserService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -24,12 +31,116 @@ import org.springframework.context.annotation.Configuration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 @Configuration
 public class AppConfiguration {
+
+    private static final List<APIQuery> releasedApiQueryList = List.of(
+            new APIQuery("Avengers", 2012),
+            new APIQuery("Daredevil", 2015),
+            new APIQuery("Blade Runner 2049", 2017),
+            new APIQuery("Indiana Jones", 0),
+            new APIQuery("Star Wars", 1977),
+            new APIQuery("Turbo", 2013),
+            new APIQuery("Asterix & Obelix: Mission Cleopatra", 2002),
+            new APIQuery("Lion King", 1994),
+            new APIQuery("The Father", 2020),
+            new APIQuery("Titanic", 1997),
+            new APIQuery("Spider-Man", 2002),
+            new APIQuery("Iron Man", 2008),
+            new APIQuery("Deadpool", 2016),
+
+            new APIQuery("Inception", 2010),
+            new APIQuery("The Dark Knight", 2008),
+            new APIQuery("Interstellar", 2014),
+            new APIQuery("Pulp Fiction", 1994),
+            new APIQuery("The Shawshank Redemption", 1994),
+            new APIQuery("Forrest Gump", 1994),
+            new APIQuery("Gladiator", 2000),
+            new APIQuery("The Matrix", 1999),
+            new APIQuery("Jurassic Park", 1993),
+            new APIQuery("The Godfather", 1972),
+            new APIQuery("The Godfather Part II", 1974),
+            new APIQuery("The Lord of the Rings: The Fellowship of the Ring", 2001),
+            new APIQuery("The Lord of the Rings: The Two Towers", 2002),
+            new APIQuery("The Lord of the Rings: The Return of the King", 2003),
+            new APIQuery("Harry Potter and the Sorcerer's Stone", 2001),
+            new APIQuery("Harry Potter and the Chamber of Secrets", 2002),
+            new APIQuery("Harry Potter and the Prisoner of Azkaban", 2004),
+            new APIQuery("Harry Potter and the Goblet of Fire", 2005),
+            new APIQuery("Harry Potter and the Order of the Phoenix", 2007),
+            new APIQuery("Harry Potter and the Half-Blood Prince", 2009),
+            new APIQuery("Harry Potter and the Deathly Hallows: Part 1", 2010),
+            new APIQuery("Harry Potter and the Deathly Hallows: Part 2", 2011),
+            new APIQuery("The Hobbit: An Unexpected Journey", 2012),
+            new APIQuery("The Hobbit: The Desolation of Smaug", 2013),
+            new APIQuery("The Hobbit: The Battle of the Five Armies", 2014),
+            new APIQuery("Pirates of the Caribbean: The Curse of the Black Pearl", 2003),
+            new APIQuery("Pirates of the Caribbean: Dead Man's Chest", 2006),
+            new APIQuery("Pirates of the Caribbean: At World's End", 2007),
+            new APIQuery("Pirates of the Caribbean: On Stranger Tides", 2011),
+            new APIQuery("Pirates of the Caribbean: Dead Men Tell No Tales", 2017),
+            new APIQuery("Frozen", 2013),
+            new APIQuery("Frozen II", 2019),
+            new APIQuery("Coco", 2017),
+            new APIQuery("Toy Story", 1995),
+            new APIQuery("Toy Story 2", 1999),
+            new APIQuery("Toy Story 3", 2010),
+            new APIQuery("Toy Story 4", 2019),
+            new APIQuery("Finding Nemo", 2003),
+            new APIQuery("Finding Dory", 2016),
+            new APIQuery("Inside Out", 2015),
+            new APIQuery("Up", 2009),
+            new APIQuery("Wall-E", 2008),
+            new APIQuery("Ratatouille", 2007),
+            new APIQuery("The Incredibles", 2004),
+            new APIQuery("Cars", 2006),
+            new APIQuery("Cars 2", 2011),
+            new APIQuery("Cars 3", 2017),
+            new APIQuery("Monsters, Inc.", 2001),
+            new APIQuery("Monsters University", 2013),
+            new APIQuery("Brave", 2012),
+            new APIQuery("The Good Dinosaur", 2015),
+            new APIQuery("Soul", 2020),
+            new APIQuery("Luca", 2021),
+            new APIQuery("Turning Red", 2022),
+            new APIQuery("Encanto", 2021),
+            new APIQuery("Zootopia", 2016),
+            new APIQuery("Moana", 2016),
+            new APIQuery("Big Hero 6", 2014),
+            new APIQuery("Tangled", 2010),
+            new APIQuery("The Princess and the Frog", 2009),
+            new APIQuery("Wreck-It Ralph", 2012),
+            new APIQuery("Ralph Breaks the Internet", 2018),
+            new APIQuery("Bolt", 2008),
+            new APIQuery("Meet the Robinsons", 2007),
+            new APIQuery("Chicken Little", 2005),
+            new APIQuery("The Emperor's New Groove", 2000),
+            new APIQuery("Treasure Planet", 2002),
+            new APIQuery("Atlantis: The Lost Empire", 2001),
+            new APIQuery("Lilo & Stitch", 2002),
+            new APIQuery("Brother Bear", 2003),
+            new APIQuery("Home on the Range", 2004),
+            new APIQuery("The Jungle Book", 1967),
+            new APIQuery("The Aristocats", 1970),
+            new APIQuery("Robin Hood", 1973),
+            new APIQuery("The Rescuers", 1977),
+            new APIQuery("The Fox and the Hound", 1981),
+            new APIQuery("The Black Cauldron", 1985),
+            new APIQuery("The Great Mouse Detective", 1986),
+            new APIQuery("Oliver & Company", 1988),
+            new APIQuery("The Little Mermaid", 1989),
+            new APIQuery("Beauty and the Beast", 1991),
+            new APIQuery("Aladdin", 1992),
+            new APIQuery("The Hunchback of Notre Dame", 1996)
+    );
+
+
+    private static final List<APIQuery> futureApiQueryList = List.of(
+            new APIQuery("Daredevil", 2025),
+            new APIQuery("Captain America", 2025)
+            );
 
     @Bean
     CommandLineRunner initData(
@@ -41,17 +152,83 @@ public class AppConfiguration {
             MovieService movieService,
             MovieRoomService movieRoomService,
             ScreeningService screeningService,
-            OpinionService opinionService) {
+            OpinionService opinionService,
+            MovieAPIService movieAPIService,
+            PurchaseService purchaseService) {
         return args -> {
             if (userService.getUsers().isEmpty()) {
-                initUsers(userService, roleService, roleRepository, passwordHasher);
-                initCategories(categoryService);
-                initMovies(movieService);
                 initMovieRooms(movieRoomService);
+                initCategories(categoryService);
+
+                initUsers(userService, roleService, roleRepository, passwordHasher);
+//                initMovies(movieService);
+                initMoviesWithAPI(movieService, movieAPIService, releasedApiQueryList);
+
+
+                addCategoriesToMovies(movieService ,categoryService);
+
                 initScreenings(screeningService);
                 initOpinions(opinionService);
+
+//                initPurchases(purchaseService,userService,screeningService);
+                initMoviesWithAPI(movieService, movieAPIService, futureApiQueryList);
             }
         };
+    }
+    private static Map<Long, Long> mapAllCategories(CategoryService categoryService){
+        List<CategoryDto> categories = categoryService.getCategories();
+        Map<Long, Long> categoryMap = new HashMap<>();
+
+        for (int i = 0; i < categories.size(); i++) {
+            categoryMap.put((long) i, categories.get(i).id());
+        }
+
+        return categoryMap;
+    }
+
+    private static void initMoviesWithAPI(MovieService movieService, MovieAPIService movieAPIService, List<APIQuery> apiQueryList) {
+
+        HashSet<String> strings = new HashSet<>();
+
+        for (APIQuery apiQuery : apiQueryList) {
+            MovieWithCategoriesDto movieWithCategoriesDto = movieAPIService.fetchMovieByQuery(apiQuery);
+            if (movieWithCategoriesDto != null) {
+                List<String> categoriesNames = movieWithCategoriesDto.categories().stream()
+                        .map(categoryDto -> {
+//                            CategoryDto::categoryName
+                            strings.add(categoryDto.categoryName());
+                            return categoryDto.categoryName();
+                        })
+                        .toList();
+                CreateMovieStatus createMovieStatus = movieService.createMovieByNames(movieWithCategoriesDto.movieDto(), categoriesNames);
+                if (!createMovieStatus.isSuccess()) {
+                    System.err.println(createMovieStatus + " for movie: " + movieWithCategoriesDto.movieDto().title());
+                }
+            }
+        }
+
+        System.out.println("syzdtkie-------------");
+        for (String string : strings) {
+            System.out.println(string);
+        }
+    }
+
+    private static void addCategoriesToMovies(MovieService movieService, CategoryService categoryService){
+        Map<Long, Long> categoryMap = mapAllCategories(categoryService);
+        int amountOfCategories = categoryService.getCategories().size();
+        long categoryIterator1 = 1;
+        long categoryIterator2 = 2;
+
+        for (MovieDto movie : movieService.getMovies()){
+
+            movieService.setCategories(movie.id(),
+                    List.of(categoryMap.get(categoryIterator1 % amountOfCategories),
+                            categoryMap.get(categoryIterator2 % amountOfCategories)));
+
+            categoryIterator1 += 1;
+            categoryIterator2 += 1;
+        }
+
     }
 
     private static void initUsers(
@@ -138,17 +315,17 @@ public class AppConfiguration {
         if (categoryService.getCategories().isEmpty()) {
             List<CategoryDto> categories = new ArrayList<>();
 
-            categories.add(new CategoryDto("action"));
-            categories.add(new CategoryDto("romance"));
-            categories.add(new CategoryDto("thriller"));
-            categories.add(new CategoryDto("science fiction"));
-            categories.add(new CategoryDto("fantasy"));
-            categories.add(new CategoryDto("drama"));
-            categories.add(new CategoryDto("animation"));
-            categories.add(new CategoryDto("comedy"));
-            categories.add(new CategoryDto("musical"));
-            categories.add(new CategoryDto("superhero"));
-            categories.add(new CategoryDto("horror"));
+            categories.add(new CategoryDto("Action"));
+            categories.add(new CategoryDto("Sci-Fi"));
+            categories.add(new CategoryDto("Adventure"));
+            categories.add(new CategoryDto("Drama"));
+            categories.add(new CategoryDto("Crime"));
+            categories.add(new CategoryDto("Fantasy"));
+            categories.add(new CategoryDto("Animation"));
+            categories.add(new CategoryDto("Family"));
+            categories.add(new CategoryDto("Romance"));
+            categories.add(new CategoryDto("Mystery"));
+            categories.add(new CategoryDto("Comedy"));
 
             categories.forEach(categoryService::createCategory);
         }
@@ -417,6 +594,17 @@ public class AppConfiguration {
         movieRoomService.save(new MovieRoomDto("ROOM 5", 40));
     }
 
+    private static Map<Long, Long> mapAllMovieRooms(MovieRoomService movieRoomService){
+        List<MovieRoomDto> movieRooms = movieRoomService.getAllMovieRooms();
+        Map<Long, Long> categoryMap = new HashMap<>();
+
+        for (int i = 0; i < movieRooms.size(); i++) {
+            categoryMap.put((long) i, movieRooms.get(i).id());
+        }
+
+        return categoryMap;
+    }
+
     private static void initScreenings(ScreeningService screeningService) {
         List<ScreeningDto> screeningDtos = new ArrayList<>();
 
@@ -452,16 +640,18 @@ public class AppConfiguration {
                 "Bardzo mi się podobał.",
                 "Mógłby być lepszy.",
                 "Nie polecam.",
-                "Rewelacyjna produkcja!"
+                "Rewelacyjna produkcja!",
+                "ESSA!",
+                "Opinia opinia"
         };
 
-        for (long movieId = 1; movieId <= 13; movieId++) {
+        for (long movieId = 1; movieId <= 95; movieId++) {
             for (long userId = 5; userId <= 15; userId++) {
-                if (movieId == 8) {
+                if (movieId == 10 || movieId == 20) {
                     break;
                 }
 
-                double rating = 1 + (10 * random.nextDouble());
+                double rating = (10 * random.nextDouble());
                 String comment = comments[random.nextInt(comments.length)];
 
                 OpinionDto opinionDto = new OpinionDto(userId, movieId, rating, comment);
@@ -474,4 +664,48 @@ public class AppConfiguration {
             opinionService.addOpinion(opinionDto);
         }
     }
+
+    private static Map<Long, Long> mapAllUsers(UserService userService){
+        List<UserDto> users = userService.getUsers();
+        Map<Long, Long> userMap = new HashMap<>();
+
+        for (int i = 0; i < users.size(); i++) {
+            userMap.put((long) i, users.get(i).id());
+        }
+
+        return userMap;
+    }
+
+    private static Map<Long, Long> mapAllScreenings(ScreeningService screeningService){
+        List<ScreeningDto> screenings = screeningService.getAllScreenings();
+        Map<Long, Long> screeningMap = new HashMap<>();
+
+        for (int i = 0; i < screenings.size(); i++) {
+            screeningMap.put((long) i, screenings.get(i).id());
+        }
+
+        return screeningMap;
+    }
+
+
+//    private static void initPurchases(PurchaseService purchaseService, UserService userService, ScreeningService screeningService){
+//
+//        Random random = new Random();
+//        int amountOfUsers = userService.getUsers().size();
+//        int amountOfScreenings = screeningService.getAllScreenings().size();
+//
+//        Map<Long,Long> usersMap = mapAllUsers(userService);
+//        Map<Long,Long> screeningsMap = mapAllScreenings(screeningService);
+//
+//        for (int i = 0; i < 20; i++) {
+//            purchaseService.create(new PurchaseDto(
+//                            usersMap.get((long) i % amountOfUsers),
+//                            screeningsMap.get((long) i % amountOfScreenings),
+//                            random.nextInt(1,3)
+//                    )
+//            );
+//        }
+//
+//
+//    }
 }

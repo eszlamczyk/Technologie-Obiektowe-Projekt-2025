@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.text.Font?>
+<?import javafx.geometry.Insets?>
+<AnchorPane fx:id="rootPane" prefHeight="800" prefWidth="800" stylesheets="@../../styles/Styles.css"
+            xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="monaditto.cinemafront.controller.user.UserPurchasesController">
+    <VBox spacing="20">
+        <padding>
+            <Insets top="24" right="24" bottom="24" left="24"/>
+        </padding>
+            <Label text="Your purchases">
+                <font>
+                    <Font size="32.0"/>
+                </font>
+            </Label>
+        <Label fx:id="errorLabel" />
+        <ListView fx:id="purchaseListView" prefWidth="752"  />
+        <Button text="Back to user panel" onAction="#handleBack"/>
+    </VBox>
+</AnchorPane>

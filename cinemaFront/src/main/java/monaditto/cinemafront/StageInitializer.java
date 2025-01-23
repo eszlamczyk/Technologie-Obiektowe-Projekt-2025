@@ -5,7 +5,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
-import monaditto.cinemafront.controller.ControllerResource;
+import monaditto.cinemafront.controller.FXMLResourceEnum;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
@@ -43,14 +43,14 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
     public void onApplicationEvent(StageReadyEvent event) {
         try{
             this.stage = event.getStage();
-            loadStage(ControllerResource.LOGIN);
+            loadStage(FXMLResourceEnum.LOGIN);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void loadStage(ControllerResource controllerResource) throws IOException {
-        Parent root = getRoot(controllerResource.getResource());
+    public void loadStage(FXMLResourceEnum FXMLResourceEnum) throws IOException {
+        Parent root = getRoot(FXMLResourceEnum.getResource());
         Scene scene = new Scene(root);
 
         loadStageIcon();

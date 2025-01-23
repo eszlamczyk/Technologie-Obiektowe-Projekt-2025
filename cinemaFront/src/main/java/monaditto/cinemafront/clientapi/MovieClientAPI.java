@@ -7,6 +7,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import monaditto.cinemafront.config.BackendConfig;
 import monaditto.cinemafront.databaseMapping.CategoryDto;
 import monaditto.cinemafront.databaseMapping.MovieDto;
+import monaditto.cinemafront.databaseMapping.MovieWithAverageRatingDto;
 import monaditto.cinemafront.databaseMapping.MovieWithCategoriesDto;
 import monaditto.cinemafront.request.RequestBuilder;
 import monaditto.cinemafront.response.ResponseResult;
@@ -32,6 +33,14 @@ public class MovieClientAPI {
 
     private String categoriesUrl;
 
+    private String comingSoonUrl;
+
+    private String recommendedUrl;
+
+    private String topRatedUrl;
+
+    private String searchUrl;
+
     private String baseUrl;
 
     private final ObjectMapper objectMapper;
@@ -40,9 +49,12 @@ public class MovieClientAPI {
 
     private final BackendConfig backendConfig;
 
-    public MovieClientAPI(BackendConfig backendConfig, CategoryClientAPI categoryClientAPI) {
+    private final HttpClient httpClient;
+
+    public MovieClientAPI(BackendConfig backendConfig, CategoryClientAPI categoryClientAPI, HttpClient httpClient) {
         this.backendConfig = backendConfig;
         this.categoryClientAPI = categoryClientAPI;
+        this.httpClient = httpClient;
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         initializeUrls();
@@ -55,20 +67,23 @@ public class MovieClientAPI {
         createUrl = endpointUrl + "/create";
         editUrl = endpointUrl + "/edit";
         categoriesUrl = endpointUrl + "/categories";
+        comingSoonUrl = endpointUrl + "/coming-soon";
+        searchUrl = endpointUrl + "/search";
+        recommendedUrl = endpointUrl + "/recommended";
+        topRatedUrl = endpointUrl + "/top-rated";
     }
 
     public CompletableFuture<ResponseResult> createMovie(MovieDto movieDto, List<CategoryDto> categories) {
         MovieWithCategoriesDto wrapperDto = new MovieWithCategoriesDto(movieDto, categories);
         String jsonBody = serializeWrapperDto(wrapperDto);
 
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestPUT(createUrl, jsonBody);
 
-        return sendCreateMovieRequest(client, request);
+        return sendCreateMovieRequest(request);
     }
 
-    private CompletableFuture<ResponseResult> sendCreateMovieRequest(HttpClient client, HttpRequest request) {
-        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+    private CompletableFuture<ResponseResult> sendCreateMovieRequest(HttpRequest request) {
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(response -> new ResponseResult(response.statusCode(), response.body()))
                 .exceptionally(e -> {
                     System.err.println("Error loading the movies: " + e.getMessage());
@@ -80,14 +95,13 @@ public class MovieClientAPI {
         MovieWithCategoriesDto wrapperDto = new MovieWithCategoriesDto(newMovieDto, categories);
         String jsonBody = serializeWrapperDto(wrapperDto);
 
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestPUT(editUrl + "/" + movieId, jsonBody);
 
-        return sendEditMovieRequest(client, request);
+        return sendEditMovieRequest(request);
     }
 
-    private CompletableFuture<ResponseResult> sendEditMovieRequest(HttpClient client, HttpRequest request) {
-        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+    private CompletableFuture<ResponseResult> sendEditMovieRequest(HttpRequest request) {
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(response -> new ResponseResult(response.statusCode(), response.body()))
                 .exceptionally(e -> {
                     System.err.println("Error editing the movies: " + e.getMessage());
@@ -96,14 +110,13 @@ public class MovieClientAPI {
     }
 
     public CompletableFuture<List<CategoryDto>> getMovieCategories(MovieDto movieDto) {
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestGET(categoriesUrl + "/" + movieDto.id());
 
-        return sendGetMovieCategoriesRequest(client, request);
+        return sendGetMovieCategoriesRequest(request);
     }
 
-    private CompletableFuture<List<CategoryDto>> sendGetMovieCategoriesRequest(HttpClient client, HttpRequest request) {
-        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+    private CompletableFuture<List<CategoryDto>> sendGetMovieCategoriesRequest(HttpRequest request) {
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(HttpResponse::body)
                 .thenApply(categoryClientAPI::parseCategoryList)
                 .exceptionally(e -> {
@@ -112,19 +125,82 @@ public class MovieClientAPI {
                 });
     }
 
-    public CompletableFuture<List<MovieDto>> loadMovies() {
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = RequestBuilder.buildRequestGET(endpointUrl);
+    public CompletableFuture<List<MovieDto>> loadComingSoonMovies() {
+        HttpRequest request = RequestBuilder.buildRequestGET(comingSoonUrl);
 
-        return sendLoadMoviesRequest(client, request);
+        return sendLoadComingSoonMoviesRequest(request);
     }
 
-    private CompletableFuture<List<MovieDto>> sendLoadMoviesRequest(HttpClient client, HttpRequest request) {
-        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+    private CompletableFuture<List<MovieDto>> sendLoadComingSoonMoviesRequest(HttpRequest request) {
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(HttpResponse::body)
                 .thenApply(this::parseMovieList)
                 .exceptionally(e -> {
                     System.err.println("Error loading the movies: " + e.getMessage());
+                    return new ArrayList<>();
+                });
+    }
+
+    public CompletableFuture<List<MovieWithAverageRatingDto>> loadRecommendedMovies(Long userId) {
+        HttpRequest request = RequestBuilder.buildRequestGET(recommendedUrl + "/" + userId);
+
+        return sendLoadRecommendedMoviesRequest(request);
+    }
+
+    private CompletableFuture<List<MovieWithAverageRatingDto>> sendLoadRecommendedMoviesRequest(HttpRequest request) {
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(HttpResponse::body)
+                .thenApply(this::parseMovieWithRatingsList)
+                .exceptionally(e -> {
+                    System.err.println("Error loading the movies: " + e.getMessage());
+                    return new ArrayList<>();
+                });
+    }
+
+    public CompletableFuture<List<MovieWithAverageRatingDto>> loadTopRatedMovies() {
+        HttpRequest request = RequestBuilder.buildRequestGET(topRatedUrl);
+
+        return sendLoadTopRatedMoviesRequest(request);
+    }
+
+    private CompletableFuture<List<MovieWithAverageRatingDto>> sendLoadTopRatedMoviesRequest(HttpRequest request) {
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(HttpResponse::body)
+                .thenApply(this::parseMovieWithRatingsList)
+                .exceptionally(e -> {
+                    System.err.println("Error loading the movies: " + e.getMessage());
+                    return new ArrayList<>();
+                });
+    }
+
+    public CompletableFuture<List<MovieDto>> loadMovies() {
+        HttpRequest request = RequestBuilder.buildRequestGET(endpointUrl);
+
+        return sendLoadMoviesRequest(request);
+    }
+
+    private CompletableFuture<List<MovieDto>> sendLoadMoviesRequest(HttpRequest request) {
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(HttpResponse::body)
+                .thenApply(this::parseMovieList)
+                .exceptionally(e -> {
+                    System.err.println("Error loading the movies: " + e.getMessage());
+                    return new ArrayList<>();
+                });
+    }
+
+    public CompletableFuture<List<MovieDto>> searchMovies(String query) {
+        HttpRequest request = RequestBuilder.buildRequestPUT(searchUrl, query);
+
+        return sendSearchMoviesRequest(request);
+    }
+
+    private CompletableFuture<List<MovieDto>> sendSearchMoviesRequest(HttpRequest request) {
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(HttpResponse::body)
+                .thenApply(this::parseMovieList)
+                .exceptionally(e -> {
+                    System.err.println("Error searching the movies: " + e.getMessage());
                     return new ArrayList<>();
                 });
     }
@@ -137,6 +213,14 @@ public class MovieClientAPI {
         }
     }
 
+    private List<MovieWithAverageRatingDto> parseMovieWithRatingsList(String responseBody) {
+        try {
+            return objectMapper.readValue(responseBody, new TypeReference<>() {});
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error parsing movie with ratings list: " + e.getMessage(), e);
+        }
+    }
+
     private String serializeWrapperDto(MovieWithCategoriesDto wrapperDto) {
         try {
             return objectMapper.writeValueAsString(wrapperDto);
@@ -146,10 +230,9 @@ public class MovieClientAPI {
     }
 
     public int delete(MovieDto movieDto) {
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = RequestBuilder.buildRequestDELETE(deleteUrl + "/" + movieDto.id());
 
-        return sendDeleteMovieRequest(client, request);
+        return sendDeleteMovieRequest(httpClient, request);
     }
 
     private int sendDeleteMovieRequest(HttpClient client, HttpRequest request) {

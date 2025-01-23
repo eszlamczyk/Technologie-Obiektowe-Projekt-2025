@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<AnchorPane fx:id="rootPane" prefHeight="800" prefWidth="1000"
+            stylesheets="@../../styles/Styles.css"
+            xmlns="http://javafx.com/javafx/17.0.2-ea"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="monaditto.cinemafront.controller.admin.AdminOpinionsController">
+    <VBox spacing="10">
+        <padding>
+            <Insets top="20" right="20" bottom="20" left="20"/>
+        </padding>
+
+        <Label text="All Opinions" style="-fx-font-size: 20; -fx-font-weight: bold;"/>
+
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <TextField fx:id="userNameFilter" promptText="Filter by User Name" prefWidth="200"/>
+            <TextField fx:id="movieTitleFilter" promptText="Movie Title" prefWidth="200"/>
+            <ComboBox fx:id="sortingOptions" prefWidth="150"/>
+            <Button fx:id="clearFiltersButton" text="Clear Filters"/>
+        </HBox>
+
+        <StackPane VBox.vgrow="ALWAYS">
+            <ListView fx:id="opinionListView" prefWidth="952"/>
+            <ProgressIndicator fx:id="loadingIndicator" visible="false"/>
+        </StackPane>
+
+        <Label fx:id="errorLabel" visible="false" style="-fx-text-fill: red;"/>
+
+        <Button text="Back to Dashboard" onAction="#handleBack"/>
+    </VBox>
+</AnchorPane>

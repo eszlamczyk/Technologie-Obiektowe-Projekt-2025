@@ -1,8 +1,6 @@
 package monaditto.cinemafront.controller.admin;
 
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -11,12 +9,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.shape.Rectangle;
 import monaditto.cinemafront.StageInitializer;
-import monaditto.cinemafront.clientapi.CategoryClientAPI;
 import monaditto.cinemafront.clientapi.MovieRoomClientAPI;
 import monaditto.cinemafront.config.BackendConfig;
-import monaditto.cinemafront.controller.ControllerResource;
-import monaditto.cinemafront.databaseMapping.CategoryDto;
-import monaditto.cinemafront.databaseMapping.MovieDto;
+import monaditto.cinemafront.controller.FXMLResourceEnum;
 import monaditto.cinemafront.databaseMapping.MovieRoomDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -93,7 +88,7 @@ public class AdminEditMovieRoomController {
     @FXML
     private void handleCancel(ActionEvent event) {
         try {
-            stageInitializer.loadStage(ControllerResource.ADMIN_MOVIE_ROOMS);
+            stageInitializer.loadStage(FXMLResourceEnum.ADMIN_MOVIE_ROOMS);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

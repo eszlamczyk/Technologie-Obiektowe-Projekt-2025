@@ -1,10 +1,8 @@
 package monaditto.cinemaproject.RESTcontrollers;
 
+import jakarta.annotation.security.RolesAllowed;
 import monaditto.cinemaproject.category.CategoryDto;
-import monaditto.cinemaproject.movie.CreateMovieStatus;
-import monaditto.cinemaproject.movie.MovieDto;
-import monaditto.cinemaproject.movie.MovieService;
-import monaditto.cinemaproject.movie.MovieWithCategoriesDto;
+import monaditto.cinemaproject.movie.*;
 import monaditto.cinemaproject.status.Status;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,11 +22,38 @@ public class MovieController {
         this.movieService = movieService;
     }
 
+    @RolesAllowed({"ADMIN","CASHIER", "USER"})
     @GetMapping()
     public ResponseEntity<List<MovieDto>> getMovies() {
         return ResponseEntity.ok().body(movieService.getMovies());
     }
 
+    @RolesAllowed({"ADMIN","CASHIER", "USER"})
+    @GetMapping("/coming-soon")
+    public ResponseEntity<List<MovieDto>> getComingSoonMovies() {
+        return ResponseEntity.ok().body(movieService.getComingSoonMovies());
+    }
+
+
+    @RolesAllowed({"USER"})
+    @GetMapping("/recommended/{id}")
+    public ResponseEntity<List<MovieWithAverageRatingDto>> getRecommendedMovies(@PathVariable("id") Long id) {
+        return ResponseEntity.ok().body(movieService.getRecommendedMovies(id));
+    }
+
+    @RolesAllowed({"USER"})
+    @GetMapping("/top-rated")
+    public ResponseEntity<List<MovieWithAverageRatingDto>> getTopRatedMovies() {
+        return ResponseEntity.ok().body(movieService.getTopRatedMovies());
+    }
+
+    @RolesAllowed({"ADMIN","CASHIER", "USER"})
+    @PutMapping("/search")
+    public ResponseEntity<List<MovieDto>> searchMovies(@RequestBody String query) {
+        return ResponseEntity.ok().body(movieService.searchMovies(query));
+    }
+
+    @RolesAllowed({"ADMIN"})
     @DeleteMapping("delete/{id}")
     public ResponseEntity<String> deleteMovie(@PathVariable Long id) {
         if (movieService.deleteMovie(id)) {
@@ -38,6 +63,7 @@ public class MovieController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(message);
     }
 
+    @RolesAllowed({"ADMIN"})
     @PutMapping("/create")
     public ResponseEntity<String> createMovie(@RequestBody MovieWithCategoriesDto wrapperDto) {
         Status createMovieStatus = movieService.createMovie(wrapperDto.movieDto(), wrapperDto.categories());
@@ -49,6 +75,7 @@ public class MovieController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(createMovieStatus.message());
     }
 
+    @RolesAllowed({"ADMIN"})
     @PutMapping("/edit/{id}")
     public ResponseEntity<String> editMovie(@PathVariable Long id, @RequestBody MovieWithCategoriesDto wrapperDto) {
         Status editMovieStatus = movieService.editMovie(id, wrapperDto.movieDto(), wrapperDto.categories());
@@ -60,8 +87,9 @@ public class MovieController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(editMovieStatus.message());
     }
 
+    @RolesAllowed({"ADMIN","CASHIER", "USER"})
     @GetMapping("/categories/{id}")
-    public ResponseEntity<List<CategoryDto>> editMovie(@PathVariable Long id) {
+    public ResponseEntity<List<CategoryDto>> getMovieCategories(@PathVariable Long id) {
         List<CategoryDto> categories = movieService.getMovieCategories(id);
 
         return ResponseEntity.ok().body(categories);

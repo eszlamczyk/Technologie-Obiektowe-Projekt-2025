@@ -2,38 +2,70 @@ package monaditto.cinemafront.request;
 
 import java.net.URI;
 import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 public class RequestBuilder {
 
+    private static String sessionId;
+
+    public static void setSessionId(String id){
+        sessionId = id;
+    }
+
+    private static HttpRequest.Builder addHeaders(HttpRequest.Builder builder) {
+        builder.header("Content-Type", "application/json");
+        if (sessionId != null && !sessionId.isEmpty()) {
+            builder.header("Cookie", "JSESSIONID=" + sessionId);
+        } else {
+            System.err.println("No session ID available");
+        }
+        return builder;
+    }
+
     public static HttpRequest buildRequestGET(String url) {
-        return HttpRequest.newBuilder()
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
-                .header("Content-Type", "application/json")
-                .GET()
-                .build();
+                .GET();
+        return addHeaders(builder).build();
+    }
+
+    public static HttpRequest buildRequestGET(String url, String jsonBody) {
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .GET();
+        return addHeaders(builder).build();
     }
 
     public static HttpRequest buildRequestPUT(String url, String jsonBody) {
-        return HttpRequest.newBuilder()
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
-                .header("Content-Type", "application/json")
-                .PUT(HttpRequest.BodyPublishers.ofString(jsonBody))
-                .build();
+                .PUT(HttpRequest.BodyPublishers.ofString(jsonBody));
+        return addHeaders(builder).build();
     }
 
     public static HttpRequest buildRequestDELETE(String url) {
-        return HttpRequest.newBuilder()
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
-                .header("Content-Type", "application/json")
-                .DELETE()
-                .build();
+                .DELETE();
+        return addHeaders(builder).build();
     }
 
-    public static HttpRequest buildRequestPOST(String url, String jsonBody){
-        return HttpRequest.newBuilder()
+    public static HttpRequest buildRequestPOST(String url, String jsonBody) {
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-                .build();
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody));
+        return addHeaders(builder).build();
+    }
+
+    public static void extractAndSetSessionId(HttpResponse<?> response) {
+        response.headers()
+                .allValues("Set-Cookie")
+                .stream()
+                .filter(cookie -> cookie.startsWith("JSESSIONID="))
+                .findFirst()
+                .ifPresent(cookie -> {
+                    String id = cookie.split(";")[0].replace("JSESSIONID=", "");
+                    setSessionId(id);
+                });
     }
 }
